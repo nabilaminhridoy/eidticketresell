@@ -57,3 +57,33 @@ Stage Summary:
 - Login page: Phone/Email/Username login with Password or OTP mode, Google SSO placeholder
 - Full i18n support for both pages (English + বাংলা)
 - All APIs properly validate and secure user inputs
+
+---
+Task ID: kyc-verification
+Agent: main
+Task: Build comprehensive KYC Verification system for Eid Ticket Resell
+
+Work Log:
+- Updated Prisma KYC schema: Added kycName, kycDob, kycGender, nameChanged, dobChanged, genderChanged (once-only change tracking), houseRoadVillage, upazilaThana, district, division, postalCode (address), selfieRight, selfieLeft, selfieSmile, selfieBlink (pose captures)
+- Force-reset DB and pushed new schema
+- Added 50+ new i18n translation keys for KYC in both English and Bangla (address fields, selfie poses, GPS, change-once warnings, status messages, verified seller benefits)
+- Added BD_DIVISIONS (8 divisions) and BD_DISTRICTS (cascading districts per division) to constants
+- Created file upload API (/api/upload) with file type validation (JPEG/PNG/WebP), 5MB size limit, unique filename generation
+- Rewrote KYC API with comprehensive validation: NID 10/13/17 digit validation, passport front-only rule, required address fields, name/dob/gender once-only change enforcement, auto user profile update on change
+- Built comprehensive KycPage component with 2-step wizard:
+  - Step 1: Personal Info (auto from profile, change-once locks), Document Upload (type-dependent UI), Present Address (cascading division→district)
+  - Step 2: Live Selfie Capture with 5 poses (Front, Right, Left, Smile, Blink), GPS location, camera API integration
+- Added KYC status pages: Pending (with spinner), Approved (with verified benefits), Rejected (with resubmit)
+- Updated DashboardPage KYC tab to link to dedicated KYC page with verified seller benefits display
+- Updated page.tsx routing to use LazyKycPage
+- Updated admin KYC API and seed data for new schema
+- Browser verified: all features working - auto-fill, change-once locks, document type switching, NID validation, passport front-only, cascading dropdowns, file uploads, selfie/GPS page
+
+Stage Summary:
+- Complete KYC verification system with 2-step wizard
+- Personal info auto-filled from profile with once-only change warnings
+- Document upload: NID (10/13/17 digits, front+back), Driving Licence (front+back), Passport (front only)
+- Present address with cascading Bangladesh Division→District dropdowns
+- Live selfie capture with 5 poses (Front, Right, Left, Smile, Blink) and GPS verification
+- After admin approval: seller gets verified badge, can sell tickets, use wallet & withdraw
+- Full i18n support (English + বাংলা)

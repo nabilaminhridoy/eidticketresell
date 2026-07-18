@@ -47,13 +47,34 @@ model User {
 model Kyc {
   id              String   @id @default(cuid())
   userId          String   @unique
+  // Personal info (can be changed once from profile)
+  kycName         String
+  kycDob          String?
+  kycGender       String?
+  nameChanged     Boolean  @default(false)
+  dobChanged      Boolean  @default(false)
+  genderChanged   Boolean  @default(false)
+  // Document info
   documentType    String   // nid, driving_licence, passport
   documentNumber  String
   documentFront   String
   documentBack    String?
+  // Present address
+  houseRoadVillage String?
+  upazilaThana    String?
+  district        String?
+  division        String?
+  postalCode      String?
+  // Selfie captures
   selfiePhoto     String
+  selfieRight     String?
+  selfieLeft      String?
+  selfieSmile     String?
+  selfieBlink     String?
+  // GPS
   gpsLatitude     Float?
   gpsLongitude    Float?
+  // Status
   status          String   @default("pending") // pending, approved, rejected
   reviewedBy      String?
   reviewNote      String?

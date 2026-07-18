@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Wallet, Ticket, ShoppingBag, ShieldCheck, Settings, ArrowRight } from 'lucide-react';
+import { User, Wallet, Ticket, ShoppingBag, ShieldCheck, Settings, ArrowRight, Check } from 'lucide-react';
 
 export default function DashboardPage() {
   const { navigate } = useAppStore();
@@ -109,13 +109,31 @@ export default function DashboardPage() {
             <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" />{t('kycVerification', language)}</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-center gap-2 mb-4"><Badge variant={user.isKycVerified ? 'default' : 'secondary'}>{user.isKycVerified ? t('kycApproved', language) : t('kycPending', language)}</Badge></div>
-              {user.isKycVerified ? <p className="text-emerald-600">{language === 'en' ? 'Your identity is verified.' : 'আপনার পরিচয় যাচাইকৃত।'}</p> : (
-                <div className="space-y-3"><p className="text-sm text-muted-foreground">{t('becomeVerifiedSeller', language)}</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5"><Label>{t('nid', language)}</Label><Input placeholder="NID Number" /></div>
-                    <div className="space-y-1.5"><Label>{t('phone', language)}</Label><Input placeholder="+880" /></div>
+              {user.isKycVerified ? (
+                <div className="space-y-3">
+                  <p className="text-emerald-600 flex items-center gap-2"><ShieldCheck className="w-4 h-4" />{language === 'en' ? 'Your identity is verified. You can sell tickets and use wallet features.' : 'আপনার পরিচয় যাচাইকৃত। আপনি টিকেট বিক্রি ও ওয়ালেট ব্যবহার করতে পারবেন।'}</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { icon: ShieldCheck, label: t('verifiedBadge', language) },
+                      { icon: Ticket, label: t('canSellTickets', language) },
+                      { icon: Wallet, label: t('canWithdraw', language) },
+                    ].map(item => (
+                      <div key={item.label} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                        <item.icon className="w-5 h-5 text-emerald-600" />
+                        <span className={`text-xs text-emerald-700 dark:text-emerald-400 text-center ${language === 'bn' ? 'font-bangla' : ''}`}>{item.label}</span>
+                      </div>
+                    ))}
                   </div>
-                  <Button className="bg-gradient-to-r from-primary to-primary/90" onClick={() => { updateUser({ isKycVerified: true }); }}>{t('submit', language)}</Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className={`text-sm text-muted-foreground ${language === 'bn' ? 'font-bangla' : ''}`}>{t('becomeVerifiedSeller', language)}</p>
+                  <p className={`text-xs text-muted-foreground ${language === 'bn' ? 'font-bangla' : ''}`}>
+                    {language === 'en' ? 'Complete KYC verification to unlock seller features, wallet, and withdrawal capabilities.' : 'বিক্রেতা বৈশিষ্ট্য, ওয়ালেট এবং উত্তোলন সক্ষমতা আনলক করতে কেওয়াইসি যাচাই সম্পন্ন করুন।'}
+                  </p>
+                  <Button className="bg-gradient-to-r from-primary to-primary/90" onClick={() => navigate('kyc')}>
+                    <ShieldCheck className="w-4 h-4 mr-2" />{t('kycVerification', language)}
+                  </Button>
                 </div>
               )}
             </CardContent>

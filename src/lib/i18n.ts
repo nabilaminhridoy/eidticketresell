@@ -156,6 +156,51 @@ type TranslationKeys = {
   documentBack: string;
   gpsVerification: string;
   becomeVerifiedSeller: string;
+  kycPersonalInfo: string;
+  kycNameChangeWarning: string;
+  kycDobChangeWarning: string;
+  kycGenderChangeWarning: string;
+  kycChangedOnce: string;
+  documentType: string;
+  documentNumber: string;
+  nidNumber: string;
+  drivingLicenceNumber: string;
+  passportNumber: string;
+  uploadFront: string;
+  uploadBack: string;
+  uploadFrontOnly: string;
+  frontSide: string;
+  backSide: string;
+  presentAddress: string;
+  houseRoadVillage: string;
+  upazilaThana: string;
+  district: string;
+  division: string;
+  postalCode: string;
+  liveSelfie: string;
+  selfieInstructions: string;
+  faceRight: string;
+  faceLeft: string;
+  faceSmile: string;
+  eyeBlink: string;
+  mustBeInLight: string;
+  gpsLocationOn: string;
+  capturingSelfie: string;
+  captureSelfie: string;
+  retake: string;
+  kycSubmitSuccess: string;
+  kycPendingMessage: string;
+  kycRejectedMessage: string;
+  kycApprovedMessage: string;
+  kycResubmit: string;
+  verifiedBadge: string;
+  canSellTickets: string;
+  canUseWallet: string;
+  canWithdraw: string;
+  nidDigitsWarning: string;
+  uploadDocument: string;
+  selectDivision: string;
+  selectDistrict: string;
 
   // Wallet
   wallet: string;
@@ -421,6 +466,51 @@ const en: TranslationKeys = {
   documentBack: 'Document Back',
   gpsVerification: 'GPS Verification',
   becomeVerifiedSeller: 'Become a Verified Seller',
+  kycPersonalInfo: 'Personal Information',
+  kycNameChangeWarning: 'Name can only be changed once. After that, it cannot be changed again.',
+  kycDobChangeWarning: 'Date of birth can only be changed once. After that, it cannot be changed again.',
+  kycGenderChangeWarning: 'Gender can only be changed once. After that, it cannot be changed again.',
+  kycChangedOnce: 'Already changed once — cannot be changed again',
+  documentType: 'Document Type',
+  documentNumber: 'Document Number',
+  nidNumber: 'NID Number',
+  drivingLicenceNumber: 'Driving Licence Number',
+  passportNumber: 'Passport Number',
+  uploadFront: 'Upload Front Side',
+  uploadBack: 'Upload Back Side',
+  uploadFrontOnly: 'Upload Photo Page',
+  frontSide: 'Front Side',
+  backSide: 'Back Side',
+  presentAddress: 'Present Address',
+  houseRoadVillage: 'House/Road/Village',
+  upazilaThana: 'Upazila/Thana',
+  district: 'District',
+  division: 'Division',
+  postalCode: 'Postal Code',
+  liveSelfie: 'Take a Live Selfie',
+  selfieInstructions: 'Follow the instructions below to capture your selfie',
+  faceRight: 'Face Right',
+  faceLeft: 'Face Left',
+  faceSmile: 'Face Smile',
+  eyeBlink: 'Eye Blink',
+  mustBeInLight: 'Must be in good lighting',
+  gpsLocationOn: 'GPS Location must be enabled',
+  capturingSelfie: 'Capturing...',
+  captureSelfie: 'Capture',
+  retake: 'Retake',
+  kycSubmitSuccess: 'KYC submitted successfully! We will review your documents.',
+  kycPendingMessage: 'Your KYC is under review. We will notify you once it\'s approved.',
+  kycRejectedMessage: 'Your KYC was rejected. Please review the reason and resubmit.',
+  kycApprovedMessage: 'Your KYC has been approved! You can now sell tickets and use wallet features.',
+  kycResubmit: 'Resubmit KYC',
+  verifiedBadge: 'Verified Badge',
+  canSellTickets: 'Sell Tickets',
+  canUseWallet: 'Use Wallet',
+  canWithdraw: 'Withdraw Funds',
+  nidDigitsWarning: 'NID must be 10, 13, or 17 digits',
+  uploadDocument: 'Upload Document',
+  selectDivision: 'Select Division',
+  selectDistrict: 'Select District',
 
   wallet: 'Wallet',
   availableBalance: 'Available Balance',
@@ -678,6 +768,51 @@ const bn: TranslationKeys = {
   documentBack: 'নথি পেছনে',
   gpsVerification: 'জিপিএস যাচাই',
   becomeVerifiedSeller: 'যাচাইকৃত বিক্রেতা হন',
+  kycPersonalInfo: 'ব্যক্তিগত তথ্য',
+  kycNameChangeWarning: 'নাম শুধুমাত্র একবার পরিবর্তন করা যাবে। এরপর আর পরিবর্তন করা যাবে না।',
+  kycDobChangeWarning: 'জন্ম তারিখ শুধুমাত্র একবার পরিবর্তন করা যাবে। এরপর আর পরিবর্তন করা যাবে না।',
+  kycGenderChangeWarning: 'লিঙ্গ শুধুমাত্র একবার পরিবর্তন করা যাবে। এরপর আর পরিবর্তন করা যাবে না।',
+  kycChangedOnce: 'একবার পরিবর্তিত — আর পরিবর্তন করা যাবে না',
+  documentType: 'নথি ধরন',
+  documentNumber: 'নথি নম্বর',
+  nidNumber: 'এনআইডি নম্বর',
+  drivingLicenceNumber: 'ড্রাইভিং লাইসেন্স নম্বর',
+  passportNumber: 'পাসপোর্ট নম্বর',
+  uploadFront: 'সামনের দিক আপলোড',
+  uploadBack: 'পেছনের দিক আপলোড',
+  uploadFrontOnly: 'ফটো পৃষ্ঠা আপলোড',
+  frontSide: 'সামনের দিক',
+  backSide: 'পেছনের দিক',
+  presentAddress: 'বর্তমান ঠিকানা',
+  houseRoadVillage: 'বাড়ি/রাস্তা/গ্রাম',
+  upazilaThana: 'উপজেলা/থানা',
+  district: 'জেলা',
+  division: 'বিভাগ',
+  postalCode: 'পোস্টাল কোড',
+  liveSelfie: 'লাইভ সেলফি তুলুন',
+  selfieInstructions: 'সেলফি ক্যাপচার করতে নিচের নির্দেশনা অনুসরণ করুন',
+  faceRight: 'ডানদিকে মুখ',
+  faceLeft: 'বামদিকে মুখ',
+  faceSmile: 'হাসিমুখ',
+  eyeBlink: 'চোখ পিটপিট',
+  mustBeInLight: 'আলোর মধ্যে থাকতে হবে',
+  gpsLocationOn: 'জিপিএস লোকেশন চালু থাকতে হবে',
+  capturingSelfie: 'ক্যাপচার হচ্ছে...',
+  captureSelfie: 'ক্যাপচার',
+  retake: 'পুনরায় তুলুন',
+  kycSubmitSuccess: 'কেওয়াইসি সফলভাবে জমা হয়েছে! আমরা আপনার নথি পর্যালোচনা করব।',
+  kycPendingMessage: 'আপনার কেওয়াইসি পর্যালোচনাধীন। অনুমোদিত হলে আমরা জানাব।',
+  kycRejectedMessage: 'আপনার কেওয়াইসি প্রত্যাখ্যাত। কারণ পর্যালোচনা করে পুনঃজমা দিন।',
+  kycApprovedMessage: 'আপনার কেওয়াইসি অনুমোদিত! এখন আপনি টিকেট বিক্রি ও ওয়ালেট ব্যবহার করতে পারবেন।',
+  kycResubmit: 'কেওয়াইসি পুনঃজমা',
+  verifiedBadge: 'যাচাইকৃত ব্যাজ',
+  canSellTickets: 'টিকেট বিক্রি',
+  canUseWallet: 'ওয়ালেট ব্যবহার',
+  canWithdraw: 'টাকা উত্তোলন',
+  nidDigitsWarning: 'এনআইডি ১০, ১৩ বা ১৭ সংখ্যার হতে হবে',
+  uploadDocument: 'নথি আপলোড',
+  selectDivision: 'বিভাগ নির্বাচন',
+  selectDistrict: 'জেলা নির্বাচন',
 
   wallet: 'ওয়ালেট',
   availableBalance: 'উপলব্ধ ব্যালেন্স',

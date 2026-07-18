@@ -47,3 +47,67 @@ export const ROLES = {
   admin: 'Admin',
   super_admin: 'Super Admin',
 };
+
+export const BD_DIVISIONS = [
+  { id: 'dhaka', label: 'Dhaka', labelBn: 'ঢাকা' },
+  { id: 'chittagong', label: 'Chittagong', labelBn: 'চট্টগ্রাম' },
+  { id: 'rajshahi', label: 'Rajshahi', labelBn: 'রাজশাহী' },
+  { id: 'khulna', label: 'Khulna', labelBn: 'খুলনা' },
+  { id: 'barishal', label: 'Barishal', labelBn: 'বরিশাল' },
+  { id: 'sylhet', label: 'Sylhet', labelBn: 'সিলেট' },
+  { id: 'rangpur', label: 'Rangpur', labelBn: 'রংপুর' },
+  { id: 'mymensingh', label: 'Mymensingh', labelBn: 'ময়মনসিংহ' },
+] as const;
+
+export const BD_DISTRICTS: Record<string, Array<{ label: string; labelBn: string }>> = {
+  dhaka: [
+    { label: 'Dhaka', labelBn: 'ঢাকা' }, { label: 'Gazipur', labelBn: 'গাজীপুর' },
+    { label: 'Narayanganj', labelBn: 'নারায়ণগঞ্জ' }, { label: 'Narsingdi', labelBn: 'নরসিংদী' },
+    { label: 'Manikganj', labelBn: 'মানিকগঞ্জ' }, { label: 'Munshiganj', labelBn: 'মুন্সিগঞ্জ' },
+    { label: 'Madaripur', labelBn: 'মাদারীপুর' }, { label: 'Faridpur', labelBn: 'ফরিদপুর' },
+    { label: 'Gopalganj', labelBn: 'গোপালগঞ্জ' }, { label: 'Tangail', labelBn: 'টাঙ্গাইল' },
+    { label: 'Kishoreganj', labelBn: 'কিশোরগঞ্জ' }, { label: 'Shariatpur', labelBn: 'শরীয়তপুর' },
+    { label: 'Rajbari', labelBn: 'রাজবাড়ী' },
+  ],
+  chittagong: [
+    { label: 'Chittagong', labelBn: 'চট্টগ্রাম' }, { label: "Cox's Bazar", labelBn: 'কক্সবাজার' },
+    { label: 'Comilla', labelBn: 'কুমিল্লা' }, { label: 'Feni', labelBn: 'ফেনী' },
+    { label: 'Brahmanbaria', labelBn: 'ব্রাহ্মণবাড়িয়া' }, { label: 'Noakhali', labelBn: 'নোয়াখালী' },
+    { label: 'Chandpur', labelBn: 'চাঁদপুর' }, { label: 'Lakshmipur', labelBn: 'লক্ষ্মীপুর' },
+    { label: 'Rangamati', labelBn: 'রাঙ্গামাটি' }, { label: 'Bandarban', labelBn: 'বান্দরবান' },
+    { label: 'Khagrachhari', labelBn: 'খাগড়াছড়ি' },
+  ],
+  rajshahi: [
+    { label: 'Rajshahi', labelBn: 'রাজশাহী' }, { label: 'Bogra', labelBn: 'বগুড়া' },
+    { label: 'Pabna', labelBn: 'পাবনা' }, { label: 'Natore', labelBn: 'নাটোর' },
+    { label: 'Nawabganj', labelBn: 'নবাবগঞ্জ' }, { label: 'Naogaon', labelBn: 'নওগাঁ' },
+    { label: 'Joypurhat', labelBn: 'জয়পুরহাট' }, { label: 'Sirajganj', labelBn: 'সিরাজগঞ্জ' },
+  ],
+  khulna: [
+    { label: 'Khulna', labelBn: 'খুলনা' }, { label: 'Jessore', labelBn: 'যশোর' },
+    { label: 'Satkhira', labelBn: 'সাতক্ষীরা' }, { label: 'Bagerhat', labelBn: 'বাগেরহাট' },
+    { label: 'Magura', labelBn: 'মাগুরা' }, { label: 'Meherpur', labelBn: 'মেহেরপুর' },
+    { label: 'Narail', labelBn: 'নড়াইল' }, { label: 'Chuadanga', labelBn: 'চুয়াডাঙ্গা' },
+    { label: 'Kushtia', labelBn: 'কুষ্টিয়া' }, { label: 'Jhenaidah', labelBn: 'ঝিনাইদহ' },
+  ],
+  barishal: [
+    { label: 'Barishal', labelBn: 'বরিশাল' }, { label: 'Patuakhali', labelBn: 'পটুয়াখালী' },
+    { label: 'Barguna', labelBn: 'বরগুনা' }, { label: 'Bhola', labelBn: 'ভোলা' },
+    { label: 'Pirojpur', labelBn: 'পিরোজপুর' }, { label: 'Jhalokati', labelBn: 'ঝালকাঠি' },
+  ],
+  sylhet: [
+    { label: 'Sylhet', labelBn: 'সিলেট' }, { label: 'Habiganj', labelBn: 'হবিগঞ্জ' },
+    { label: 'Sunamganj', labelBn: 'সুনামগঞ্জ' }, { label: 'Moulvibazar', labelBn: 'মৌলভীবাজার' },
+  ],
+  rangpur: [
+    { label: 'Rangpur', labelBn: 'রংপুর' }, { label: 'Dinajpur', labelBn: 'দিনাজপুর' },
+    { label: 'Kurigram', labelBn: 'কুড়িগ্রাম' }, { label: 'Lalmonirhat', labelBn: 'লালমনিরহাট' },
+    { label: 'Nilphamari', labelBn: 'নীলফামারী' }, { label: 'Gaibandha', labelBn: 'গাইবান্ধা' },
+    { label: 'Thakurgaon', labelBn: 'ঠাকুরগাঁও' }, { label: 'Panchagarh', labelBn: 'পঞ্চগড়' },
+  ],
+  mymensingh: [
+    { label: 'Mymensingh', labelBn: 'ময়মনসিংহ' }, { label: 'Jamalpur', labelBn: 'জামালপুর' },
+    { label: 'Sherpur', labelBn: 'শেরপুর' }, { label: 'Netrokona', labelBn: 'নেত্রকোণা' },
+    { label: 'Kishoreganj', labelBn: 'কিশোরগঞ্জ' },
+  ],
+};

@@ -26,6 +26,7 @@ function PageLoader() {
 // Pre-created lazy page components (declared outside render to avoid re-creation)
 const LazyLoginPage = lazy(() => import('@/components/pages/LoginPage'));
 const LazyRegisterPage = lazy(() => import('@/components/pages/RegisterPage'));
+const LazyKycPage = lazy(() => import('@/components/pages/KycPage'));
 const LazySearchPage = lazy(() => import('@/components/pages/SearchPage'));
 const LazyTicketDetailsPage = lazy(() => import('@/components/pages/TicketDetailsPage'));
 const LazySellTicketPage = lazy(() => import('@/components/pages/SellTicketPage'));
@@ -44,7 +45,7 @@ const pageComponents: Record<string, ComponentType> = {
   'ticket-details': LazyTicketDetailsPage,
   'sell-ticket': LazySellTicketPage,
   profile: LazyDashboardPage,
-  kyc: LazyDashboardPage,
+  kyc: LazyKycPage,
   wallet: LazyDashboardPage,
   'my-tickets': LazyDashboardPage,
   'my-orders': LazyDashboardPage,

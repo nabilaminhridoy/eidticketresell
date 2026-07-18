@@ -107,11 +107,18 @@ export async function POST() {
       await db.kyc.create({
         data: {
           userId: seller.id,
+          kycName: sellerNames[i],
+          kycDob: `199${i}-01-15`,
+          kycGender: 'male',
           documentType: 'nid',
           documentNumber: `NID-1990${i}0000${i + 1}`,
           documentFront: '/uploads/nid-front-sample.jpg',
           documentBack: '/uploads/nid-back-sample.jpg',
           selfiePhoto: '/uploads/selfie-sample.jpg',
+          houseRoadVillage: 'House 12, Road 5',
+          upazilaThana: 'Dhanmondi',
+          district: 'Dhaka',
+          division: 'dhaka',
           status: 'approved',
           reviewedBy: admin.id,
           reviewedAt: new Date(),
