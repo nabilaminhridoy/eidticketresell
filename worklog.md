@@ -87,3 +87,30 @@ Stage Summary:
 - Live selfie capture with 5 poses (Front, Right, Left, Smile, Blink) and GPS verification
 - After admin approval: seller gets verified badge, can sell tickets, use wallet & withdraw
 - Full i18n support (English + বাংলা)
+
+---
+Task ID: ticket-system
+Agent: main
+Task: Build comprehensive ticket selling system with escrow, platform fee, QR delivery, review, and chat
+
+Work Log:
+- Updated Prisma Ticket schema: Added pnrNumber, ticketDocument, boardingPoint, droppingPoint, seatClass, deckType, originalPrice, deliveryType, meetingPlace, courierName, deliverySpeed, deliveryChargePaidBy, deliveryCharge, sellerNotes, isConfirmed; Changed default status to 'pending_review'
+- Updated Prisma Order schema: Added isQrScanned, clarified amount/totalAmount/platformFee fields for escrow logic
+- Force-reset DB and pushed new schema
+- Added ALL_BD_DISTRICTS (all 64), BUS_CLASSES (6), DECK_TYPES (2), COURIER_COMPANIES (6), DELIVERY_SPEEDS (2), DECK_REQUIRED_CLASSES constants
+- Rewrote ticket creation API with comprehensive validation: KYC check, ticket type-dependent file validation, conditional delivery fields, platform fee calculation, seller confirmation checkboxes
+- Rewrote ticket detail API with sensitive info hiding: PNR, document, seller name/phone hidden until purchase; hasPurchased/isSeller flags returned
+- Rewrote orders API with escrow logic: Online Copy buyer pays full price (platform fee deducted from seller), Counter Copy buyer pays only platform fee; QR code generation for counter copy delivery; chat auto-creation on order
+- Built comprehensive SellTicketPage: 6 sections (Ticket Info, Route, Class/Seat, Pricing, Delivery, Details), conditional UI (deck type for certain bus classes, delivery only for counter copy, PDF-only upload for online copy, image-only for counter copy), ticket preview, 3 agreement checkboxes
+- Built TicketDetailsPage: blur/hide sensitive info until payment, escrow explanation (Online Copy vs Counter Copy), platform fee calculation, purchase flow with confirmation dialog, QR code display for counter copy, chat with seller after purchase
+- Updated seed data for new ticket schema fields
+- Lint passes, dev server running
+
+Stage Summary:
+- Complete ticket creation with all specified fields and conditional UI
+- Sensitive info hidden/blurred until platform fee paid
+- Platform fee: 2% min 20 BDT; Online Copy=full payment held in escrow; Counter Copy=platform fee only
+- Escrow: Money held until travel date; refund if fraudulent; release after successful journey
+- QR code generation for counter copy delivery verification (in-person and courier)
+- Auto chat creation between buyer and seller on order
+- Review system and E2E encrypted chat inbox remain as next priorities

@@ -24,14 +24,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Only JPEG, PNG, and WebP images are allowed' }, { status: 400 });
+      return NextResponse.json({ error: 'Only JPEG, PNG, WebP images and PDF files are allowed' }, { status: 400 });
     }
 
-    // Max 5MB
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be under 5MB' }, { status: 400 });
+    // Max 10MB for PDF, 5MB for images
+    const maxSize = file.type === 'application/pdf' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return NextResponse.json({ error: `File size must be under ${file.type === 'application/pdf' ? '10MB' : '5MB'}` }, { status: 400 });
     }
 
     // Generate unique filename

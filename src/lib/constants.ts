@@ -111,3 +111,35 @@ export const BD_DISTRICTS: Record<string, Array<{ label: string; labelBn: string
     { label: 'Kishoreganj', labelBn: 'কিশোরগঞ্জ' },
   ],
 };
+
+export const ALL_BD_DISTRICTS = Object.values(BD_DISTRICTS).flat();
+
+export const BUS_CLASSES = [
+  { id: 'non_ac', label: 'Non AC', labelBn: 'নন এসি' },
+  { id: 'ac_economy', label: 'AC Economy', labelBn: 'এসি ইকোনমি' },
+  { id: 'ac_business', label: 'AC Business', labelBn: 'এসি বিজনেস' },
+  { id: 'ac_double_decker', label: 'AC Double Decker', labelBn: 'এসি ডাবল ডেকার' },
+  { id: 'ac_sleeper', label: 'AC Sleeper', labelBn: 'এসি স্লিপার' },
+  { id: 'ac_suite_sleeper', label: 'AC Suite Class Sleeper', labelBn: 'এসি স্যুট ক্লাস স্লিপার' },
+] as const;
+
+export const DECK_TYPES = [
+  { id: 'upper', label: 'Upper Deck', labelBn: 'আপার ডেক' },
+  { id: 'lower', label: 'Lower Deck', labelBn: 'লোয়ার ডেক' },
+] as const;
+
+export const COURIER_COMPANIES = [
+  { id: 'pathao', label: 'Pathao', labelBn: 'পাঠাও' },
+  { id: 'steadfast', label: 'Steadfast', labelBn: 'স্টেডফাস্ট' },
+  { id: 'redex', label: 'Redex', labelBn: 'রেডেক্স' },
+  { id: 'paperfly', label: 'Paperfly', labelBn: 'পেপারফ্লাই' },
+  { id: 'carrybee', label: 'CarryBee', labelBn: 'ক্যারিবি' },
+  { id: 'ecourier', label: 'eCourier', labelBn: 'ই-কুরিয়ার' },
+] as const;
+
+export const DELIVERY_SPEEDS = [
+  { id: 'normal', label: 'Normal', labelBn: 'সাধারণ' },
+  { id: 'express', label: 'Express', labelBn: 'এক্সপ্রেস' },
+] as const;
+
+export const DECK_REQUIRED_CLASSES = ['ac_double_decker', 'ac_sleeper', 'ac_suite_sleeper'];
