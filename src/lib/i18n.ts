@@ -88,6 +88,13 @@ type TranslationKeys = {
   confirmPassword: string;
   phone: string;
   name: string;
+  fullName: string;
+  username: string;
+  gender: string;
+  dateOfBirth: string;
+  male: string;
+  female: string;
+  other: string;
   forgotPassword: string;
   resetPassword: string;
   emailOtp: string;
@@ -95,6 +102,46 @@ type TranslationKeys = {
   googleLogin: string;
   alreadyHaveAccount: string;
   dontHaveAccount: string;
+  createAccount: string;
+  createNow: string;
+  loginWithOtp: string;
+  ageAgreement: string;
+  termsAgreement: string;
+  notificationsAgreement: string;
+  phoneEmailUsername: string;
+  otpVerification: string;
+  sendOtp: string;
+  verifyOtp: string;
+  resendOtp: string;
+  otpSent: string;
+  otpSentToEmail: string;
+  otpSentToPhone: string;
+  invalidOtp: string;
+  otpExpired: string;
+  usernameAvailable: string;
+  usernameTaken: string;
+  passwordRequirements: string;
+  passwordMinLength: string;
+  passwordUppercase: string;
+  passwordLowercase: string;
+  passwordNumber: string;
+  passwordSpecial: string;
+  passwordMismatch: string;
+  registrationSuccess: string;
+  verifyEmailFirst: string;
+  verifyPhoneFirst: string;
+  passwordStrength: string;
+  weak: string;
+  fair: string;
+  good: string;
+  strong: string;
+  personalInfo: string;
+  agreement: string;
+  securityVerification: string;
+  step: string;
+  of: string;
+  continueBtn: string;
+  orLoginWith: string;
 
   // KYC
   kycVerification: string;
@@ -307,6 +354,13 @@ const en: TranslationKeys = {
   confirmPassword: 'Confirm Password',
   phone: 'Phone',
   name: 'Name',
+  fullName: 'Full Name (as per NID/Driving Licence/Passport)',
+  username: 'Username',
+  gender: 'Gender',
+  dateOfBirth: 'Date of Birth',
+  male: 'Male',
+  female: 'Female',
+  other: 'Other',
   forgotPassword: 'Forgot Password?',
   resetPassword: 'Reset Password',
   emailOtp: 'Email OTP',
@@ -314,6 +368,46 @@ const en: TranslationKeys = {
   googleLogin: 'Continue with Google',
   alreadyHaveAccount: 'Already have an account?',
   dontHaveAccount: "Don't have an account?",
+  createAccount: 'Create Account',
+  createNow: 'Create Now',
+  loginWithOtp: 'Login with OTP',
+  ageAgreement: 'I am at least 18 years old.',
+  termsAgreement: 'I agree to the Terms & Conditions and Privacy Policy.',
+  notificationsAgreement: 'I agree to receive account-related notifications.',
+  phoneEmailUsername: 'Phone / Email / Username',
+  otpVerification: 'OTP Verification',
+  sendOtp: 'Send OTP',
+  verifyOtp: 'Verify OTP',
+  resendOtp: 'Resend OTP',
+  otpSent: 'OTP Sent!',
+  otpSentToEmail: 'OTP has been sent to your email',
+  otpSentToPhone: 'OTP has been sent to your phone',
+  invalidOtp: 'Invalid OTP code',
+  otpExpired: 'OTP has expired. Please request a new one.',
+  usernameAvailable: 'Username is available',
+  usernameTaken: 'Username is already taken',
+  passwordRequirements: 'Password Requirements',
+  passwordMinLength: 'At least 8 characters',
+  passwordUppercase: 'At least one uppercase letter (A-Z)',
+  passwordLowercase: 'At least one lowercase letter (a-z)',
+  passwordNumber: 'At least one number (0-9)',
+  passwordSpecial: 'At least one special character (!@#$...)',
+  passwordMismatch: 'Passwords do not match',
+  registrationSuccess: 'Account created successfully!',
+  verifyEmailFirst: 'Please verify your email first',
+  verifyPhoneFirst: 'Please verify your phone first',
+  passwordStrength: 'Password Strength',
+  weak: 'Weak',
+  fair: 'Fair',
+  good: 'Good',
+  strong: 'Strong',
+  personalInfo: 'Personal Information',
+  agreement: 'Agreement',
+  securityVerification: 'Security Verification',
+  step: 'Step',
+  of: 'of',
+  continueBtn: 'Continue',
+  orLoginWith: 'Or login with',
 
   kycVerification: 'KYC Verification',
   kycPending: 'KYC Pending',
@@ -517,6 +611,13 @@ const bn: TranslationKeys = {
   confirmPassword: 'পাসওয়ার্ড নিশ্চিত করুন',
   phone: 'ফোন',
   name: 'নাম',
+  fullName: 'পূর্ণ নাম (এনআইডি/ড্রাইভিং লাইসেন্স/পাসপোর্ট অনুযায়ী)',
+  username: 'ইউজারনেম',
+  gender: 'লিঙ্গ',
+  dateOfBirth: 'জন্ম তারিখ',
+  male: 'পুরুষ',
+  female: 'মহিলা',
+  other: 'অন্যান্য',
   forgotPassword: 'পাসওয়ার্ড ভুলে গেছেন?',
   resetPassword: 'পাসওয়ার্ড রিসেট',
   emailOtp: 'ইমেইল ওটিপি',
@@ -524,6 +625,46 @@ const bn: TranslationKeys = {
   googleLogin: 'গুগল দিয়ে চালিয়ে যান',
   alreadyHaveAccount: 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
   dontHaveAccount: 'অ্যাকাউন্ট নেই?',
+  createAccount: 'অ্যাকাউন্ট তৈরি করুন',
+  createNow: 'এখনই তৈরি করুন',
+  loginWithOtp: 'ওটিপি দিয়ে লগইন',
+  ageAgreement: 'আমি কমপক্ষে ১৮ বছরের।',
+  termsAgreement: 'আমি শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত।',
+  notificationsAgreement: 'আমি অ্যাকাউন্ট সম্পর্কিত বিজ্ঞপ্তি পেতে সম্মত।',
+  phoneEmailUsername: 'ফোন / ইমেইল / ইউজারনেম',
+  otpVerification: 'ওটিপি যাচাই',
+  sendOtp: 'ওটিপি পাঠান',
+  verifyOtp: 'ওটিপি যাচাই করুন',
+  resendOtp: 'ওটিপি পুনঃপ্রেরণ',
+  otpSent: 'ওটিপি পাঠানো হয়েছে!',
+  otpSentToEmail: 'আপনার ইমেইলে ওটিপি পাঠানো হয়েছে',
+  otpSentToPhone: 'আপনার ফোনে ওটিপি পাঠানো হয়েছে',
+  invalidOtp: 'ওটিপি কোড সঠিক নয়',
+  otpExpired: 'ওটিপি মেয়াদোত্তীর্ণ। অনুগ্রহ করে নতুন করে অনুরোধ করুন।',
+  usernameAvailable: 'ইউজারনেম পাওয়া যাচ্ছে',
+  usernameTaken: 'ইউজারনেম ইতিমধ্যে নেওয়া হয়েছে',
+  passwordRequirements: 'পাসওয়ার্ড শর্তাবলী',
+  passwordMinLength: 'কমপক্ষে ৮ অক্ষর',
+  passwordUppercase: 'কমপক্ষে একটি বড় হাতের অক্ষর (A-Z)',
+  passwordLowercase: 'কমপক্ষে একটি ছোট হাতের অক্ষর (a-z)',
+  passwordNumber: 'কমপক্ষে একটি সংখ্যা (0-9)',
+  passwordSpecial: 'কমপক্ষে একটি বিশেষ অক্ষর (!@#$...)',
+  passwordMismatch: 'পাসওয়ার্ড মিলছে না',
+  registrationSuccess: 'অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!',
+  verifyEmailFirst: 'অনুগ্রহ করে প্রথমে আপনার ইমেইল যাচাই করুন',
+  verifyPhoneFirst: 'অনুগ্রহ করে প্রথমে আপনার ফোন যাচাই করুন',
+  passwordStrength: 'পাসওয়ার্ড শক্তি',
+  weak: 'দুর্বল',
+  fair: 'মাঝারি',
+  good: 'ভালো',
+  strong: 'শক্তিশালী',
+  personalInfo: 'ব্যক্তিগত তথ্য',
+  agreement: 'চুক্তি',
+  securityVerification: 'নিরাপত্তা যাচাই',
+  step: 'ধাপ',
+  of: 'এর মধ্যে',
+  continueBtn: 'চালিয়ে যান',
+  orLoginWith: 'অথবা এই দিয়ে লগইন',
 
   kycVerification: 'কেওয়াইসি যাচাই',
   kycPending: 'কেওয়াইসি অপেক্ষমাণ',

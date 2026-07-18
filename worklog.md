@@ -30,3 +30,30 @@ Stage Summary:
 - Database seeded with sample data (admin@eidticket.com / admin123)
 - App verified working through browser and curl
 - Memory constraints in sandbox cause server instability under browser load
+
+---
+Task ID: auth-pages
+Agent: main
+Task: Build comprehensive Register and Login pages for Eid Ticket Resell
+
+Work Log:
+- Updated Prisma schema: Added `username`, `gender`, `dateOfBirth` fields to User model; Added `OtpVerification` model for OTP tracking
+- Force-reset DB and pushed new schema
+- Added 50+ new i18n translation keys for both English and Bangla (fullName, username, gender, dateOfBirth, male/female/other, OTP-related, password strength, agreements, step labels, etc.)
+- Updated auth store User type to include username, gender, dateOfBirth, emailVerified, phoneVerified
+- Rewrote register API with comprehensive validation: email domain whitelist (gmail, outlook, yahoo, etc.), BD phone format (+88+11digits), username format (3-20 chars, lowercase), password strength regex (8+ chars, upper, lower, digit, special), age verification (18+), agreement checks, duplicate detection
+- Rewrote login API to accept identifier (email/phone/username) with both password and OTP login modes
+- Created OTP send API (/api/auth/otp/send) with rate limiting (3 per 10min), 5min expiry, type support (email_verification, phone_verification, login, forgot_password)
+- Created OTP verify API (/api/auth/otp/verify) with expiry check and auto user status update
+- Created username availability check API (/api/auth/check-username) with regex validation
+- Built comprehensive RegisterPage with 3-step wizard (Personal Info → Agreement → OTP Verification)
+- Built comprehensive LoginPage with Password/OTP toggle, Google login placeholder, dynamic identifier icon
+- Updated page.tsx routing to use separate LazyRegisterPage component
+- Updated /api/auth/me, /api/admin/users, /api/seed routes to include new username field
+- Browser verified: all features working - form validation, password strength meter, username availability, OTP send/verify, step navigation, Bangla/English translations
+
+Stage Summary:
+- Register page: 3-step wizard with all specified fields, password strength indicator, username availability check, agreements, email+phone OTP verification
+- Login page: Phone/Email/Username login with Password or OTP mode, Google SSO placeholder
+- Full i18n support for both pages (English + বাংলা)
+- All APIs properly validate and secure user inputs

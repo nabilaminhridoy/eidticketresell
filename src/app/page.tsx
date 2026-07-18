@@ -25,6 +25,7 @@ function PageLoader() {
 
 // Pre-created lazy page components (declared outside render to avoid re-creation)
 const LazyLoginPage = lazy(() => import('@/components/pages/LoginPage'));
+const LazyRegisterPage = lazy(() => import('@/components/pages/RegisterPage'));
 const LazySearchPage = lazy(() => import('@/components/pages/SearchPage'));
 const LazyTicketDetailsPage = lazy(() => import('@/components/pages/TicketDetailsPage'));
 const LazySellTicketPage = lazy(() => import('@/components/pages/SellTicketPage'));
@@ -34,7 +35,7 @@ const LazyInfoPage = lazy(() => import('@/components/pages/InfoPage'));
 
 const pageComponents: Record<string, ComponentType> = {
   login: LazyLoginPage,
-  register: LazyLoginPage,
+  register: LazyRegisterPage,
   search: LazySearchPage,
   bus: LazySearchPage,
   train: LazySearchPage,

@@ -74,10 +74,15 @@ interface User {
   id: string;
   email: string;
   name: string;
+  username: string;
   phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
   role: string;
   isKycVerified: boolean;
   avatar?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
 }
 
 interface AuthState {

@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
         { name: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search, mode: 'insensitive' } },
+        { username: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -68,6 +69,9 @@ export async function GET(req: NextRequest) {
           name: true,
           email: true,
           phone: true,
+          username: true,
+          gender: true,
+          dateOfBirth: true,
           role: true,
           isKycVerified: true,
           isActive: true,

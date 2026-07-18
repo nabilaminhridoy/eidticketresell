@@ -11,9 +11,12 @@ model User {
   id            String   @id @default(cuid())
   email         String   @unique
   phone         String?  @unique
+  username      String   @unique
   name          String
   password      String
   avatar        String?
+  gender        String?  // male, female, other
+  dateOfBirth   String?
   role          String   @default("user") // guest, user, verified_seller, admin, super_admin
   emailVerified Boolean  @default(false)
   phoneVerified Boolean  @default(false)
@@ -336,4 +339,15 @@ model Counter {
   id    String @id @default(cuid())
   name  String @unique
   value Int    @default(0)
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String?
+  phone     String?
+  otp       String
+  type      String   // email_verification, phone_verification, login, forgot_password
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
