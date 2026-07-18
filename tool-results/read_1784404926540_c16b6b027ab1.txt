@@ -1,0 +1,1097 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef } from 'react';
+     4→import { motion, useInView } from 'framer-motion';
+     5→import {
+     6→  Bus,
+     7→  TrainFront,
+     8→  Plane,
+     9→  Ship,
+    10→  Search,
+    11→  ShieldCheck,
+    12→  UserCheck,
+    13→  RefreshCcw,
+    14→  Headphones,
+    15→  ArrowRight,
+    16→  ArrowLeftRight,
+    17→  Star,
+    18→  ChevronRight,
+    19→  Ticket,
+    20→  MapPin,
+    21→  Calendar,
+    22→  BadgeCheck,
+    23→  Zap,
+    24→  TrendingUp,
+    25→  Clock,
+    26→} from 'lucide-react';
+    27→import { t } from '@/lib/i18n';
+    28→import { useLanguageStore, useAppStore } from '@/lib/store';
+    29→import { TRANSPORT_TYPES, POPULAR_ROUTES, BD_CITIES } from '@/lib/constants';
+    30→import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+    31→import { Button } from '@/components/ui/button';
+    32→import { Badge } from '@/components/ui/badge';
+    33→import {
+    34→  Select,
+    35→  SelectContent,
+    36→  SelectItem,
+    37→  SelectTrigger,
+    38→  SelectValue,
+    39→} from '@/components/ui/select';
+    40→import { Input } from '@/components/ui/input';
+    41→
+    42→// ─── Mock Data ──────────────────────────────────────────────
+    43→const MOCK_TICKETS = [
+    44→  {
+    45→    id: '1',
+    46→    ticketId: 'ETR-00000001',
+    47→    transportType: 'bus',
+    48→    transportCompany: 'Green Line',
+    49→    routeFrom: 'Dhaka',
+    50→    routeTo: 'Chittagong',
+    51→    departureDate: '2025-03-28',
+    52→    departureTime: '22:00',
+    53→    seatNumber: 'A1',
+    54→    ticketType: 'online_copy',
+    55→    price: 850,
+    56→    platformFee: 17,
+    57→    totalAmount: 867,
+    58→    status: 'active',
+    59→    isFeatured: true,
+    60→    seller: { name: 'Rahim Uddin', isVerified: true },
+    61→  },
+    62→  {
+    63→    id: '2',
+    64→    ticketId: 'ETR-00000002',
+    65→    transportType: 'train',
+    66→    transportCompany: 'Subarna Express',
+    67→    routeFrom: 'Dhaka',
+    68→    routeTo: 'Chittagong',
+    69→    departureDate: '2025-03-29',
+    70→    departureTime: '07:00',
+    71→    seatNumber: 'S-4',
+    72→    ticketType: 'counter_copy',
+    73→    price: 520,
+    74→    platformFee: 20,
+    75→    totalAmount: 540,
+    76→    status: 'active',
+    77→    isFeatured: true,
+    78→    seller: { name: 'Karim Hossain', isVerified: true },
+    79→  },
+    80→  {
+    81→    id: '3',
+    82→    ticketId: 'ETR-00000003',
+    83→    transportType: 'flight',
+    84→    transportCompany: 'Biman Bangladesh',
+    85→    routeFrom: 'Dhaka',
+    86→    routeTo: "Cox's Bazar",
+    87→    departureDate: '2025-03-30',
+    88→    departureTime: '10:30',
+    89→    seatNumber: '12A',
+    90→    ticketType: 'online_copy',
+    91→    price: 4500,
+    92→    platformFee: 90,
+    93→    totalAmount: 4590,
+    94→    status: 'active',
+    95→    isFeatured: true,
+    96→    seller: { name: 'Fatima Akter', isVerified: true },
+    97→  },
+    98→  {
+    99→    id: '4',
+   100→    ticketId: 'ETR-00000004',
+   101→    transportType: 'launch',
+   102→    transportCompany: 'MV Sundarban',
+   103→    routeFrom: 'Dhaka',
+   104→    routeTo: 'Barishal',
+   105→    departureDate: '2025-03-28',
+   106→    departureTime: '18:00',
+   107→    seatNumber: 'Cabin-3',
+   108→    ticketType: 'counter_copy',
+   109→    price: 1200,
+   110→    platformFee: 24,
+   111→    totalAmount: 1224,
+   112→    status: 'active',
+   113→    isFeatured: false,
+   114→    seller: { name: 'Nasir Ahmed', isVerified: false },
+   115→  },
+   116→  {
+   117→    id: '5',
+   118→    ticketId: 'ETR-00000005',
+   119→    transportType: 'bus',
+   120→    transportCompany: 'Shyamoli NR',
+   121→    routeFrom: 'Dhaka',
+   122→    routeTo: 'Sylhet',
+   123→    departureDate: '2025-03-29',
+   124→    departureTime: '23:30',
+   125→    seatNumber: 'B3',
+   126→    ticketType: 'online_copy',
+   127→    price: 950,
+   128→    platformFee: 19,
+   129→    totalAmount: 969,
+   130→    status: 'active',
+   131→    isFeatured: false,
+   132→    seller: { name: 'Sabrina Islam', isVerified: true },
+   133→  },
+   134→  {
+   135→    id: '6',
+   136→    ticketId: 'ETR-00000006',
+   137→    transportType: 'train',
+   138→    transportCompany: 'Parabat Express',
+   139→    routeFrom: 'Dhaka',
+   140→    routeTo: 'Sylhet',
+   141→    departureDate: '2025-03-30',
+   142→    departureTime: '09:00',
+   143→    seatNumber: 'K-12',
+   144→    ticketType: 'online_copy',
+   145→    price: 480,
+   146→    platformFee: 20,
+   147→    totalAmount: 500,
+   148→    status: 'active',
+   149→    isFeatured: true,
+   150→    seller: { name: 'Imran Khan', isVerified: true },
+   151→  },
+   152→];
+   153→
+   154→// ─── Transport Icon Mapping ──────────────────────────────────
+   155→const TRANSPORT_ICONS: Record<string, React.ReactNode> = {
+   156→  bus: <Bus className="size-5" />,
+   157→  train: <TrainFront className="size-5" />,
+   158→  flight: <Plane className="size-5" />,
+   159→  launch: <Ship className="size-5" />,
+   160→};
+   161→
+   162→const TRANSPORT_COLORS: Record<string, string> = {
+   163→  bus: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+   164→  train: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+   165→  flight: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+   166→  launch: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+   167→};
+   168→
+   169→const TRANSPORT_BG_COLORS: Record<string, string> = {
+   170→  bus: 'from-emerald-500 to-emerald-600',
+   171→  train: 'from-amber-500 to-amber-600',
+   172→  flight: 'from-sky-500 to-sky-600',
+   173→  launch: 'from-teal-500 to-teal-600',
+   174→};
+   175→
+   176→// ─── Animation Variants ─────────────────────────────────────
+   177→const fadeInUp = {
+   178→  hidden: { opacity: 0, y: 30 },
+   179→  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+   180→};
+   181→
+   182→const fadeIn = {
+   183→  hidden: { opacity: 0 },
+   184→  visible: { opacity: 1, transition: { duration: 0.5 } },
+   185→};
+   186→
+   187→const staggerContainer = {
+   188→  hidden: { opacity: 0 },
+   189→  visible: {
+   190→    opacity: 1,
+   191→    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+   192→  },
+   193→};
+   194→
+   195→const staggerItem = {
+   196→  hidden: { opacity: 0, y: 20 },
+   197→  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+   198→};
+   199→
+   200→const scaleIn = {
+   201→  hidden: { opacity: 0, scale: 0.9 },
+   202→  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
+   203→};
+   204→
+   205→// ─── Animated Counter Hook ──────────────────────────────────
+   206→function useAnimatedCounter(target: number, inView: boolean, duration: number = 2000) {
+   207→  const [count, setCount] = useState(0);
+   208→
+   209→  useEffect(() => {
+   210→    if (!inView) return;
+   211→    let start = 0;
+   212→    const startTime = Date.now();
+   213→
+   214→    const step = () => {
+   215→      const elapsed = Date.now() - startTime;
+   216→      const progress = Math.min(elapsed / duration, 1);
+   217→      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+   218→      const current = Math.floor(eased * target);
+   219→      setCount(current);
+   220→      if (progress < 1) {
+   221→        requestAnimationFrame(step);
+   222→      } else {
+   223→        setCount(target);
+   224→      }
+   225→    };
+   226→    requestAnimationFrame(step);
+   227→  }, [inView, target, duration]);
+   228→
+   229→  return count;
+   230→}
+   231→
+   232→// ─── Section Wrapper ─────────────────────────────────────────
+   233→function Section({
+   234→  children,
+   235→  className = '',
+   236→  id,
+   237→}: {
+   238→  children: React.ReactNode;
+   239→  className?: string;
+   240→  id?: string;
+   241→}) {
+   242→  return (
+   243→    <section id={id} className={`py-16 md:py-24 ${className}`}>
+   244→      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
+   245→    </section>
+   246→  );
+   247→}
+   248→
+   249→// ─── Section Header ─────────────────────────────────────────
+   250→function SectionHeader({
+   251→  title,
+   252→  subtitle,
+   253→  lang,
+   254→}: {
+   255→  title: string;
+   256→  subtitle?: string;
+   257→  lang: 'en' | 'bn';
+   258→}) {
+   259→  return (
+   260→    <motion.div
+   261→      className="mb-12 text-center"
+   262→      initial="hidden"
+   263→      whileInView="visible"
+   264→      viewport={{ once: true, margin: '-50px' }}
+   265→      variants={fadeInUp}
+   266→    >
+   267→      <h2
+   268→        className={`text-3xl font-bold tracking-tight md:text-4xl ${lang === 'bn' ? 'font-bangla' : ''}`}
+   269→      >
+   270→        {title}
+   271→      </h2>
+   272→      {subtitle && (
+   273→        <p className={`mt-3 text-lg text-muted-foreground ${lang === 'bn' ? 'font-bangla' : ''}`}>
+   274→          {subtitle}
+   275→        </p>
+   276→      )}
+   277→    </motion.div>
+   278→  );
+   279→}
+   280→
+   281→// ═════════════════════════════════════════════════════════════
+   282→// MAIN HOME PAGE COMPONENT
+   283→// ═════════════════════════════════════════════════════════════
+   284→export default function HomePage() {
+   285→  const { language: lang } = useLanguageStore();
+   286→  const { navigate } = useAppStore();
+   287→  const [searchFrom, setSearchFrom] = useState('');
+   288→  const [searchTo, setSearchTo] = useState('');
+   289→  const [searchDate, setSearchDate] = useState('');
+   290→  const [searchTransport, setSearchTransport] = useState('');
+   291→
+   292→  // ─── 1. HERO SECTION ─────────────────────────────────────
+   293→  const HeroSection = () => (
+   294→    <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900">
+   295→      {/* Animated Background Pattern */}
+   296→      <div className="absolute inset-0 opacity-10">
+   297→        <div className="absolute inset-0" style={{
+   298→          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+   299→          backgroundSize: '40px 40px',
+   300→        }} />
+   301→      </div>
+   302→
+   303→      {/* Floating Transport Icons */}
+   304→      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+   305→        <motion.div
+   306→          className="absolute top-[10%] left-[5%] text-white/10"
+   307→          animate={{ y: [-10, 10, -10], rotate: [0, 5, 0] }}
+   308→          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+   309→        >
+   310→          <Bus className="size-16 md:size-24" />
+   311→        </motion.div>
+   312→        <motion.div
+   313→          className="absolute top-[60%] right-[8%] text-white/10"
+   314→          animate={{ y: [10, -10, 10], rotate: [0, -5, 0] }}
+   315→          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+   316→        >
+   317→          <TrainFront className="size-14 md:size-20" />
+   318→        </motion.div>
+   319→        <motion.div
+   320→          className="absolute top-[20%] right-[15%] text-white/10"
+   321→          animate={{ y: [-8, 12, -8], x: [0, 5, 0] }}
+   322→          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+   323→        >
+   324→          <Plane className="size-18 md:size-28" />
+   325→        </motion.div>
+   326→        <motion.div
+   327→          className="absolute bottom-[15%] left-[12%] text-white/10"
+   328→          animate={{ y: [5, -15, 5], rotate: [0, 3, 0] }}
+   329→          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+   330→        >
+   331→          <Ship className="size-16 md:size-22" />
+   332→        </motion.div>
+   333→      </div>
+   334→
+   335→      {/* Hero Content */}
+   336→      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6 md:pb-24 md:pt-28 lg:px-8">
+   337→        <motion.div
+   338→          className="text-center"
+   339→          initial="hidden"
+   340→          animate="visible"
+   341→          variants={staggerContainer}
+   342→        >
+   343→          <motion.div variants={fadeInUp} className="mb-4">
+   344→            <Badge className="border-emerald-300/30 bg-emerald-500/30 px-4 py-1.5 text-sm text-white backdrop-blur-sm hover:bg-emerald-500/40">
+   345→              <Zap className="mr-1.5 size-3.5" />
+   346→              {lang === 'en' ? 'Bangladesh\'s #1 Ticket Marketplace' : 'বাংলাদেশের #১ টিকেট মার্কেটপ্লেস'}
+   347→            </Badge>
+   348→          </motion.div>
+   349→
+   350→          <motion.h1
+   351→            variants={fadeInUp}
+   352→            className={`text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl ${lang === 'bn' ? 'font-bangla' : ''}`}
+   353→          >
+   354→            {t('heroTitle', lang)}
+   355→          </motion.h1>
+   356→
+   357→          <motion.p
+   358→            variants={fadeInUp}
+   359→            className={`mx-auto mt-6 max-w-2xl text-lg text-emerald-100/90 sm:text-xl ${lang === 'bn' ? 'font-bangla' : ''}`}
+   360→          >
+   361→            {t('heroSubtitle', lang)}
+   362→          </motion.p>
+   363→
+   364→          {/* CTA Buttons */}
+   365→          <motion.div variants={fadeInUp} className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+   366→            <Button
+   367→              size="lg"
+   368→              className="h-12 bg-white text-emerald-700 shadow-lg shadow-emerald-900/20 hover:bg-emerald-50 px-8 text-base font-semibold"
+   369→              onClick={() => navigate('search')}
+   370→            >
+   371→              <Search className="mr-2 size-5" />
+   372→              {t('buyTickets', lang)}
+   373→            </Button>
+   374→            <Button
+   375→              size="lg"
+   376→              variant="outline"
+   377→              className="h-12 border-2 border-white/30 bg-white/10 px-8 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+   378→              onClick={() => navigate('sell-ticket')}
+   379→            >
+   380→              <Ticket className="mr-2 size-5" />
+   381→              {t('sellTickets', lang)}
+   382→            </Button>
+   383→          </motion.div>
+   384→        </motion.div>
+   385→
+   386→        {/* Search Box */}
+   387→        <motion.div
+   388→          className="mx-auto mt-12 max-w-4xl md:mt-16"
+   389→          initial={{ opacity: 0, y: 40 }}
+   390→          animate={{ opacity: 1, y: 0 }}
+   391→          transition={{ duration: 0.7, delay: 0.5, ease: 'easeOut' }}
+   392→        >
+   393→          <Card className="border-0 shadow-2xl shadow-emerald-950/20">
+   394→            <CardContent className="p-4 md:p-6">
+   395→              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_1fr_1fr_auto] lg:items-end">
+   396→                {/* From */}
+   397→                <div className="space-y-1.5">
+   398→                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+   399→                    {t('from', lang)}
+   400→                  </label>
+   401→                  <Select value={searchFrom} onValueChange={setSearchFrom}>
+   402→                    <SelectTrigger className="w-full">
+   403→                      <MapPin className="mr-1.5 size-4 text-emerald-500" />
+   404→                      <SelectValue placeholder={lang === 'en' ? 'Select City' : 'শহর নির্বাচন'} />
+   405→                    </SelectTrigger>
+   406→                    <SelectContent className="max-h-60">
+   407→                      {BD_CITIES.map((city) => (
+   408→                        <SelectItem key={city} value={city}>
+   409→                          {city}
+   410→                        </SelectItem>
+   411→                      ))}
+   412→                    </SelectContent>
+   413→                  </Select>
+   414→                </div>
+   415→
+   416→                {/* Swap button (visible on lg) */}
+   417→                <div className="hidden lg:flex items-end pb-0.5">
+   418→                  <Button
+   419→                    variant="ghost"
+   420→                    size="icon"
+   421→                    className="size-9 rounded-full text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/20"
+   422→                    onClick={() => {
+   423→                      const temp = searchFrom;
+   424→                      setSearchFrom(searchTo);
+   425→                      setSearchTo(temp);
+   426→                    }}
+   427→                  >
+   428→                    <ArrowLeftRight className="size-4" />
+   429→                  </Button>
+   430→                </div>
+   431→
+   432→                {/* To */}
+   433→                <div className="space-y-1.5">
+   434→                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+   435→                    {t('to', lang)}
+   436→                  </label>
+   437→                  <Select value={searchTo} onValueChange={setSearchTo}>
+   438→                    <SelectTrigger className="w-full">
+   439→                      <MapPin className="mr-1.5 size-4 text-red-500" />
+   440→                      <SelectValue placeholder={lang === 'en' ? 'Select City' : 'শহর নির্বাচন'} />
+   441→                    </SelectTrigger>
+   442→                    <SelectContent className="max-h-60">
+   443→                      {BD_CITIES.map((city) => (
+   444→                        <SelectItem key={city} value={city}>
+   445→                          {city}
+   446→                        </SelectItem>
+   447→                      ))}
+   448→                    </SelectContent>
+   449→                  </Select>
+   450→                </div>
+   451→
+   452→                {/* Date */}
+   453→                <div className="space-y-1.5">
+   454→                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+   455→                    {t('date', lang)}
+   456→                  </label>
+   457→                  <Input
+   458→                    type="date"
+   459→                    className="h-9"
+   460→                    value={searchDate}
+   461→                    onChange={(e) => setSearchDate(e.target.value)}
+   462→                  />
+   463→                </div>
+   464→
+   465→                {/* Transport Type */}
+   466→                <div className="space-y-1.5">
+   467→                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+   468→                    {t('transport', lang)}
+   469→                  </label>
+   470→                  <Select value={searchTransport} onValueChange={setSearchTransport}>
+   471→                    <SelectTrigger className="w-full">
+   472→                      <SelectValue placeholder={t('allTransport', lang)} />
+   473→                    </SelectTrigger>
+   474→                    <SelectContent>
+   475→                      <SelectItem value="all">{t('allTransport', lang)}</SelectItem>
+   476→                      {TRANSPORT_TYPES.map((type) => (
+   477→                        <SelectItem key={type.id} value={type.id}>
+   478→                          {lang === 'bn' ? type.labelBn : type.label}
+   479→                        </SelectItem>
+   480→                      ))}
+   481→                    </SelectContent>
+   482→                  </Select>
+   483→                </div>
+   484→
+   485→                {/* Search Button */}
+   486→                <div className="sm:col-span-2 lg:col-span-1">
+   487→                  <Button
+   488→                    className="h-9 w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md lg:h-9"
+   489→                    size="default"
+   490→                    onClick={() => navigate('search', { from: searchFrom, to: searchTo, date: searchDate, transport: searchTransport })}
+   491→                  >
+   492→                    <Search className="mr-1.5 size-4" />
+   493→                    {t('search', lang)}
+   494→                  </Button>
+   495→                </div>
+   496→              </div>
+   497→            </CardContent>
+   498→          </Card>
+   499→        </motion.div>
+   500→      </div>
+   501→
+   502→      {/* Bottom Wave */}
+   503→      <div className="absolute bottom-0 left-0 right-0">
+   504→        <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+   505→          <path d="M0 80V30C240 60 480 0 720 30C960 60 1200 0 1440 30V80H0Z" className="fill-background" />
+   506→        </svg>
+   507→      </div>
+   508→    </div>
+   509→  );
+   510→
+   511→  // ─── 2. TRANSPORT CATEGORIES SECTION ──────────────────────
+   512→  const TransportCategoriesSection = () => {
+   513→    const categories = [
+   514→      {
+   515→        id: 'bus',
+   516→        icon: <Bus className="size-8" />,
+   517→        name: t('bus', lang),
+   518→        count: '120+',
+   519→        description: lang === 'en' ? 'AC & Non-AC buses across all routes' : 'সকল রুটে এসি ও নন-এসি বাস',
+   520→        gradient: 'from-emerald-500 to-emerald-600',
+   521→        bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+   522→        textColor: 'text-emerald-600 dark:text-emerald-400',
+   523→      },
+   524→      {
+   525→        id: 'train',
+   526→        icon: <TrainFront className="size-8" />,
+   527→        name: t('train', lang),
+   528→        count: '85+',
+   529→        description: lang === 'en' ? 'Intercity & express trains' : 'আন্তঃনগর ও এক্সপ্রেস ট্রেন',
+   530→        gradient: 'from-amber-500 to-amber-600',
+   531→        bgColor: 'bg-amber-50 dark:bg-amber-950/30',
+   532→        textColor: 'text-amber-600 dark:text-amber-400',
+   533→      },
+   534→      {
+   535→        id: 'flight',
+   536→        icon: <Plane className="size-8" />,
+   537→        name: t('flight', lang),
+   538→        count: '45+',
+   539→        description: lang === 'en' ? 'Domestic flights at best prices' : 'সেরা দামে দেশীয় ফ্লাইট',
+   540→        gradient: 'from-sky-500 to-sky-600',
+   541→        bgColor: 'bg-sky-50 dark:bg-sky-950/30',
+   542→        textColor: 'text-sky-600 dark:text-sky-400',
+   543→      },
+   544→      {
+   545→        id: 'launch',
+   546→        icon: <Ship className="size-8" />,
+   547→        name: t('launch', lang),
+   548→        count: '30+',
+   549→        description: lang === 'en' ? 'Comfortable river journey tickets' : 'আরামদায়ক নদী যাত্রার টিকেট',
+   550→        gradient: 'from-teal-500 to-teal-600',
+   551→        bgColor: 'bg-teal-50 dark:bg-teal-950/30',
+   552→        textColor: 'text-teal-600 dark:text-teal-400',
+   553→      },
+   554→    ];
+   555→
+   556→    return (
+   557→      <Section>
+   558→        <SectionHeader
+   559→          title={lang === 'en' ? 'Browse by Transport' : 'যানবাহন অনুযায়ী ব্রাউজ করুন'}
+   560→          subtitle={lang === 'en' ? 'Choose your preferred transport type' : 'আপনার পছন্দের যানবাহন বেছে নিন'}
+   561→          lang={lang}
+   562→        />
+   563→        <motion.div
+   564→          className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6"
+   565→          variants={staggerContainer}
+   566→          initial="hidden"
+   567→          whileInView="visible"
+   568→          viewport={{ once: true, margin: '-50px' }}
+   569→        >
+   570→          {categories.map((cat) => (
+   571→            <motion.div key={cat.id} variants={staggerItem}>
+   572→              <Card
+   573→                className="group cursor-pointer border-0 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl overflow-hidden"
+   574→                onClick={() => navigate(cat.id as 'bus' | 'train' | 'flight' | 'launch')}
+   575→              >
+   576→                <div className={`h-2 bg-gradient-to-r ${cat.gradient}`} />
+   577→                <CardContent className="flex flex-col items-center p-6 text-center">
+   578→                  <div
+   579→                    className={`mb-4 flex size-16 items-center justify-center rounded-2xl ${cat.bgColor} ${cat.textColor} transition-transform duration-300 group-hover:scale-110`}
+   580→                  >
+   581→                    {cat.icon}
+   582→                  </div>
+   583→                  <h3 className={`text-lg font-bold ${lang === 'bn' ? 'font-bangla' : ''}`}>{cat.name}</h3>
+   584→                  <p className={`mt-1 text-2xl font-extrabold ${cat.textColor}`}>{cat.count}</p>
+   585→                  <p className={`mt-2 text-sm text-muted-foreground ${lang === 'bn' ? 'font-bangla' : ''}`}>
+   586→                    {cat.description}
+   587→                  </p>
+   588→                </CardContent>
+   589→              </Card>
+   590→            </motion.div>
+   591→          ))}
+   592→        </motion.div>
+   593→      </Section>
+   594→    );
+   595→  };
+   596→
+   597→  // ─── 3. HOW IT WORKS SECTION ──────────────────────────────
+   598→  const HowItWorksSection = () => {
+   599→    const steps = [
+   600→      {
+   601→        icon: <Search className="size-7" />,
+   602→        title: t('step1Title', lang),
+   603→        desc: t('step1Desc', lang),
+   604→        color: 'from-emerald-400 to-emerald-600',
+   605→        bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+   606→      },
+   607→      {
+   608→        icon: <ShieldCheck className="size-7" />,
+   609→        title: t('step2Title', lang),
+   610→        desc: t('step2Desc', lang),
+   611→        color: 'from-amber-400 to-amber-600',
+   612→        bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+   613→      },
+   614→      {
+   615→        icon: <Ticket className="size-7" />,
+   616→        title: t('step3Title', lang),
+   617→        desc: t('step3Desc', lang),
+   618→        color: 'from-sky-400 to-sky-600',
+   619→        bgColor: 'bg-sky-100 dark:bg-sky-900/30',
+   620→      },
+   621→      {
+   622→        icon: <TrendingUp className="size-7" />,
+   623→        title: t('step4Title', lang),
+   624→        desc: t('step4Desc', lang),
+   625→        color: 'from-teal-400 to-teal-600',
+   626→        bgColor: 'bg-teal-100 dark:bg-teal-900/30',
+   627→      },
+   628→    ];
+   629→
+   630→    return (
+   631→      <Section className="bg-muted/30">
+   632→        <SectionHeader
+   633→          title={t('howItWorksTitle', lang)}
+   634→          subtitle={lang === 'en' ? 'Simple steps to buy or sell tickets' : 'টিকেট কেনা বা বিক্রির সহজ পদক্ষেপ'}
+   635→          lang={lang}
+   636→        />
+   637→        <motion.div
+   638→          className="relative grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
+   639→          variants={staggerContainer}
+   640→          initial="hidden"
+   641→          whileInView="visible"
+   642→          viewport={{ once: true, margin: '-50px' }}
+   643→        >
+   644→          {steps.map((step, index) => (
+   645→            <motion.div key={index} variants={staggerItem} className="relative">
+   646→              <div className="flex flex-col items-center text-center">
+   647→                {/* Step Number Circle */}
+   648→                <div className={`relative mb-4 flex size-20 items-center justify-center rounded-full ${step.bgColor}`}>
+   649→                  <div className={`flex size-14 items-center justify-center rounded-full bg-gradient-to-br ${step.color} text-white shadow-lg`}>
+   650→                    {step.icon}
+   651→                  </div>
+   652→                  <span className="absolute -top-1 -right-1 flex size-7 items-center justify-center rounded-full bg-background text-sm font-bold text-foreground shadow-md ring-2 ring-primary/20">
+   653→                    {index + 1}
+   654→                  </span>
+   655→                </div>
+   656→                <h3 className={`text-lg font-bold ${lang === 'bn' ? 'font-bangla' : ''}`}>{step.title}</h3>
+   657→                <p className={`mt-2 text-sm text-muted-foreground ${lang === 'bn' ? 'font-bangla' : ''}`}>
+   658→                  {step.desc}
+   659→                </p>
+   660→              </div>
+   661→              {/* Connecting Line (desktop only) */}
+   662→              {index < steps.length - 1 && (
+   663→                <div className="absolute top-10 right-0 hidden lg:block translate-x-1/2">
+   664→                  <div className="flex items-center">
+   665→                    <div className="h-0.5 w-8 bg-gradient-to-r from-muted-foreground/30 to-muted-foreground/10" />
+   666→                    <ChevronRight className="size-4 text-muted-foreground/30" />
+   667→                  </div>
+   668→                </div>
+   669→              )}
+   670→            </motion.div>
+   671→          ))}
+   672→        </motion.div>
+   673→      </Section>
+   674→    );
+   675→  };
+   676→
+   677→  // ─── 4. FEATURED TICKETS SECTION ──────────────────────────
+   678→  const FeaturedTicketsSection = () => (
+   679→    <Section>
+   680→      <div className="flex items-end justify-between mb-10">
+   681→        <div>
+   682→          <motion.h2
+   683→            className={`text-3xl font-bold tracking-tight md:text-4xl ${lang === 'bn' ? 'font-bangla' : ''}`}
+   684→            initial="hidden"
+   685→            whileInView="visible"
+   686→            viewport={{ once: true }}
+   687→            variants={fadeInUp}
+   688→          >
+   689→            {t('featuredTickets', lang)}
+   690→          </motion.h2>
+   691→          <motion.p
+   692→            className={`mt-2 text-muted-foreground ${lang === 'bn' ? 'font-bangla' : ''}`}
+   693→            initial="hidden"
+   694→            whileInView="visible"
+   695→            viewport={{ once: true }}
+   696→            variants={fadeInUp}
+   697→          >
+   698→            {lang === 'en' ? 'Hand-picked tickets from verified sellers' : 'যাচাইকৃত বিক্রেতাদের থেকে নির্বাচিত টিকেট'}
+   699→          </motion.p>
+   700→        </div>
+   701→        <Button
+   702→          variant="ghost"
+   703→          className="hidden items-center text-emerald-600 hover:text-emerald-700 sm:flex"
+   704→          onClick={() => navigate('search')}
+   705→        >
+   706→          {t('viewAll', lang)}
+   707→          <ChevronRight className="ml-1 size-4" />
+   708→        </Button>
+   709→      </div>
+   710→
+   711→      <motion.div
+   712→        className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+   713→        variants={staggerContainer}
+   714→        initial="hidden"
+   715→        whileInView="visible"
+   716→        viewport={{ once: true, margin: '-50px' }}
+   717→      >
+   718→        {MOCK_TICKETS.map((ticket) => (
+   719→          <motion.div key={ticket.id} variants={staggerItem}>
+   720→            <Card className="group cursor-pointer overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+   721→              {/* Transport type header bar */}
+   722→              <div className={`h-1.5 bg-gradient-to-r ${TRANSPORT_BG_COLORS[ticket.transportType] || 'from-emerald-500 to-emerald-600'}`} />
+   723→
+   724→              <CardHeader className="pb-0">
+   725→                <div className="flex items-center justify-between">
+   726→                  <Badge className={`${TRANSPORT_COLORS[ticket.transportType]} border-0 text-xs font-semibold`}>
+   727→                    {TRANSPORT_ICONS[ticket.transportType]}
+   728→                    <span className="ml-1">{t(ticket.transportType as 'bus' | 'train' | 'flight' | 'launch', lang)}</span>
+   729→                  </Badge>
+   730→                  {ticket.isFeatured && (
+   731→                    <Badge variant="secondary" className="text-xs">
+   732→                      <Star className="mr-1 size-3 text-amber-500" />
+   733→                      {t('featured', lang)}
+   734→                    </Badge>
+   735→                  )}
+   736→                </div>
+   737→              </CardHeader>
+   738→
+   739→              <CardContent className="pb-0 pt-2">
+   740→                {/* Route */}
+   741→                <div className="flex items-center gap-2 mb-3">
+   742→                  <div className="flex-1 text-center">
+   743→                    <p className="text-lg font-bold">{ticket.routeFrom}</p>
+   744→                  </div>
+   745→                  <div className="flex items-center text-muted-foreground">
+   746→                    <div className="h-px w-6 bg-border" />
+   747→                    <ArrowRight className="size-4 mx-1" />
+   748→                    <div className="h-px w-6 bg-border" />
+   749→                  </div>
+   750→                  <div className="flex-1 text-center">
+   751→                    <p className="text-lg font-bold">{ticket.routeTo}</p>
+   752→                  </div>
+   753→                </div>
+   754→
+   755→                {/* Details */}
+   756→                <div className="space-y-2 text-sm text-muted-foreground">
+   757→                  <div className="flex items-center gap-2">
+   758→                    <Bus className="size-3.5 text-muted-foreground/60" />
+   759→                    <span>{ticket.transportCompany}</span>
+   760→                  </div>
+   761→                  <div className="flex items-center justify-between">
+   762→                    <div className="flex items-center gap-2">
+   763→                      <Calendar className="size-3.5 text-muted-foreground/60" />
+   764→                      <span>{ticket.departureDate}</span>
+   765→                    </div>
+   766→                    <div className="flex items-center gap-2">
+   767→                      <Clock className="size-3.5 text-muted-foreground/60" />
+   768→                      <span>{ticket.departureTime}</span>
+   769→                    </div>
+   770→                  </div>
+   771→                </div>
+   772→              </CardContent>
+   773→
+   774→              <CardFooter className="flex items-center justify-between pt-2">
+   775→                <div>
+   776→                  <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
+   777→                    ৳{ticket.price}
+   778→                  </p>
+   779→                  <p className="text-xs text-muted-foreground">
+   780→                    {t('seatNumber', lang)}: {ticket.seatNumber}
+   781→                  </p>
+   782→                </div>
+   783→                <div className="flex items-center gap-2">
+   784→                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+   785→                    <span>{ticket.seller.name}</span>
+   786→                    {ticket.seller.isVerified && (
+   787→                      <BadgeCheck className="size-4 text-emerald-500" />
+   788→                    )}
+   789→                  </div>
+   790→                  <Button
+   791→                    size="sm"
+   792→                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+   793→                    onClick={(e) => {
+   794→                      e.stopPropagation();
+   795→                      navigate('ticket-details', { id: ticket.id });
+   796→                    }}
+   797→                  >
+   798→                    {t('viewDetails', lang)}
+   799→                  </Button>
+   800→                </div>
+   801→              </CardFooter>
+   802→            </Card>
+   803→          </motion.div>
+   804→        ))}
+   805→      </motion.div>
+   806→
+   807→      {/* Mobile View All */}
+   808→      <div className="mt-8 text-center sm:hidden">
+   809→        <Button
+   810→          variant="outline"
+   811→          className="text-emerald-600 hover:text-emerald-700"
+   812→          onClick={() => navigate('search')}
+   813→        >
+   814→          {t('viewAll', lang)}
+   815→          <ChevronRight className="ml-1 size-4" />
+   816→        </Button>
+   817→      </div>
+   818→    </Section>
+   819→  );
+   820→
+   821→  // ─── 5. POPULAR ROUTES SECTION ────────────────────────────
+   822→  const PopularRoutesSection = () => (
+   823→    <Section className="bg-muted/30">
+   824→      <SectionHeader
+   825→        title={t('popularRoutes', lang)}
+   826→        subtitle={lang === 'en' ? 'Most traveled routes in Bangladesh' : 'বাংলাদেশে সবচেয়ে বেশি ভ্রমণ করা রুট'}
+   827→        lang={lang}
+   828→      />
+   829→      <motion.div
+   830→        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+   831→        variants={staggerContainer}
+   832→        initial="hidden"
+   833→        whileInView="visible"
+   834→        viewport={{ once: true, margin: '-50px' }}
+   835→      >
+   836→        {POPULAR_ROUTES.map((route, index) => (
+   837→          <motion.div key={index} variants={staggerItem}>
+   838→            <Card
+   839→              className="group cursor-pointer border transition-all duration-300 hover:border-emerald-300 hover:shadow-md dark:hover:border-emerald-700"
+   840→              onClick={() => navigate('search', { from: route.from, to: route.to })}
+   841→            >
+   842→              <CardContent className="flex items-center gap-3 p-4">
+   843→                <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+   844→                  <MapPin className="size-5" />
+   845→                </div>
+   846→                <div className="flex-1 min-w-0">
+   847→                  <div className="flex items-center gap-2">
+   848→                    <span className="font-semibold text-sm truncate">
+   849→                      {lang === 'bn' ? route.fromBn : route.from}
+   850→                    </span>
+   851→                    <ArrowRight className="size-3.5 text-muted-foreground shrink-0" />
+   852→                    <span className="font-semibold text-sm truncate">
+   853→                      {lang === 'bn' ? route.toBn : route.to}
+   854→                    </span>
+   855→                  </div>
+   856→                  <p className="text-xs text-muted-foreground mt-0.5">
+   857→                    {lang === 'en' ? `${route.from} → ${route.to}` : `${route.fromBn} → ${route.toBn}`}
+   858→                  </p>
+   859→                </div>
+   860→                <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+   861→              </CardContent>
+   862→            </Card>
+   863→          </motion.div>
+   864→        ))}
+   865→      </motion.div>
+   866→    </Section>
+   867→  );
+   868→
+   869→  // ─── 6. WHY CHOOSE US SECTION ─────────────────────────────
+   870→  const WhyChooseUsSection = () => {
+   871→    const features = [
+   872→      {
+   873→        icon: <ShieldCheck className="size-7" />,
+   874→        title: lang === 'en' ? 'Secure Escrow' : 'নিরাপদ এসক্রো',
+   875→        desc: lang === 'en'
+   876→          ? 'Your payment is held securely until you complete your journey. Full protection for buyers and sellers.'
+   877→          : 'আপনার যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট নিরাপদে রাখা হয়। ক্রেতা ও বিক্রেতার সম্পূর্ণ সুরক্ষা।',
+   878→        gradient: 'from-emerald-400 to-emerald-600',
+   879→        bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+   880→      },
+   881→      {
+   882→        icon: <UserCheck className="size-7" />,
+   883→        title: lang === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা',
+   884→        desc: lang === 'en'
+   885→          ? 'All sellers go through NID verification and GPS check. Buy with confidence from trusted sellers.'
+   886→          : 'সকল বিক্রেতা এনআইডি যাচাই ও জিপিএস চেকের মধ্য দিয়ে যান। বিশ্বস্ত বিক্রেতাদের থেকে আত্মবিশ্বাসে কিনুন।',
+   887→        gradient: 'from-sky-400 to-sky-600',
+   888→        bgColor: 'bg-sky-100 dark:bg-sky-900/30',
+   889→      },
+   890→      {
+   891→        icon: <RefreshCcw className="size-7" />,
+   892→        title: lang === 'en' ? 'Easy Refund' : 'সহজ ফেরত',
+   893→        desc: lang === 'en'
+   894→          ? 'Hassle-free refund process if your ticket is invalid or journey cancelled. Your money is always safe.'
+   895→          : 'আপনার টিকেট অবৈধ বা যাত্রা বাতিল হলে ঝামেলামুক্ত ফেরত প্রক্রিয়া। আপনার টাকা সবসময় নিরাপদ।',
+   896→        gradient: 'from-amber-400 to-amber-600',
+   897→        bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+   898→      },
+   899→      {
+   900→        icon: <Headphones className="size-7" />,
+   901→        title: lang === 'en' ? '24/7 Support' : '২৪/৭ সাহায্য',
+   902→        desc: lang === 'en'
+   903→          ? 'Our dedicated support team is always ready to help. Get assistance anytime, anywhere in Bangladesh.'
+   904→          : 'আমাদের নিবেদিত সহায়তা দল সবসময় সাহায্য করতে প্রস্তুত। বাংলাদেশে যেকোনো সময় সহায়তা পান।',
+   905→        gradient: 'from-teal-400 to-teal-600',
+   906→        bgColor: 'bg-teal-100 dark:bg-teal-900/30',
+   907→      },
+   908→    ];
+   909→
+   910→    return (
+   911→      <Section>
+   912→        <SectionHeader
+   913→          title={t('whyChooseUs', lang)}
+   914→          subtitle={lang === 'en' ? 'We make ticket trading safe and simple' : 'আমরা টিকেট ট্রেডিং নিরাপদ ও সহজ করি'}
+   915→          lang={lang}
+   916→        />
+   917→        <motion.div
+   918→          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+   919→          variants={staggerContainer}
+   920→          initial="hidden"
+   921→          whileInView="visible"
+   922→          viewport={{ once: true, margin: '-50px' }}
+   923→        >
+   924→          {features.map((feature, index) => (
+   925→            <motion.div key={index} variants={staggerItem}>
+   926→              <Card className="group h-full border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-emerald-200 dark:hover:border-emerald-800">
+   927→                <CardContent className="p-6">
+   928→                  <div
+   929→                    className={`mb-4 flex size-14 items-center justify-center rounded-xl ${feature.bgColor} transition-transform duration-300 group-hover:scale-110`}
+   930→                  >
+   931→                    <div className={`bg-gradient-to-br ${feature.gradient} bg-clip-text text-transparent`}>
+   932→                      {feature.icon}
+   933→                    </div>
+   934→                  </div>
+   935→                  <h3 className={`text-lg font-bold mb-2 ${lang === 'bn' ? 'font-bangla' : ''}`}>
+   936→                    {feature.title}
+   937→                  </h3>
+   938→                  <p className={`text-sm text-muted-foreground leading-relaxed ${lang === 'bn' ? 'font-bangla' : ''}`}>
+   939→                    {feature.desc}
+   940→                  </p>
+   941→                </CardContent>
+   942→              </Card>
+   943→            </motion.div>
+   944→          ))}
+   945→        </motion.div>
+   946→      </Section>
+   947→    );
+   948→  };
+   949→
+   950→  // ─── 7. STATS SECTION ─────────────────────────────────────
+   951→  const StatsSection = () => {
+   952→    const ref = useRef(null);
+   953→    const isInView = useInView(ref, { once: true, margin: '-100px' });
+   954→
+   955→    const stat1 = useAnimatedCounter(10000, isInView);
+   956→    const stat2 = useAnimatedCounter(5000, isInView);
+   957→    const stat3 = useAnimatedCounter(500, isInView);
+   958→    const stat4 = useAnimatedCounter(8, isInView, 1500);
+   959→
+   960→    const stats = [
+   961→      {
+   962→        value: stat1.toLocaleString() + '+',
+   963→        label: lang === 'en' ? 'Tickets Sold' : 'টিকেট বিক্রি হয়েছে',
+   964→        icon: <Ticket className="size-6" />,
+   965→      },
+   966→      {
+   967→        value: stat2.toLocaleString() + '+',
+   968→        label: lang === 'en' ? 'Happy Users' : 'সুখী ব্যবহারকারী',
+   969→        icon: <UserCheck className="size-6" />,
+   970→      },
+   971→      {
+   972→        value: stat3.toLocaleString() + '+',
+   973→        label: lang === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা',
+   974→        icon: <BadgeCheck className="size-6" />,
+   975→      },
+   976→      {
+   977→        value: stat4.toLocaleString() + '+',
+   978→        label: lang === 'en' ? 'Cities Covered' : 'শহর কভার করা',
+   979→        icon: <MapPin className="size-6" />,
+   980→      },
+   981→    ];
+   982→
+   983→    return (
+   984→      <div
+   985→        ref={ref}
+   986→        className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900"
+   987→      >
+   988→        {/* Pattern overlay */}
+   989→        <div className="absolute inset-0 opacity-5">
+   990→          <div className="absolute inset-0" style={{
+   991→            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+   992→            backgroundSize: '30px 30px',
+   993→          }} />
+   994→        </div>
+   995→
+   996→        <Section className="relative z-10 !py-16 md:!py-20">
+   997→          <motion.div
+   998→            className="grid grid-cols-2 gap-8 lg:grid-cols-4"
+   999→            variants={staggerContainer}
+  1000→            initial="hidden"
+  1001→            whileInView="visible"
+  1002→            viewport={{ once: true, margin: '-50px' }}
+  1003→          >
+  1004→            {stats.map((stat, index) => (
+  1005→              <motion.div key={index} variants={staggerItem} className="text-center">
+  1006→                <div className="mb-3 flex justify-center">
+  1007→                  <div className="flex size-14 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm">
+  1008→                    {stat.icon}
+  1009→                  </div>
+  1010→                </div>
+  1011→                <p className="text-3xl font-extrabold text-white md:text-4xl">
+  1012→                  {stat.value}
+  1013→                </p>
+  1014→                <p className={`mt-1 text-sm text-emerald-100/80 ${lang === 'bn' ? 'font-bangla' : ''}`}>
+  1015→                  {stat.label}
+  1016→                </p>
+  1017→              </motion.div>
+  1018→            ))}
+  1019→          </motion.div>
+  1020→        </Section>
+  1021→      </div>
+  1022→    );
+  1023→  };
+  1024→
+  1025→  // ─── 8. CTA SECTION ───────────────────────────────────────
+  1026→  const CTASection = () => (
+  1027→    <Section>
+  1028→      <motion.div
+  1029→        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 p-8 md:p-16"
+  1030→        initial="hidden"
+  1031→        whileInView="visible"
+  1032→        viewport={{ once: true, margin: '-50px' }}
+  1033→        variants={scaleIn}
+  1034→      >
+  1035→        {/* Background decoration */}
+  1036→        <div className="absolute inset-0 opacity-10">
+  1037→          <div className="absolute -top-20 -right-20 size-64 rounded-full bg-white/20" />
+  1038→          <div className="absolute -bottom-10 -left-10 size-40 rounded-full bg-white/10" />
+  1039→        </div>
+  1040→
+  1041→        <div className="relative z-10 text-center">
+  1042→          <motion.h2
+  1043→            className={`text-3xl font-extrabold text-white md:text-4xl lg:text-5xl ${lang === 'bn' ? 'font-bangla' : ''}`}
+  1044→            variants={fadeInUp}
+  1045→          >
+  1046→            {lang === 'en' ? 'Start Selling Your Tickets Today' : 'আজই আপনার টিকেট বিক্রি শুরু করুন'}
+  1047→          </motion.h2>
+  1048→          <motion.p
+  1049→            className={`mx-auto mt-4 max-w-xl text-lg text-emerald-100/90 ${lang === 'bn' ? 'font-bangla' : ''}`}
+  1050→            variants={fadeInUp}
+  1051→          >
+  1052→            {lang === 'en'
+  1053→              ? 'Join thousands of verified sellers and earn money by reselling your unused tickets safely.'
+  1054→              : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং আপনার অব্যবহৃত টিকেট নিরাপদে পুনরায় বিক্রি করে আয় করুন।'}
+  1055→          </motion.p>
+  1056→          <motion.div
+  1057→            className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row"
+  1058→            variants={fadeInUp}
+  1059→          >
+  1060→            <Button
+  1061→              size="lg"
+  1062→              className="h-13 bg-white text-emerald-700 shadow-lg shadow-emerald-900/30 hover:bg-emerald-50 px-8 text-base font-semibold"
+  1063→              onClick={() => navigate('sell-ticket')}
+  1064→            >
+  1065→              <Ticket className="mr-2 size-5" />
+  1066→              {t('sellTicket', lang)}
+  1067→            </Button>
+  1068→            <Button
+  1069→              size="lg"
+  1070→              variant="outline"
+  1071→              className="h-13 border-2 border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 hover:text-white"
+  1072→              onClick={() => navigate('how-it-works')}
+  1073→            >
+  1074→              {lang === 'en' ? 'Learn More' : 'আরও জানুন'}
+  1075→              <ArrowRight className="ml-2 size-5" />
+  1076→            </Button>
+  1077→          </motion.div>
+  1078→        </div>
+  1079→      </motion.div>
+  1080→    </Section>
+  1081→  );
+  1082→
+  1083→  // ─── RENDER ───────────────────────────────────────────────
+  1084→  return (
+  1085→    <div className="min-h-screen">
+  1086→      <HeroSection />
+  1087→      <TransportCategoriesSection />
+  1088→      <HowItWorksSection />
+  1089→      <FeaturedTicketsSection />
+  1090→      <PopularRoutesSection />
+  1091→      <WhyChooseUsSection />
+  1092→      <StatsSection />
+  1093→      <CTASection />
+  1094→    </div>
+  1095→  );
+  1096→}
+  1097→

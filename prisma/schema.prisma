@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  phone         String?  @unique
+  name          String
+  password      String
+  avatar        String?
+  role          String   @default("user") // guest, user, verified_seller, admin, super_admin
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
+  isKycVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  isDeleted     Boolean  @default(false)
+  lastLogin     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  kyc           Kyc?
+  wallet        Wallet?
+  tickets       Ticket[]  @relation("SellerTickets")
+  orders        Order[]   @relation("BuyerOrders")
+  soldOrders    Order[]   @relation("SellerOrders")
+  reviewsGiven  Review[]  @relation("ReviewAuthor")
+  reviewsReceived Review[] @relation("ReviewTarget")
+  notifications Notification[]
+  activities    ActivityLog[]
+  chatParticipants ChatParticipant[]
+  messages      Message[]  @relation("MessageSender")
+  supportTickets SupportTicket[]
+  referrals     Referral[] @relation("Referrer")
+  referredBy    String?
+  couponUsages  CouponUsage[]
+}
+
+model Kyc {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  documentType    String   // nid, driving_licence, passport
+  documentNumber  String
+  documentFront   String
+  documentBack    String?
+  selfiePhoto     String
+  gpsLatitude     Float?
+  gpsLongitude    Float?
+  status          String   @default("pending") // pending, approved, rejected
+  reviewedBy      String?
+  reviewNote      String?
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Wallet {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  availableBalance Float   @default(0)
+  pendingBalance  Float    @default(0)
+  escrowBalance   Float    @default(0)
+  totalEarnings   Float    @default(0)
+  totalWithdrawn  Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+  withdrawals   Withdrawal[]
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  walletId        String
+  type            String   // credit, debit, escrow_hold, escrow_release, escrow_refund
+  amount          Float
+  balance         Float
+  description     String
+  orderId         String?
+  createdAt       DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+model Withdrawal {
+  id              String   @id @default(cuid())
+  walletId        String
+  amount          Float
+  method          String   // bkash, bank_transfer
+  accountDetails  String
+  status          String   @default("pending") // pending, approved, rejected, completed
+  reviewedBy      String?
+  reviewNote      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+model Ticket {
+  id              String   @id @default(cuid())
+  ticketId        String   @unique // ETR-00000001
+  sellerId        String
+  transportType   String   // bus, train, flight, launch
+  transportCompany String
+  routeFrom       String
+  routeTo         String
+  departureDate   String
+  departureTime   String
+  seatNumber      String?
+  seatType        String?
+  coachNumber     String?
+  ticketType      String   // online_copy, counter_copy
+  price           Float
+  platformFee     Float    @default(0)
+  totalAmount     Float    @default(0)
+  description     String?
+  ticketDocument  String?
+  status          String   @default("active") // active, sold, expired, cancelled, pending_review
+  isFeatured      Boolean  @default(false)
+  views           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  seller  User    @relation("SellerTickets", fields: [sellerId], references: [id])
+  orders  Order[]
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  orderId         String   @unique // ORD-00000001
+  ticketId        String
+  buyerId         String
+  sellerId        String
+  amount          Float
+  platformFee     Float
+  totalAmount     Float
+  escrowStatus    String   @default("held") // held, released, refunded
+  paymentStatus   String   @default("pending") // pending, paid, failed, refunded
+  deliveryMethod  String   // online_pdf, in_person, courier
+  deliveryStatus  String   @default("pending") // pending, delivered, confirmed
+  qrCode          String?
+  status          String   @default("pending") // pending, confirmed, in_progress, completed, cancelled, disputed
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  ticket  Ticket  @relation(fields: [ticketId], references: [id])
+  buyer   User    @relation("BuyerOrders", fields: [buyerId], references: [id])
+  seller  User    @relation("SellerOrders", fields: [sellerId], references: [id])
+  reviews Review[]
+  chat    Chat?
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order        Order             @relation(fields: [orderId], references: [id])
+  participants ChatParticipant[]
+  messages     Message[]
+}
+
+model ChatParticipant {
+  id     String @id @default(cuid())
+  chatId String
+  userId String
+
+  chat Chat @relation(fields: [chatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([chatId, userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  senderId  String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  chat   Chat @relation(fields: [chatId], references: [id])
+  sender User @relation("MessageSender", fields: [senderId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String
+  authorId  String
+  targetId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id])
+  author User  @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target User  @relation("ReviewTarget", fields: [targetId], references: [id])
+
+  @@unique([orderId, authorId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  message   String
+  status    String   @default("open") // open, in_progress, resolved, closed
+  priority  String   @default("medium") // low, medium, high, urgent
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User              @relation(fields: [userId], references: [id])
+  replies     SupportReply[]
+}
+
+model SupportReply {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String?
+  adminId   String?
+  message   String
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id])
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String
+  excerpt     String?
+  coverImage  String?
+  author      String?
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Coupon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        String   // percentage, fixed
+  value       Float
+  minAmount   Float    @default(0)
+  maxDiscount Float?
+  usageLimit  Int?
+  usedCount   Int      @default(0)
+  validFrom   DateTime
+  validUntil  DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  usages CouponUsage[]
+}
+
+model CouponUsage {
+  id        String   @id @default(cuid())
+  couponId  String
+  userId    String
+  orderId   String
+  createdAt DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  referrerId  String
+  referredId  String   @unique
+  reward      Float    @default(0)
+  isRewarded  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  referrer User @relation("Referrer", fields: [referrerId], references: [id])
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  group String @default("general")
+}
+
+model TransportCompany {
+  id            String   @id @default(cuid())
+  name          String
+  nameBn        String?
+  type          String   // bus, train, flight, launch
+  logo          String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Counter {
+  id    String @id @default(cuid())
+  name  String @unique
+  value Int    @default(0)
+}
