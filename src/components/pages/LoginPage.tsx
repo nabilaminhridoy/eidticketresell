@@ -144,14 +144,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-3 sm:p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md relative">
+      <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md mx-auto relative">
         {/* Logo */}
         <motion.div
           className="text-center mb-6"
@@ -168,13 +168,13 @@ export default function LoginPage() {
           </p>
         </motion.div>
 
-        <Card className="shadow-xl border-primary/10">
-          <CardHeader className="pb-2">
+        <Card className="shadow-xl border-primary/10 overflow-hidden">
+          <CardHeader className="pb-2 px-4 sm:px-6">
             {/* Login mode toggle */}
             <div className="flex rounded-lg border bg-muted/50 p-1">
               <button
                 onClick={() => { setLoginMode('password'); setError(''); setOtpSent(false); }}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-2 rounded-md text-sm font-medium transition-all min-h-[44px] ${
                   loginMode === 'password'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -185,7 +185,7 @@ export default function LoginPage() {
               </button>
               <button
                 onClick={() => { setLoginMode('otp'); setError(''); }}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-2 rounded-md text-sm font-medium transition-all min-h-[44px] ${
                   loginMode === 'otp'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -196,7 +196,7 @@ export default function LoginPage() {
               </button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Identifier input */}
               <div className="space-y-1.5">
@@ -209,7 +209,7 @@ export default function LoginPage() {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder={isBn ? 'ফোন / ইমেইল / ইউজারনেম' : 'Phone / Email / Username'}
-                    className="pl-10"
+                    className="pl-10 h-11"
                   />
                 </div>
               </div>
@@ -234,12 +234,12 @@ export default function LoginPage() {
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 h-11"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -248,7 +248,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => navigate('forgot-password')}
-                        className={`text-xs text-primary hover:underline ${fontClass}`}
+                        className={`text-xs sm:text-sm text-primary hover:underline py-1 min-h-[36px] inline-flex items-center ${fontClass}`}
                       >
                         {t('forgotPassword', language)}
                       </button>
@@ -287,14 +287,16 @@ export default function LoginPage() {
                       <div className="space-y-3">
                         <Label className={`text-sm font-medium ${fontClass}`}>{t('otpVerification', language)}</Label>
                         <div className="flex justify-center">
-                          <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                          <InputOTP maxLength={6} value={otp} onChange={setOtp} containerClassName="flex items-center gap-1 sm:gap-2">
                             <InputOTPGroup>
-                              <InputOTPSlot index={0} />
-                              <InputOTPSlot index={1} />
-                              <InputOTPSlot index={2} />
-                              <InputOTPSlot index={3} />
-                              <InputOTPSlot index={4} />
-                              <InputOTPSlot index={5} />
+                              <InputOTPSlot index={0} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
+                              <InputOTPSlot index={1} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
+                              <InputOTPSlot index={2} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
+                            </InputOTPGroup>
+                            <InputOTPGroup>
+                              <InputOTPSlot index={3} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
+                              <InputOTPSlot index={4} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
+                              <InputOTPSlot index={5} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
                             </InputOTPGroup>
                           </InputOTP>
                         </div>
@@ -332,7 +334,7 @@ export default function LoginPage() {
               {/* Submit button */}
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/30 transition-shadow"
+                className="w-full h-11 bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/30 transition-shadow"
                 disabled={loading || (loginMode === 'otp' && otpSent && otp.length !== 6)}
               >
                 {loading ? (
@@ -360,7 +362,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full"
+              className="w-full h-11"
               onClick={() => toast.info(isBn ? 'শীঘ্রই আসছে!' : 'Coming soon!')}
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -373,11 +375,11 @@ export default function LoginPage() {
             </Button>
 
             {/* Register link */}
-            <p className={`text-center text-sm text-muted-foreground mt-4 ${fontClass}`}>
+            <p className={`text-center text-sm text-muted-foreground mt-5 ${fontClass}`}>
               {t('dontHaveAccount', language)}{' '}
               <button
                 onClick={() => navigate('register')}
-                className="text-primary font-medium hover:underline"
+                className="text-primary font-medium hover:underline min-h-[44px] inline-flex items-center px-1"
               >
                 {t('createNow', language)}
               </button>

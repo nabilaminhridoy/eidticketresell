@@ -216,7 +216,7 @@ export default function TicketDetailsPage() {
   // ─── Loading state ───────────────────────────────────
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-3xl">
+      <div className="container mx-auto px-3 sm:px-4 py-6 max-w-3xl">
         <Skeleton className="h-8 w-24 mb-6" />
         <Skeleton className="h-48 w-full mb-4 rounded-xl" />
         <Skeleton className="h-36 w-full mb-4 rounded-xl" />
@@ -229,7 +229,7 @@ export default function TicketDetailsPage() {
   // ─── Error / not found ───────────────────────────────
   if (!ticket) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center max-w-md">
+      <div className="container mx-auto px-3 sm:px-4 py-20 text-center max-w-md">
         <div className="w-16 h-16 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
           <AlertTriangle className="w-8 h-8 text-red-500" />
         </div>
@@ -250,15 +250,15 @@ export default function TicketDetailsPage() {
   // ─── Post-purchase order confirmation ────────────────
   if (hasPaid && order) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-3xl">
-        <Button variant="ghost" onClick={() => navigate('my-orders')} className="mb-4">
+      <div className="container mx-auto px-3 sm:px-4 py-6 max-w-3xl">
+        <Button variant="ghost" onClick={() => navigate('my-orders')} className="mb-4 min-h-[44px]">
           <ArrowLeft className="w-4 h-4 mr-1" />{t('back', language)}
         </Button>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           {/* Success header */}
           <Card className="border-emerald-200 dark:border-emerald-800 mb-4">
-            <CardContent className="p-6 text-center">
+            <CardContent className="p-4 sm:p-6 text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -396,7 +396,7 @@ export default function TicketDetailsPage() {
               transition={{ duration: 0.4, delay: 0.5 }}
             >
               <Card className="border-primary/10 mb-4">
-                <CardContent className="p-6 text-center">
+                <CardContent className="p-4 sm:p-6 text-center">
                   <div className="w-16 h-16 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                     <QrCode className="w-8 h-8 text-primary" />
                   </div>
@@ -407,7 +407,7 @@ export default function TicketDetailsPage() {
                     {isBn ? 'টিকেট ডেলিভারির সময় বিক্রেতাকে এই কিউআর কোড দেখান' : 'Show this QR code to the seller during ticket delivery'}
                   </p>
                   <div className="inline-block p-4 bg-white rounded-xl border-2 border-dashed border-primary/30">
-                    <div className="w-40 h-40 bg-[repeating-conic-gradient(#000_0%_25%,#fff_0%_50%)] bg-[length:20px_20px] rounded-lg flex items-center justify-center">
+                    <div className="w-32 h-32 sm:w-40 sm:h-40 bg-[repeating-conic-gradient(#000_0%_25%,#fff_0%_50%)] bg-[length:20px_20px] rounded-lg flex items-center justify-center">
                       <span className="bg-white px-2 py-1 rounded text-[10px] font-mono text-center break-all">{order.qrCode}</span>
                     </div>
                   </div>
@@ -448,7 +448,7 @@ export default function TicketDetailsPage() {
                 </div>
               </div>
               <Button
-                className="w-full"
+                className="w-full min-h-[44px]"
                 variant="outline"
                 onClick={() => navigate('chat', { orderId: order.id })}
               >
@@ -514,10 +514,10 @@ export default function TicketDetailsPage() {
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mt-6">
-            <Button className="flex-1" onClick={() => navigate('my-orders')}>
+            <Button className="flex-1 min-h-[44px]" onClick={() => navigate('my-orders')}>
               {isBn ? 'আমার অর্ডার দেখুন' : 'View My Orders'}
             </Button>
-            <Button variant="outline" className="flex-1" onClick={() => navigate('search')}>
+            <Button variant="outline" className="flex-1 min-h-[44px]" onClick={() => navigate('search')}>
               {isBn ? 'আরও টিকেট খুঁজুন' : 'Find More Tickets'}
             </Button>
           </div>
@@ -530,9 +530,9 @@ export default function TicketDetailsPage() {
   const isAvailable = ticket.status === 'active';
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-3xl">
+    <div className="container mx-auto px-3 sm:px-4 py-6 max-w-3xl">
       {/* Back button */}
-      <Button variant="ghost" onClick={() => navigate('search')} className="mb-4 -ml-2">
+      <Button variant="ghost" onClick={() => navigate('search')} className="mb-4 -ml-2 min-h-[44px]">
         <ArrowLeft className="w-4 h-4 mr-1" />
         {t('back', language)}
       </Button>
@@ -587,38 +587,38 @@ export default function TicketDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {/* From / To row */}
-            <div className="flex items-center gap-4">
-              <div className="flex-1 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex-1 p-2.5 sm:p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 min-w-0">
                 <p className="text-[10px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold mb-0.5">
                   {t('from', language)}
                 </p>
-                <p className={`font-semibold ${isBn ? 'font-bangla' : ''}`}>{ticket.routeFrom}</p>
+                <p className={`font-semibold truncate ${isBn ? 'font-bangla' : ''}`}>{ticket.routeFrom}</p>
                 {ticket.boardingPoint && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{ticket.boardingPoint}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{ticket.boardingPoint}</p>
                 )}
               </div>
-              <div className="flex flex-col items-center">
-                <ChevronRight className="w-5 h-5 text-primary" />
+              <div className="flex flex-col items-center shrink-0">
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div className="flex-1 p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+              <div className="flex-1 p-2.5 sm:p-3 rounded-lg bg-red-50 dark:bg-red-900/20 min-w-0">
                 <p className="text-[10px] uppercase tracking-wider text-red-600 dark:text-red-400 font-semibold mb-0.5">
                   {t('to', language)}
                 </p>
-                <p className={`font-semibold ${isBn ? 'font-bangla' : ''}`}>{ticket.routeTo}</p>
+                <p className={`font-semibold truncate ${isBn ? 'font-bangla' : ''}`}>{ticket.routeTo}</p>
                 {ticket.droppingPoint && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{ticket.droppingPoint}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{ticket.droppingPoint}</p>
                 )}
               </div>
             </div>
 
             {/* Date & Time */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 flex-1 text-sm">
-                <Calendar className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="w-4 h-4 text-primary shrink-0" />
                 <span className="font-medium">{ticket.departureDate}</span>
               </div>
-              <div className="flex items-center gap-2 flex-1 text-sm">
-                <Clock className="w-4 h-4 text-primary" />
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-4 h-4 text-primary shrink-0" />
                 <span className="font-medium">{ticket.departureTime}</span>
               </div>
             </div>
@@ -645,33 +645,33 @@ export default function TicketDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 text-sm">
                 {ticket.seatClass && (
-                  <div className="p-2.5 rounded-lg bg-muted/50">
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{isBn ? 'ক্লাস' : 'Class'}</p>
                     <p className="font-medium">{ticket.seatClass}</p>
                   </div>
                 )}
                 {ticket.deckType && (
-                  <div className="p-2.5 rounded-lg bg-muted/50">
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{isBn ? 'ডেক টাইপ' : 'Deck Type'}</p>
                     <p className="font-medium">{ticket.deckType}</p>
                   </div>
                 )}
                 {ticket.seatNumber && (
-                  <div className="p-2.5 rounded-lg bg-muted/50">
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('seatNumber', language)}</p>
                     <p className="font-medium">{ticket.seatNumber}</p>
                   </div>
                 )}
                 {ticket.seatType && (
-                  <div className="p-2.5 rounded-lg bg-muted/50">
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('seatType', language)}</p>
                     <p className="font-medium">{ticket.seatType}</p>
                   </div>
                 )}
                 {ticket.coachNumber && (
-                  <div className="p-2.5 rounded-lg bg-muted/50">
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{isBn ? 'কোচ/কেবিন' : 'Coach/Cabin'}</p>
                     <p className="font-medium">{ticket.coachNumber}</p>
                   </div>
@@ -691,7 +691,7 @@ export default function TicketDetailsPage() {
               {isBn ? 'মূল্যের বিবরণ' : 'Price Breakdown'}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="p-3 sm:p-6 space-y-3">
             {/* Ticket type badge */}
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="outline" className={isOnlineCopy
@@ -755,7 +755,7 @@ export default function TicketDetailsPage() {
       {/* ─── Escrow Protection Info ─────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
         <Card className="border-amber-200 dark:border-amber-800 mb-4">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-5 h-5 text-amber-600" />
@@ -791,14 +791,14 @@ export default function TicketDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 {hasPaid ? (
                   <User className="w-5 h-5 text-primary" />
                 ) : (
                   <EyeOff className="w-5 h-5 text-muted-foreground" />
                 )}
               </div>
-              <div>
+              <div className="min-w-0">
                 {hasPaid ? (
                   <>
                     <div className="flex items-center gap-2">
@@ -889,7 +889,7 @@ export default function TicketDetailsPage() {
       {(ticket.description || ticket.sellerNotes) && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.35 }}>
           <Card className="border-primary/10 mb-4">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-3 sm:p-4 space-y-3">
               {ticket.description && (
                 <div>
                   <h4 className={`text-sm font-semibold mb-1 ${isBn ? 'font-bangla' : ''}`}>
@@ -1020,7 +1020,7 @@ export default function TicketDetailsPage() {
           <>
             {/* Purchase summary before button */}
             <Card className="border-primary/10 mb-4">
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-3 sm:p-4 space-y-3">
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 dark:bg-primary/10">
                   <Info className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                   <div>
@@ -1076,9 +1076,9 @@ export default function TicketDetailsPage() {
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
-                        className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+                        className="flex-1 bg-gradient-to-r from-primary to-primary/90 min-h-[44px]"
                         size="lg"
                         onClick={handlePurchase}
                         disabled={buying}
@@ -1088,7 +1088,7 @@ export default function TicketDetailsPage() {
                           : (isBn ? 'কেনাকাটা নিশ্চিত করুন' : 'Confirm Purchase')
                         }
                       </Button>
-                      <Button variant="outline" size="lg" onClick={() => setShowConfirmDialog(false)} disabled={buying}>
+                      <Button variant="outline" size="lg" className="min-h-[44px]" onClick={() => setShowConfirmDialog(false)} disabled={buying}>
                         {t('cancel', language)}
                       </Button>
                     </div>
@@ -1098,7 +1098,7 @@ export default function TicketDetailsPage() {
                   </motion.div>
                 ) : (
                   <Button
-                    className="w-full bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/20 transition-shadow"
+                    className="w-full bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/20 transition-shadow min-h-[48px]"
                     size="lg"
                     onClick={() => {
                       if (!token || !isAuthenticated) {

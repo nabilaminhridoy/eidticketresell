@@ -294,14 +294,14 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-3 sm:p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-lg relative">
+      <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-lg mx-auto relative">
         {/* Logo */}
         <motion.div
           className="text-center mb-6"
@@ -317,10 +317,10 @@ export default function RegisterPage() {
         </motion.div>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
+        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-4 sm:mb-6">
           {steps.map((step, index) => (
             <div key={step.number} className="flex items-center">
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              <div className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 currentStep >= step.number
                   ? 'bg-primary text-primary-foreground shadow-md'
                   : 'bg-muted text-muted-foreground'
@@ -330,7 +330,7 @@ export default function RegisterPage() {
                 <span className="sm:hidden">{step.number}</span>
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-8 h-0.5 mx-1 rounded transition-all ${
+                <div className={`w-4 sm:w-8 h-0.5 mx-0.5 sm:mx-1 rounded transition-all ${
                   currentStep > step.number ? 'bg-primary' : 'bg-muted'
                 }`} />
               )}
@@ -338,8 +338,8 @@ export default function RegisterPage() {
           ))}
         </div>
 
-        <Card className="shadow-xl border-primary/10">
-          <CardHeader className="pb-4">
+        <Card className="shadow-xl border-primary/10 overflow-hidden">
+          <CardHeader className="pb-4 px-4 sm:px-6">
             <CardTitle className={`text-xl text-center ${fontClass}`}>
               {currentStep === 1 && t('personalInfo', language)}
               {currentStep === 2 && t('agreement', language)}
@@ -349,7 +349,7 @@ export default function RegisterPage() {
               {t('step', language)} {currentStep} {t('of', language)} 3
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             <AnimatePresence mode="wait">
               {/* STEP 1: Personal Information */}
               {currentStep === 1 && (
@@ -359,7 +359,7 @@ export default function RegisterPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2 }}
-                  className="space-y-4"
+                  className="space-y-4 [&_input]:h-11 [&_[data-slot=select-trigger]]:h-11 [&_[data-slot=select-trigger]]:w-full"
                 >
                   {/* Full Name */}
                   <div className="space-y-1.5">
@@ -452,7 +452,7 @@ export default function RegisterPage() {
                   </div>
 
                   {/* Gender & DOB row */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className={`text-sm font-medium ${fontClass}`}>
                         {t('gender', language)} <span className="text-destructive">*</span>
@@ -521,7 +521,7 @@ export default function RegisterPage() {
                             {passwordStrength.label}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                           {[
                             { check: passwordChecks.length, label: t('passwordMinLength', language) },
                             { check: passwordChecks.uppercase, label: t('passwordUppercase', language) },
@@ -591,12 +591,12 @@ export default function RegisterPage() {
                   className="space-y-5"
                 >
                   {/* Summary of entered info */}
-                  <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+                  <div className="bg-muted/50 rounded-xl p-3 sm:p-4 space-y-2">
                     <h4 className={`font-semibold text-sm ${fontClass}`}>{isBn ? 'আপনার তথ্য সারসংক্ষেপ' : 'Your Information Summary'}</h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs">
                       <div><span className="text-muted-foreground">{t('name', language)}:</span> <span className="font-medium">{fullName}</span></div>
                       <div><span className="text-muted-foreground">{t('username', language)}:</span> <span className="font-medium">@{username}</span></div>
-                      <div><span className="text-muted-foreground">{t('email', language)}:</span> <span className="font-medium">{email}</span></div>
+                      <div className="break-all"><span className="text-muted-foreground">{t('email', language)}:</span> <span className="font-medium">{email}</span></div>
                       <div><span className="text-muted-foreground">{t('phone', language)}:</span> <span className="font-medium">{phone}</span></div>
                       <div><span className="text-muted-foreground">{t('gender', language)}:</span> <span className="font-medium">{gender}</span></div>
                       <div><span className="text-muted-foreground">{t('dateOfBirth', language)}:</span> <span className="font-medium">{dateOfBirth}</span></div>
@@ -605,12 +605,12 @@ export default function RegisterPage() {
 
                   <div className="space-y-4">
                     {/* Age Agreement */}
-                    <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                    <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg border hover:bg-muted/30 transition-colors min-h-[44px]">
                       <Checkbox
                         id="agree-age"
                         checked={agreeAge}
                         onCheckedChange={(checked) => setAgreeAge(checked === true)}
-                        className="mt-0.5"
+                        className="mt-0.5 shrink-0"
                       />
                       <Label htmlFor="agree-age" className={`text-sm cursor-pointer leading-relaxed ${fontClass}`}>
                         {t('ageAgreement', language)}
@@ -618,12 +618,12 @@ export default function RegisterPage() {
                     </div>
 
                     {/* Terms Agreement */}
-                    <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                    <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg border hover:bg-muted/30 transition-colors min-h-[44px]">
                       <Checkbox
                         id="agree-terms"
                         checked={agreeTerms}
                         onCheckedChange={(checked) => setAgreeTerms(checked === true)}
-                        className="mt-0.5"
+                        className="mt-0.5 shrink-0"
                       />
                       <Label htmlFor="agree-terms" className={`text-sm cursor-pointer leading-relaxed ${fontClass}`}>
                         {t('termsAgreement', language)}
@@ -631,12 +631,12 @@ export default function RegisterPage() {
                     </div>
 
                     {/* Notifications Agreement */}
-                    <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                    <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg border hover:bg-muted/30 transition-colors min-h-[44px]">
                       <Checkbox
                         id="agree-notifications"
                         checked={agreeNotifications}
                         onCheckedChange={(checked) => setAgreeNotifications(checked === true)}
-                        className="mt-0.5"
+                        className="mt-0.5 shrink-0"
                       />
                       <Label htmlFor="agree-notifications" className={`text-sm cursor-pointer leading-relaxed ${fontClass}`}>
                         {t('notificationsAgreement', language)}
@@ -663,7 +663,7 @@ export default function RegisterPage() {
                   className="space-y-5"
                 >
                   {/* Email OTP */}
-                  <div className="space-y-3 p-4 rounded-xl border bg-card">
+                  <div className="space-y-3 p-3 sm:p-4 rounded-xl border bg-card">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-primary" />
@@ -672,7 +672,7 @@ export default function RegisterPage() {
                       {emailOtpVerified ? (
                         <Badge variant="default" className="bg-emerald-600"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
                       ) : (
-                        <Badge variant="secondary">{email}</Badge>
+                        <Badge variant="secondary" className="max-w-[140px] truncate">{email}</Badge>
                       )}
                     </div>
 
@@ -684,14 +684,14 @@ export default function RegisterPage() {
                             size="sm"
                             onClick={() => handleSendOtp('email')}
                             disabled={sendingOtp === 'email'}
-                            className="w-full"
+                            className="w-full h-11"
                           >
                             {sendingOtp === 'email' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
                             {t('sendOtp', language)}
                           </Button>
                         ) : (
                           <div className="space-y-3">
-                            <div className="flex justify-center">
+                            <div className="flex justify-center [&_[data-slot=input-otp-slot]]:w-10 [&_[data-slot=input-otp-slot]]:h-12 [&_[data-slot=input-otp-slot]]:text-base sm:[&_[data-slot=input-otp-slot]]:w-12 sm:[&_[data-slot=input-otp-slot]]:h-14">
                               <InputOTP maxLength={6} value={emailOtp} onChange={setEmailOtp}>
                                 <InputOTPGroup>
                                   <InputOTPSlot index={0} />
@@ -703,12 +703,12 @@ export default function RegisterPage() {
                                 </InputOTPGroup>
                               </InputOTP>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                               <Button
                                 size="sm"
                                 onClick={() => handleVerifyOtp('email')}
                                 disabled={emailOtp.length !== 6 || verifyingOtp === 'email'}
-                                className="flex-1"
+                                className="flex-1 h-11"
                               >
                                 {verifyingOtp === 'email' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
                                 {t('verifyOtp', language)}
@@ -718,6 +718,7 @@ export default function RegisterPage() {
                                 size="sm"
                                 onClick={() => handleSendOtp('email')}
                                 disabled={resendTimer.email > 0 || sendingOtp === 'email'}
+                                className="h-11"
                               >
                                 {resendTimer.email > 0
                                   ? `${resendTimer.email}s`
@@ -731,7 +732,7 @@ export default function RegisterPage() {
                   </div>
 
                   {/* Phone OTP */}
-                  <div className="space-y-3 p-4 rounded-xl border bg-card">
+                  <div className="space-y-3 p-3 sm:p-4 rounded-xl border bg-card">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Phone className="w-4 h-4 text-primary" />
@@ -740,7 +741,7 @@ export default function RegisterPage() {
                       {phoneOtpVerified ? (
                         <Badge variant="default" className="bg-emerald-600"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
                       ) : (
-                        <Badge variant="secondary">{phone}</Badge>
+                        <Badge variant="secondary" className="max-w-[140px] truncate">{phone}</Badge>
                       )}
                     </div>
 
@@ -752,14 +753,14 @@ export default function RegisterPage() {
                             size="sm"
                             onClick={() => handleSendOtp('phone')}
                             disabled={sendingOtp === 'phone'}
-                            className="w-full"
+                            className="w-full h-11"
                           >
                             {sendingOtp === 'phone' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Phone className="w-4 h-4 mr-2" />}
                             {t('sendOtp', language)}
                           </Button>
                         ) : (
                           <div className="space-y-3">
-                            <div className="flex justify-center">
+                            <div className="flex justify-center [&_[data-slot=input-otp-slot]]:w-10 [&_[data-slot=input-otp-slot]]:h-12 [&_[data-slot=input-otp-slot]]:text-base sm:[&_[data-slot=input-otp-slot]]:w-12 sm:[&_[data-slot=input-otp-slot]]:h-14">
                               <InputOTP maxLength={6} value={phoneOtp} onChange={setPhoneOtp}>
                                 <InputOTPGroup>
                                   <InputOTPSlot index={0} />
@@ -771,12 +772,12 @@ export default function RegisterPage() {
                                 </InputOTPGroup>
                               </InputOTP>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                               <Button
                                 size="sm"
                                 onClick={() => handleVerifyOtp('phone')}
                                 disabled={phoneOtp.length !== 6 || verifyingOtp === 'phone'}
-                                className="flex-1"
+                                className="flex-1 h-11"
                               >
                                 {verifyingOtp === 'phone' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
                                 {t('verifyOtp', language)}
@@ -786,6 +787,7 @@ export default function RegisterPage() {
                                 size="sm"
                                 onClick={() => handleSendOtp('phone')}
                                 disabled={resendTimer.phone > 0 || sendingOtp === 'phone'}
+                                className="h-11"
                               >
                                 {resendTimer.phone > 0
                                   ? `${resendTimer.phone}s`
@@ -799,7 +801,7 @@ export default function RegisterPage() {
                   </div>
 
                   {/* Verification status */}
-                  <div className="flex items-center justify-center gap-4 text-xs">
+                  <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs">
                     <span className={`flex items-center gap-1 ${emailOtpVerified ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                       <Mail className="w-3 h-3" />
                       {isBn ? 'ইমেইল' : 'Email'}: {emailOtpVerified ? '✓' : '...'}
@@ -827,7 +829,7 @@ export default function RegisterPage() {
                 <Button
                   variant="outline"
                   onClick={() => setCurrentStep((prev) => (prev - 1) as Step)}
-                  className={fontClass}
+                  className={`h-11 ${fontClass}`}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   {t('back', language)}
@@ -848,7 +850,7 @@ export default function RegisterPage() {
                     }
                     setCurrentStep((prev) => (prev + 1) as Step);
                   }}
-                  className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 h-11 bg-gradient-to-r from-primary to-primary/90"
                   disabled={currentStep === 1 && !isStep1Valid()}
                 >
                   {t('continueBtn', language)}
@@ -858,7 +860,7 @@ export default function RegisterPage() {
                 <Button
                   onClick={handleRegister}
                   disabled={!isStep3Valid() || loading}
-                  className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 h-11 bg-gradient-to-r from-primary to-primary/90"
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -875,7 +877,7 @@ export default function RegisterPage() {
               {t('alreadyHaveAccount', language)}{' '}
               <button
                 onClick={() => navigate('login')}
-                className="text-primary font-medium hover:underline"
+                className="text-primary font-medium hover:underline min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
               >
                 {t('login', language)}
               </button>

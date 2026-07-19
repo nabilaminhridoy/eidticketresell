@@ -32,24 +32,26 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="container mx-auto px-3 sm:px-4 py-6 max-w-4xl">
       <Tabs defaultValue="overview">
-        <TabsList className="flex flex-wrap gap-1 mb-4">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm"><User className="w-3 h-3 mr-1" />{language === 'en' ? 'Overview' : 'সারসংক্ষেপ'}</TabsTrigger>
-          <TabsTrigger value="tickets" className="text-xs sm:text-sm"><Ticket className="w-3 h-3 mr-1" />{t('myTickets', language)}</TabsTrigger>
-          <TabsTrigger value="orders" className="text-xs sm:text-sm"><ShoppingBag className="w-3 h-3 mr-1" />{t('myOrders', language)}</TabsTrigger>
-          <TabsTrigger value="wallet" className="text-xs sm:text-sm"><Wallet className="w-3 h-3 mr-1" />{t('wallet', language)}</TabsTrigger>
-          <TabsTrigger value="kyc" className="text-xs sm:text-sm"><ShieldCheck className="w-3 h-3 mr-1" />{t('kyc', language)}</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs sm:text-sm"><Settings className="w-3 h-3 mr-1" />{t('settings', language)}</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4">
+          <TabsList className="flex gap-1 mb-0 min-w-max sm:min-w-0 sm:flex-wrap">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm min-h-[44px]"><User className="w-3 h-3 mr-1" />{language === 'en' ? 'Overview' : 'সারসংক্ষেপ'}</TabsTrigger>
+            <TabsTrigger value="tickets" className="text-xs sm:text-sm min-h-[44px]"><Ticket className="w-3 h-3 mr-1" />{t('myTickets', language)}</TabsTrigger>
+            <TabsTrigger value="orders" className="text-xs sm:text-sm min-h-[44px]"><ShoppingBag className="w-3 h-3 mr-1" />{t('myOrders', language)}</TabsTrigger>
+            <TabsTrigger value="wallet" className="text-xs sm:text-sm min-h-[44px]"><Wallet className="w-3 h-3 mr-1" />{t('wallet', language)}</TabsTrigger>
+            <TabsTrigger value="kyc" className="text-xs sm:text-sm min-h-[44px]"><ShieldCheck className="w-3 h-3 mr-1" />{t('kyc', language)}</TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm min-h-[44px]"><Settings className="w-3 h-3 mr-1" />{t('settings', language)}</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card className="border-primary/10">
               <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{t('profile', language)}</CardTitle></CardHeader>
               <CardContent>
-                <div className="flex items-center gap-3 mb-3"><div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-6 h-6 text-primary" /></div><div><p className="font-semibold">{user.name}</p><p className="text-sm text-muted-foreground">{user.email}</p></div></div>
-                <div className="flex items-center gap-2"><Badge variant={user.isKycVerified ? 'default' : 'secondary'}>{user.isKycVerified ? t('verified', language) : t('unverified', language)}</Badge><Badge>{user.role}</Badge></div>
+                <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /></div><div className="min-w-0"><p className="font-semibold truncate">{user.name}</p><p className="text-sm text-muted-foreground truncate">{user.email}</p></div></div>
+                <div className="flex items-center gap-2 flex-wrap"><Badge variant={user.isKycVerified ? 'default' : 'secondary'}>{user.isKycVerified ? t('verified', language) : t('unverified', language)}</Badge><Badge>{user.role}</Badge></div>
               </CardContent>
             </Card>
             <Card className="border-primary/10">
@@ -68,17 +70,17 @@ export default function DashboardPage() {
               <CardContent><p className="text-2xl font-bold">{orders.length}</p></CardContent>
             </Card>
           </div>
-          <div className="flex gap-3 mt-4"><Button variant="outline" onClick={() => navigate('sell-ticket')}>{t('sellTickets', language)}</Button><Button variant="outline" onClick={logout}>{t('logout', language)}</Button></div>
+          <div className="flex flex-col sm:flex-row gap-3 mt-4"><Button variant="outline" className="min-h-[44px] w-full sm:w-auto" onClick={() => navigate('sell-ticket')}>{t('sellTickets', language)}</Button><Button variant="outline" className="min-h-[44px] w-full sm:w-auto" onClick={logout}>{t('logout', language)}</Button></div>
         </TabsContent>
 
         <TabsContent value="tickets">
-          <div className="flex items-center justify-between mb-4"><h2 className="font-bold">{t('myTickets', language)}</h2><Button size="sm" onClick={() => navigate('sell-ticket')}>+ {t('sellTicket', language)}</Button></div>
+          <div className="flex items-center justify-between mb-4 gap-2"><h2 className="font-bold truncate">{t('myTickets', language)}</h2><Button size="sm" className="min-h-[44px] shrink-0" onClick={() => navigate('sell-ticket')}>+ {t('sellTicket', language)}</Button></div>
           {tickets.length === 0 ? <p className="text-center py-8 text-muted-foreground">{t('noData', language)}</p> : (
             <div className="space-y-2">{(tickets as Array<{id:string;from:string;to:string;price:number;status:string;departureDate:string}>).map((tk) => (
               <Card key={tk.id} className="cursor-pointer hover:shadow-sm" onClick={() => navigate('ticket-details', { id: tk.id })}>
-                <CardContent className="p-3 flex items-center justify-between">
-                  <div><p className="font-medium">{tk.from} → {tk.to}</p><p className="text-xs text-muted-foreground">{tk.departureDate}</p></div>
-                  <div className="flex items-center gap-2"><span className="font-semibold text-primary">{t('bdt', language)}{tk.price}</span><Badge variant="secondary" className="text-xs">{tk.status}</Badge><ArrowRight className="w-4 h-4 text-muted-foreground" /></div>
+                <CardContent className="p-3 sm:p-4 flex items-center justify-between gap-2">
+                  <div className="min-w-0"><p className="font-medium truncate">{tk.from} → {tk.to}</p><p className="text-xs text-muted-foreground">{tk.departureDate}</p></div>
+                  <div className="flex items-center gap-2 shrink-0"><span className="font-semibold text-primary whitespace-nowrap">{t('bdt', language)}{tk.price}</span><Badge variant="secondary" className="text-xs">{tk.status}</Badge><ArrowRight className="w-4 h-4 text-muted-foreground" /></div>
                 </CardContent>
               </Card>
             ))}</div>
@@ -89,19 +91,19 @@ export default function DashboardPage() {
           <h2 className="font-bold mb-4">{t('myOrders', language)}</h2>
           {orders.length === 0 ? <p className="text-center py-8 text-muted-foreground">{t('noData', language)}</p> : (
             <div className="space-y-2">{(orders as Array<{id:string;status:string;totalAmount:number;createdAt:string}>).map((o) => (
-              <Card key={o.id}><CardContent className="p-3 flex items-center justify-between"><div><p className="font-medium">#{o.id.slice(0,8)}</p><p className="text-xs text-muted-foreground">{o.createdAt}</p></div><div className="flex items-center gap-2"><span className="font-semibold">{t('bdt', language)}{o.totalAmount}</span><Badge variant="secondary" className="text-xs">{o.status}</Badge></div></CardContent></Card>
+              <Card key={o.id}><CardContent className="p-3 sm:p-4 flex items-center justify-between gap-2"><div className="min-w-0"><p className="font-medium">#{o.id.slice(0,8)}</p><p className="text-xs text-muted-foreground">{o.createdAt}</p></div><div className="flex items-center gap-2 shrink-0"><span className="font-semibold whitespace-nowrap">{t('bdt', language)}{o.totalAmount}</span><Badge variant="secondary" className="text-xs">{o.status}</Badge></div></CardContent></Card>
             ))}</div>
           )}
         </TabsContent>
 
         <TabsContent value="wallet">
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t('availableBalance', language)}</p><p className="text-xl font-bold text-primary">{t('bdt', language)}{walletData.balance}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t('pendingBalance', language)}</p><p className="text-xl font-bold">{t('bdt', language)}{walletData.pending}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t('escrowBalance', language)}</p><p className="text-xl font-bold">{t('bdt', language)}{walletData.escrow}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t('totalEarnings', language)}</p><p className="text-xl font-bold">{t('bdt', language)}{walletData.totalEarnings}</p></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('availableBalance', language)}</p><p className="text-lg sm:text-xl font-bold text-primary">{t('bdt', language)}{walletData.balance}</p></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('pendingBalance', language)}</p><p className="text-lg sm:text-xl font-bold">{t('bdt', language)}{walletData.pending}</p></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('escrowBalance', language)}</p><p className="text-lg sm:text-xl font-bold">{t('bdt', language)}{walletData.escrow}</p></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('totalEarnings', language)}</p><p className="text-lg sm:text-xl font-bold">{t('bdt', language)}{walletData.totalEarnings}</p></CardContent></Card>
           </div>
-          <Button className="bg-gradient-to-r from-primary to-primary/90">{t('withdraw', language)}</Button>
+          <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px] w-full sm:w-auto">{t('withdraw', language)}</Button>
         </TabsContent>
 
         <TabsContent value="kyc">
@@ -112,7 +114,7 @@ export default function DashboardPage() {
               {user.isKycVerified ? (
                 <div className="space-y-3">
                   <p className="text-emerald-600 flex items-center gap-2"><ShieldCheck className="w-4 h-4" />{language === 'en' ? 'Your identity is verified. You can sell tickets and use wallet features.' : 'আপনার পরিচয় যাচাইকৃত। আপনি টিকেট বিক্রি ও ওয়ালেট ব্যবহার করতে পারবেন।'}</p>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
                       { icon: ShieldCheck, label: t('verifiedBadge', language) },
                       { icon: Ticket, label: t('canSellTickets', language) },
@@ -142,9 +144,9 @@ export default function DashboardPage() {
 
         <TabsContent value="settings">
           <Card className="border-primary/10">
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-3 sm:p-6 space-y-4 sm:space-y-6">
               <div className="flex items-center justify-between"><div><p className="font-medium">{t('language', language)}</p><p className="text-sm text-muted-foreground">{language === 'en' ? 'English' : 'বাংলা'}</p></div>
-                <Select value={language} onValueChange={(v) => setLanguage(v as 'en' | 'bn')}><SelectTrigger className="w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="bn">বাংলা</SelectItem></SelectContent></Select>
+                <Select value={language} onValueChange={(v) => setLanguage(v as 'en' | 'bn')}><SelectTrigger className="w-full sm:w-28 h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="bn">বাংলা</SelectItem></SelectContent></Select>
               </div>
               <div className="flex items-center justify-between"><div><p className="font-medium">{t('notificationsSettings', language)}</p><p className="text-sm text-muted-foreground">{language === 'en' ? 'Push notifications' : 'পুশ বিজ্ঞপ্তি'}</p></div><Switch defaultChecked /></div>
               <div className="flex items-center justify-between"><div><p className="font-medium">{t('security', language)}</p><p className="text-sm text-muted-foreground">{language === 'en' ? 'Two-factor auth' : 'দ্বি-ফ্যাক্টর প্রমাণীকরণ'}</p></div><Switch /></div>

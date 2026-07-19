@@ -79,22 +79,22 @@ export default function Header() {
           : 'bg-background/95 backdrop-blur-sm border-b border-border/30'
       }`}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
+      <div className="container mx-auto flex h-16 items-center justify-between px-3 sm:px-4 lg:px-8 overflow-hidden">
         {/* Logo */}
         <motion.button
           onClick={() => handleNavigate('home')}
-          className="flex items-center gap-2 group"
+          className="flex items-center gap-2 group min-w-0 shrink-0 sm:shrink"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-md group-hover:shadow-primary/30 transition-shadow">
-            <MoonStar className="w-5 h-5 text-primary-foreground" />
+          <div className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-md group-hover:shadow-primary/30 transition-shadow shrink-0">
+            <MoonStar className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
-          <div className="flex flex-col">
-            <span className={`text-lg font-bold leading-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent ${language === 'bn' ? 'font-bangla' : ''}`}>
+          <div className="flex flex-col min-w-0">
+            <span className={`text-sm sm:text-lg font-bold leading-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
               {t('appName', language)}
             </span>
-            <span className={`text-[10px] text-muted-foreground leading-tight ${language === 'bn' ? 'font-bangla' : ''}`}>
+            <span className={`text-[9px] sm:text-[10px] text-muted-foreground leading-tight truncate hidden sm:block ${language === 'bn' ? 'font-bangla' : ''}`}>
               {t('appSlogan', language)}
             </span>
           </div>
@@ -174,14 +174,14 @@ export default function Header() {
         </nav>
 
         {/* Right Side Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Language Switcher */}
           <motion.div whileTap={{ scale: 0.95 }}>
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className="gap-1.5 text-sm font-medium"
+              className="gap-1.5 text-sm font-medium min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
             >
               <Globe className="w-4 h-4 text-primary" />
               <span className="hidden sm:inline">{language === 'en' ? 'বাংলা' : 'EN'}</span>
@@ -191,7 +191,7 @@ export default function Header() {
           {/* Theme Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
                 <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Toggle theme</span>
@@ -314,27 +314,27 @@ export default function Header() {
           {/* Mobile Menu */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
+              <Button variant="ghost" size="icon" className="lg:hidden min-h-[44px] min-w-[44px]">
                 <Menu className="w-5 h-5" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0">
-              <SheetHeader className="p-4 pb-2">
+            <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 overflow-y-auto">
+              <SheetHeader className="p-5 pb-3">
                 <SheetTitle className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80">
-                    <MoonStar className="w-4 h-4 text-primary-foreground" />
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80">
+                    <MoonStar className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <span className={`bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent ${language === 'bn' ? 'font-bangla' : ''}`}>
+                  <span className={`text-lg bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent ${language === 'bn' ? 'font-bangla' : ''}`}>
                     {t('appName', language)}
                   </span>
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
+              <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto custom-scrollbar">
                 {/* Mobile User Info */}
                 {isAuthenticated && user && (
-                  <div className="p-4 border-b">
+                  <div className="px-5 py-4 border-b">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 ring-2 ring-primary/20">
                         <AvatarImage src={user.avatar} alt={user.name} />
@@ -357,7 +357,7 @@ export default function Header() {
                 )}
 
                 {/* Mobile Nav Links */}
-                <nav className="flex flex-col p-2">
+                <nav className="flex flex-col px-3 py-2">
                   <MobileNavItem
                     icon={<Ticket className="w-5 h-5" />}
                     label={t('home', language)}
@@ -367,7 +367,7 @@ export default function Header() {
                   />
 
                   {/* Buy Tickets Section */}
-                  <div className="px-3 py-2">
+                  <div className="px-2 py-2 mt-1">
                     <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
                       {t('buyTickets', language)}
                     </p>
@@ -383,7 +383,7 @@ export default function Header() {
                     />
                   ))}
 
-                  <div className="px-3 py-2 mt-2">
+                  <div className="px-2 py-2 mt-1">
                     <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
                       {t('sellTickets', language)}
                     </p>
@@ -396,7 +396,7 @@ export default function Header() {
                     lang={language}
                   />
 
-                  <div className="px-3 py-2 mt-2">
+                  <div className="px-2 py-2 mt-1">
                     <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider`}>
                       Info
                     </p>
@@ -425,9 +425,9 @@ export default function Header() {
                 </nav>
 
                 {/* Mobile Auth / User Actions */}
-                <Separator className="my-2" />
+                <Separator className="my-1" />
                 {isAuthenticated && user ? (
-                  <nav className="flex flex-col p-2">
+                  <nav className="flex flex-col px-3 py-2">
                     <MobileNavItem
                       icon={<User className="w-5 h-5" />}
                       label={t('profile', language)}
@@ -479,7 +479,7 @@ export default function Header() {
                       onClick={() => handleNavigate('settings')}
                       lang={language}
                     />
-                    <Separator className="my-2" />
+                    <Separator className="my-1" />
                     <MobileNavItem
                       icon={<LogOut className="w-5 h-5" />}
                       label={t('logout', language)}
@@ -493,16 +493,16 @@ export default function Header() {
                     />
                   </nav>
                 ) : (
-                  <div className="p-4 flex flex-col gap-2">
+                  <div className="px-5 py-4 flex flex-col gap-3">
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full min-h-[44px]"
                       onClick={() => handleNavigate('login')}
                     >
                       {t('login', language)}
                     </Button>
                     <Button
-                      className="w-full bg-gradient-to-r from-primary to-primary/90"
+                      className="w-full min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
                       onClick={() => handleNavigate('register')}
                     >
                       {t('register', language)}
@@ -511,12 +511,12 @@ export default function Header() {
                 )}
 
                 {/* Mobile Footer Controls */}
-                <div className="mt-auto border-t p-4 flex items-center justify-between">
+                <div className="mt-auto border-t px-5 py-4 flex items-center justify-between gap-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={toggleLanguage}
-                    className="gap-1.5"
+                    className="gap-1.5 min-h-[44px]"
                   >
                     <Globe className="w-4 h-4 text-primary" />
                     {language === 'en' ? 'বাংলা' : 'English'}
@@ -527,7 +527,7 @@ export default function Header() {
                         key={mode}
                         variant={theme === mode ? 'default' : 'ghost'}
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-10 w-10 min-h-[44px] min-w-[44px]"
                         onClick={() => setTheme(mode)}
                       >
                         {mode === 'light' && <Sun className="w-4 h-4" />}
@@ -600,7 +600,7 @@ function MobileNavItem({
   return (
     <motion.button
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left ${
+      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors w-full text-left min-h-[44px] ${
         active
           ? 'bg-primary/10 text-primary'
           : destructive

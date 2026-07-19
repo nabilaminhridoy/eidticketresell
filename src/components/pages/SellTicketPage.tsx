@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import {
@@ -14,7 +14,7 @@ import {
   PLATFORM_FEE_PERCENTAGE,
   PLATFORM_FEE_MINIMUM,
 } from '@/lib/constants';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,9 @@ import {
   Loader2,
   Eye,
   X,
+  ShieldCheck,
+  Lock,
+  ArrowRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -204,7 +207,7 @@ function FieldLabel({
 
 export default function SellTicketPage() {
   const { navigate } = useAppStore();
-  const { token, isAuthenticated } = useAuthStore();
+  const { user, token, isAuthenticated, updateUser } = useAuthStore();
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
 
@@ -215,6 +218,49 @@ export default function SellTicketPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [kycStatus, setKycStatus] = useState<'unknown' | 'none' | 'pending' | 'approved' | 'rejected'>('unknown');
+
+  // Fetch user profile & KYC status on mount
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      setCheckingAuth(false);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) updateUser(data.user);
+          if (data.user?.isKycVerified) {
+            setKycStatus('approved');
+          } else {
+            // Check KYC application status
+            const kycRes = await fetch('/api/kyc', {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (kycRes.ok) {
+              const kycData = await kycRes.json();
+              if (kycData.application) {
+                setKycStatus(kycData.application.status === 'pending' ? 'pending' : kycData.application.status === 'approved' ? 'approved' : kycData.application.status === 'rejected' ? 'rejected' : 'none');
+              } else {
+                setKycStatus('none');
+              }
+            } else {
+              setKycStatus('none');
+            }
+          }
+        }
+      } catch {
+        setKycStatus('none');
+      } finally {
+        setCheckingAuth(false);
+      }
+    })();
+  }, [isAuthenticated, token, updateUser]);
 
   /* ---- derived ---- */
   const platformFee = useMemo(() => {
@@ -467,6 +513,131 @@ export default function SellTicketPage() {
     const ds = DELIVERY_SPEEDS.find((d) => d.id === id);
     return ds ? (isBn ? ds.labelBn : ds.label) : id;
   };
+
+  /* ================================================================ */
+  /*  AUTH GATE                                                        */
+  /* ================================================================ */
+
+  if (checkingAuth) {
+    return (
+      <div className="container mx-auto px-4 py-16 max-w-md text-center">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary mb-4" />
+        <p className={`text-muted-foreground ${isBn ? 'font-bangla' : ''}`}>
+          {isBn ? 'যাচাই করা হচ্ছে...' : 'Verifying...'}
+        </p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !token) {
+    return (
+      <div className="container mx-auto px-4 py-12 max-w-lg">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-primary/20 shadow-md">
+            <CardContent className="p-6 sm:p-8 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-5">
+                <Lock className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className={`text-xl font-bold mb-2 ${isBn ? 'font-bangla' : ''}`}>
+                {isBn ? 'লগইন প্রয়োজন' : 'Login Required'}
+              </h2>
+              <p className={`text-muted-foreground mb-6 text-sm ${isBn ? 'font-bangla' : ''}`}>
+                {isBn
+                  ? 'টিকেট বিক্রি করতে আপনাকে প্রথমে লগইন করতে হবে।'
+                  : 'You need to login first to sell tickets on our platform.'}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate('login')} className="bg-gradient-to-r from-primary to-primary/90">
+                  {t('login', language)}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button variant="outline" onClick={() => navigate('register')}>
+                  {t('register', language)}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
+  /* ================================================================ */
+  /*  KYC GATE                                                        */
+  /* ================================================================ */
+
+  if (kycStatus !== 'approved') {
+    return (
+      <div className="container mx-auto px-4 py-12 max-w-lg">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-amber-200 dark:border-amber-800/50 shadow-md">
+            <CardContent className="p-6 sm:p-8 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-5">
+                <ShieldCheck className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h2 className={`text-xl font-bold mb-2 ${isBn ? 'font-bangla' : ''}`}>
+                {isBn ? 'KYC যাচাইকরণ প্রয়োজন' : 'KYC Verification Required'}
+              </h2>
+              <p className={`text-muted-foreground mb-6 text-sm ${isBn ? 'font-bangla' : ''}`}>
+                {kycStatus === 'pending'
+                  ? isBn
+                    ? 'আপনার KYC আবেদন পর্যালোচনাধীন আছে। অনুমোদিত হলে আপনি টিকেট বিক্রি করতে পারবেন।'
+                    : 'Your KYC application is under review. You can sell tickets once it\'s approved.'
+                  : kycStatus === 'rejected'
+                    ? isBn
+                      ? 'আপনার KYC আবেদন প্রত্যাখ্যাত হয়েছে। অনুগ্রহ করে পুনরায় আবেদন করুন।'
+                      : 'Your KYC application was rejected. Please resubmit with correct information.'
+                    : isBn
+                      ? 'টিকেট বিক্রি করতে আপনাকে প্রথমে KYC যাচাইকরণ সম্পন্ন করতে হবে। এটি ক্রেতাদের নিরাপত্তা নিশ্চিত করে।'
+                      : 'You need to complete KYC verification before selling tickets. This ensures buyer safety and trust.'}
+              </p>
+
+              {kycStatus === 'pending' && (
+                <div className="flex items-center justify-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg mb-6">
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                  <span className={`text-sm text-amber-700 dark:text-amber-400 ${isBn ? 'font-bangla' : ''}`}>
+                    {isBn ? 'পর্যালোচনাধীন — সাধারণত ২৪ ঘন্টার মধ্যে অনুমোদিত হয়' : 'Under review — usually approved within 24 hours'}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                {kycStatus === 'none' || kycStatus === 'rejected' ? (
+                  <Button onClick={() => navigate('kyc')} className="bg-gradient-to-r from-primary to-primary/90">
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    {isBn ? 'KYC যাচাইকরণ শুরু করুন' : 'Start KYC Verification'}
+                  </Button>
+                ) : null}
+                <Button variant="outline" onClick={() => navigate('home')}>
+                  {t('back', language)}
+                </Button>
+              </div>
+
+              {/* Benefits list */}
+              <div className="mt-6 pt-6 border-t text-left">
+                <p className={`text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 ${isBn ? 'font-bangla' : ''}`}>
+                  {isBn ? 'যাচাইকৃত বিক্রেতাদের সুবিধা' : 'Verified Seller Benefits'}
+                </p>
+                <ul className="space-y-2">
+                  {[
+                    isBn ? 'টিকেট বিক্রি করার অনুমতি' : 'Permission to sell tickets',
+                    isBn ? 'ভেরিফাইড ব্যাজ প্রদর্শন' : 'Verified badge displayed on profile',
+                    isBn ? 'ক্রেতাদের কাছে বেশি বিশ্বাসযোগ্যতা' : 'Higher trust from buyers',
+                    isBn ? 'ওয়ালেট ও উত্তোলন সুবিধা' : 'Wallet & withdrawal access',
+                  ].map((benefit, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span className={isBn ? 'font-bangla' : ''}>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   /* ================================================================ */
   /*  SUCCESS PAGE                                                     */

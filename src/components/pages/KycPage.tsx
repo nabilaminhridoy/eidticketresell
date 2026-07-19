@@ -381,34 +381,35 @@ export default function KycPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 py-6 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 py-4 sm:py-6 px-3 sm:px-4 overflow-x-hidden">
       <div className="w-full max-w-2xl mx-auto">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-3 shadow-lg">
-            <ShieldCheck className="w-7 h-7 text-primary-foreground" />
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-4 sm:mb-6">
+          <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-2 sm:mb-3 shadow-lg">
+            <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
           </div>
-          <h1 className={`text-2xl font-bold ${fontClass}`}>{t('kycVerification', language)}</h1>
-          <p className={`text-sm text-muted-foreground mt-1 ${fontClass}`}>{t('becomeVerifiedSeller', language)}</p>
+          <h1 className={`text-xl sm:text-2xl font-bold ${fontClass}`}>{t('kycVerification', language)}</h1>
+          <p className={`text-xs sm:text-sm text-muted-foreground mt-1 ${fontClass}`}>{t('becomeVerifiedSeller', language)}</p>
         </motion.div>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
+        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-4 sm:mb-6">
           {[
-            { num: 1, label: isBn ? 'নথি ও ঠিকানা' : 'Document & Address', icon: FileText },
-            { num: 2, label: isBn ? 'সেলফি ও জিপিএস' : 'Selfie & GPS', icon: Camera },
+            { num: 1, label: isBn ? 'নথি ও ঠিকানা' : 'Document & Address', shortLabel: isBn ? 'নথি' : 'Docs', icon: FileText },
+            { num: 2, label: isBn ? 'সেলফি ও জিপিএস' : 'Selfie & GPS', shortLabel: isBn ? 'সেলফি' : 'Selfie', icon: Camera },
           ].map((step, idx) => (
             <div key={step.num} className="flex items-center">
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
+              <div className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium transition-all ${
                 currentStep >= step.num
                   ? 'bg-primary text-primary-foreground shadow-md'
                   : 'bg-muted text-muted-foreground'
               } ${fontClass}`}>
-                <step.icon className="w-3.5 h-3.5" />
-                {step.label}
+                <step.icon className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">{step.label}</span>
+                <span className="sm:hidden">{step.shortLabel}</span>
               </div>
               {idx < 1 && (
-                <div className={`w-8 h-0.5 mx-1 rounded transition-all ${
+                <div className={`w-4 sm:w-8 h-0.5 mx-0.5 sm:mx-1 rounded transition-all ${
                   currentStep > step.num ? 'bg-primary' : 'bg-muted'
                 }`} />
               )}
@@ -417,14 +418,14 @@ export default function KycPage() {
         </div>
 
         <Card className="shadow-xl border-primary/10">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <AnimatePresence mode="wait">
               {/* STEP 1: Personal Info + Document + Address */}
               {currentStep === 1 && (
-                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 sm:space-y-6">
                   {/* Personal Information */}
                   <div>
-                    <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${fontClass}`}>
+                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
                       <User className="w-4 h-4 text-primary" />
                       {t('kycPersonalInfo', language)}
                     </h3>
@@ -435,7 +436,7 @@ export default function KycPage() {
                           {t('fullName', language)} <span className="text-destructive">*</span>
                         </Label>
                         <div className="relative">
-                          <Input value={kycName} onChange={(e) => !nameLocked && setKycName(e.target.value)} disabled={nameLocked} className={nameLocked ? 'opacity-70' : ''} />
+                          <Input value={kycName} onChange={(e) => !nameLocked && setKycName(e.target.value)} disabled={nameLocked} className={`h-11 ${nameLocked ? 'opacity-70' : ''}`} />
                           {nameLocked && <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />}
                         </div>
                         {nameLocked ? (
@@ -445,13 +446,13 @@ export default function KycPage() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* DOB */}
                         <div className="space-y-1.5">
                           <Label className={`text-sm ${fontClass}`}>
                             {t('dateOfBirth', language)} <span className="text-destructive">*</span>
                           </Label>
-                          <Input type="date" value={kycDob} onChange={(e) => !dobLocked && setKycDob(e.target.value)} disabled={dobLocked} className={dobLocked ? 'opacity-70' : ''} />
+                          <Input type="date" value={kycDob} onChange={(e) => !dobLocked && setKycDob(e.target.value)} disabled={dobLocked} className={`h-11 ${dobLocked ? 'opacity-70' : ''}`} />
                           {dobLocked && <p className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" />{t('kycChangedOnce', language)}</p>}
                           {!dobLocked && <p className="text-xs text-amber-600">{t('kycDobChangeWarning', language)}</p>}
                         </div>
@@ -462,7 +463,7 @@ export default function KycPage() {
                             {t('gender', language)} <span className="text-destructive">*</span>
                           </Label>
                           <Select value={kycGender} onValueChange={genderLocked ? undefined : setKycGender} disabled={genderLocked}>
-                            <SelectTrigger className={genderLocked ? 'opacity-70' : ''}><SelectValue /></SelectTrigger>
+                            <SelectTrigger className={`h-11 ${genderLocked ? 'opacity-70' : ''}`}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="male">{t('male', language)}</SelectItem>
                               <SelectItem value="female">{t('female', language)}</SelectItem>
@@ -479,19 +480,19 @@ export default function KycPage() {
 
                   {/* Document Upload */}
                   <div>
-                    <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${fontClass}`}>
+                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
                       <FileText className="w-4 h-4 text-primary" />
                       {t('uploadDocument', language)}
                     </h3>
                     <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* Document Type */}
                         <div className="space-y-1.5">
                           <Label className={`text-sm ${fontClass}`}>
                             {t('documentType', language)} <span className="text-destructive">*</span>
                           </Label>
                           <Select value={documentType} onValueChange={(v) => { setDocumentType(v); setDocumentNumber(''); }}>
-                            <SelectTrigger><SelectValue placeholder={isBn ? 'নির্বাচন' : 'Select'} /></SelectTrigger>
+                            <SelectTrigger className="h-11"><SelectValue placeholder={isBn ? 'নির্বাচন' : 'Select'} /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="nid">{t('nid', language)}</SelectItem>
                               <SelectItem value="driving_licence">{t('drivingLicence', language)}</SelectItem>
@@ -505,7 +506,7 @@ export default function KycPage() {
                           <Label className={`text-sm ${fontClass}`}>
                             {getDocNumberLabel()} <span className="text-destructive">*</span>
                           </Label>
-                          <Input value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} placeholder={
+                          <Input value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} className="h-11" placeholder={
                             documentType === 'nid' ? '1990123456' :
                             documentType === 'driving_licence' ? 'DL-12345' :
                             documentType === 'passport' ? 'AB1234567' : ''
@@ -517,7 +518,7 @@ export default function KycPage() {
                       </div>
 
                       {/* File uploads */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* Front */}
                         <div className="space-y-1.5">
                           <Label className={`text-sm ${fontClass}`}>
@@ -526,13 +527,13 @@ export default function KycPage() {
                           <div className="relative">
                             {documentFront ? (
                               <div className="relative rounded-lg overflow-hidden border">
-                                <img src={documentFront} alt="Front" className="w-full h-28 object-cover" />
-                                <button onClick={() => setDocumentFront('')} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center">
-                                  <RotateCcw className="w-3 h-3" />
+                                <img src={documentFront} alt="Front" className="w-full h-28 sm:h-32 object-cover" />
+                                <button onClick={() => setDocumentFront('')} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center touch-manipulation">
+                                  <RotateCcw className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             ) : (
-                              <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                              <label className="flex flex-col items-center justify-center h-28 sm:h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors min-h-[44px]">
                                 {uploadingFront ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
                                 <span className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>{t('uploadFront', language)}</span>
                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'front')} />
@@ -550,13 +551,13 @@ export default function KycPage() {
                             <div className="relative">
                               {documentBack ? (
                                 <div className="relative rounded-lg overflow-hidden border">
-                                  <img src={documentBack} alt="Back" className="w-full h-28 object-cover" />
-                                  <button onClick={() => setDocumentBack('')} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center">
-                                    <RotateCcw className="w-3 h-3" />
+                                  <img src={documentBack} alt="Back" className="w-full h-28 sm:h-32 object-cover" />
+                                  <button onClick={() => setDocumentBack('')} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center touch-manipulation">
+                                    <RotateCcw className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               ) : (
-                                <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                                <label className="flex flex-col items-center justify-center h-28 sm:h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors min-h-[44px]">
                                   {uploadingBack ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
                                   <span className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>{t('uploadBack', language)}</span>
                                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'back')} />
@@ -567,7 +568,7 @@ export default function KycPage() {
                         )}
 
                         {documentType === 'passport' && (
-                          <div className="flex items-center justify-center h-28 rounded-lg border bg-muted/30">
+                          <div className="flex items-center justify-center h-28 sm:h-32 rounded-lg border bg-muted/30">
                             <p className={`text-xs text-muted-foreground text-center px-4 ${fontClass}`}>
                               {isBn ? 'পাসপোর্টের শুধু সামনের দিক প্রয়োজন' : 'Passport requires front side only'}
                             </p>
@@ -581,24 +582,24 @@ export default function KycPage() {
 
                   {/* Present Address */}
                   <div>
-                    <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${fontClass}`}>
+                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
                       <MapPin className="w-4 h-4 text-primary" />
                       {t('presentAddress', language)}
                     </h3>
                     <div className="space-y-3">
                       <div className="space-y-1.5">
                         <Label className={`text-sm ${fontClass}`}>{t('houseRoadVillage', language)} <span className="text-destructive">*</span></Label>
-                        <Input value={houseRoadVillage} onChange={(e) => setHouseRoadVillage(e.target.value)} placeholder={isBn ? 'বাড়ি/রাস্তা/গ্রাম' : 'House/Road/Village'} />
+                        <Input value={houseRoadVillage} onChange={(e) => setHouseRoadVillage(e.target.value)} className="h-11" placeholder={isBn ? 'বাড়ি/রাস্তা/গ্রাম' : 'House/Road/Village'} />
                       </div>
                       <div className="space-y-1.5">
                         <Label className={`text-sm ${fontClass}`}>{t('upazilaThana', language)} <span className="text-destructive">*</span></Label>
-                        <Input value={upazilaThana} onChange={(e) => setUpazilaThana(e.target.value)} placeholder={isBn ? 'উপজেলা/থানা' : 'Upazila/Thana'} />
+                        <Input value={upazilaThana} onChange={(e) => setUpazilaThana(e.target.value)} className="h-11" placeholder={isBn ? 'উপজেলা/থানা' : 'Upazila/Thana'} />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <Label className={`text-sm ${fontClass}`}>{t('division', language)} <span className="text-destructive">*</span></Label>
                           <Select value={division} onValueChange={(v) => { setDivision(v); setDistrict(''); }}>
-                            <SelectTrigger><SelectValue placeholder={t('selectDivision', language)} /></SelectTrigger>
+                            <SelectTrigger className="h-11"><SelectValue placeholder={t('selectDivision', language)} /></SelectTrigger>
                             <SelectContent>
                               {BD_DIVISIONS.map(d => <SelectItem key={d.id} value={d.id}>{isBn ? d.labelBn : d.label}</SelectItem>)}
                             </SelectContent>
@@ -607,7 +608,7 @@ export default function KycPage() {
                         <div className="space-y-1.5">
                           <Label className={`text-sm ${fontClass}`}>{t('district', language)} <span className="text-destructive">*</span></Label>
                           <Select value={district} onValueChange={setDistrict} disabled={!division}>
-                            <SelectTrigger><SelectValue placeholder={t('selectDistrict', language)} /></SelectTrigger>
+                            <SelectTrigger className="h-11"><SelectValue placeholder={t('selectDistrict', language)} /></SelectTrigger>
                             <SelectContent>
                               {districts.map(d => <SelectItem key={d.label} value={d.label}>{isBn ? d.labelBn : d.label}</SelectItem>)}
                             </SelectContent>
@@ -616,7 +617,7 @@ export default function KycPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label className={`text-sm ${fontClass}`}>{t('postalCode', language)}</Label>
-                        <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="1200" />
+                        <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="h-11" placeholder="1200" />
                       </div>
                     </div>
                   </div>
@@ -625,22 +626,24 @@ export default function KycPage() {
 
               {/* STEP 2: Selfie + GPS */}
               {currentStep === 2 && (
-                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
+                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 sm:space-y-5">
                   {/* GPS Status */}
-                  <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${fontClass} ${
+                  <div className={`flex items-start gap-2 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm ${fontClass} ${
                     gpsStatus === 'granted' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' :
                     gpsStatus === 'denied' ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
                     'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
                   }`}>
-                    <MapPin className="w-4 h-4 shrink-0" />
-                    {gpsStatus === 'granted' && (isBn ? `জিপিএস সক্রিয়: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}` : `GPS active: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}`)}
-                    {gpsStatus === 'denied' && (isBn ? 'জিপিএস অ্যাক্সেস অস্বীকৃত। অনুগ্রহ করে ব্রাউজার সেটিংসে অনুমতি দিন।' : 'GPS access denied. Please enable in browser settings.')}
-                    {gpsStatus === 'pending' && (isBn ? 'জিপিএস অনুমতির অপেক্ষায়...' : 'Waiting for GPS permission...')}
+                    <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      {gpsStatus === 'granted' && (isBn ? `জিপিএস সক্রিয়: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}` : `GPS active: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}`)}
+                      {gpsStatus === 'denied' && (isBn ? 'জিপিএস অ্যাক্সেস অস্বীকৃত। অনুগ্রহ করে ব্রাউজার সেটিংসে অনুমতি দিন।' : 'GPS access denied. Please enable in browser settings.')}
+                      {gpsStatus === 'pending' && (isBn ? 'জিপিএস অনুমতির অপেক্ষায়...' : 'Waiting for GPS permission...')}
+                    </div>
                   </div>
 
                   {/* Instructions */}
-                  <div className="bg-primary/5 rounded-xl p-4">
-                    <h4 className={`text-sm font-semibold mb-2 flex items-center gap-2 ${fontClass}`}>
+                  <div className="bg-primary/5 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                    <h4 className={`text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2 flex items-center gap-2 ${fontClass}`}>
                       <Sun className="w-4 h-4 text-primary" />
                       {t('selfieInstructions', language)}
                     </h4>
@@ -651,7 +654,7 @@ export default function KycPage() {
                   </div>
 
                   {/* Pose selector */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {[
                       { key: 'front' as const, label: isBn ? 'সামনে' : 'Front', captured: !!selfiePhoto, icon: User },
                       { key: 'right' as const, label: t('faceRight', language), captured: !!selfieRight, icon: Eye },
@@ -662,7 +665,7 @@ export default function KycPage() {
                       <button
                         key={pose.key}
                         onClick={() => setCurrentPose(pose.key)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] sm:min-h-0 touch-manipulation ${
                           currentPose === pose.key
                             ? 'bg-primary text-primary-foreground shadow-md'
                             : pose.captured
@@ -677,7 +680,7 @@ export default function KycPage() {
                   </div>
 
                   {/* Camera area */}
-                  <div className="relative rounded-xl overflow-hidden border bg-black aspect-[4/3]">
+                  <div className="relative rounded-lg sm:rounded-xl overflow-hidden border bg-black aspect-[4/3]">
                     {/* Show captured photo preview or live camera */}
                     {(() => {
                       const currentPhoto = currentPose === 'front' ? selfiePhoto :
@@ -689,8 +692,8 @@ export default function KycPage() {
                         return (
                           <div className="relative w-full h-full">
                             <img src={currentPhoto} alt="Captured" className="w-full h-full object-cover" />
-                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                              <Button size="sm" variant="secondary" onClick={startCamera}>
+                            <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                              <Button size="sm" variant="secondary" onClick={startCamera} className="min-h-[36px]">
                                 <RotateCcw className="w-3 h-3 mr-1" />{t('retake', language)}
                               </Button>
                             </div>
@@ -708,10 +711,10 @@ export default function KycPage() {
                             <div className="absolute inset-0 pointer-events-none">
                               {/* Face guide oval */}
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-48 h-64 border-2 border-white/40 rounded-full" />
+                                <div className="w-36 h-48 sm:w-48 sm:h-64 border-2 border-white/40 rounded-full" />
                               </div>
                               {/* Pose label */}
-                              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-xs">
+                              <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 bg-black/60 text-white px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs">
                                 {currentPose === 'front' && (isBn ? 'সোজা তাকান' : 'Look straight')}
                                 {currentPose === 'right' && t('faceRight', language)}
                                 {currentPose === 'left' && t('faceLeft', language)}
@@ -750,7 +753,7 @@ export default function KycPage() {
                   </div>
 
                   {/* Captured photos grid */}
-                  <div className="flex gap-2 overflow-x-auto pb-2">
+                  <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2">
                     {[
                       { src: selfiePhoto, label: isBn ? 'সামনে' : 'Front', required: true },
                       { src: selfieRight, label: t('faceRight', language), required: false },
@@ -758,14 +761,14 @@ export default function KycPage() {
                       { src: selfieSmile, label: t('faceSmile', language), required: false },
                       { src: selfieBlink, label: t('eyeBlink', language), required: false },
                     ].map((item, idx) => (
-                      <div key={idx} className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
+                      <div key={idx} className={`shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 ${
                         item.src ? 'border-emerald-500' : 'border-muted'
                       } relative`}>
                         {item.src ? (
                           <img src={item.src} alt={item.label} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-muted flex items-center justify-center">
-                            <Camera className="w-4 h-4 text-muted-foreground" />
+                            <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
                           </div>
                         )}
                         {item.required && !item.src && (
@@ -787,10 +790,10 @@ export default function KycPage() {
             )}
 
             {/* Action buttons */}
-            <div className="flex items-center gap-3 mt-6">
+            <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
               {currentStep > 1 && (
-                <Button variant="outline" onClick={() => setCurrentStep((prev) => (prev - 1) as Step)} className={fontClass}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />{t('back', language)}
+                <Button variant="outline" onClick={() => setCurrentStep((prev) => (prev - 1) as Step)} className={`min-h-[44px] ${fontClass}`}>
+                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />{t('back', language)}
                 </Button>
               )}
 
@@ -804,16 +807,16 @@ export default function KycPage() {
                     }
                     setCurrentStep(2);
                   }}
-                  className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
                   disabled={!isStep1Valid()}
                 >
-                  {t('next', language)}<ArrowRight className="w-4 h-4 ml-2" />
+                  {t('next', language)}<ArrowRight className="w-4 h-4 ml-1 sm:ml-2" />
                 </Button>
               ) : (
                 <Button
                   onClick={handleSubmit}
                   disabled={!isStep2Valid() || loading}
-                  className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
                 >
                   {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
                   {t('submit', language)}
