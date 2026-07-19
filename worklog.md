@@ -83,3 +83,36 @@ Stage Summary:
 - Online Copy delivery mentions both email AND dashboard download
 - Original price shown alongside selling price
 - Counter copy correctly shows "fee only" label
+---
+Task ID: 3
+Agent: Main Agent
+Task: Redesign TicketDetailsPage with 2-column layout
+
+Work Log:
+- Completely rewrote TicketDetailsPage.tsx with 2-column desktop layout
+- Container widened from max-w-3xl to max-w-5xl
+- Grid layout: lg:grid-cols-3 with left lg:col-span-2 and right col-span-1
+- LEFT column contains:
+  1. Ticket Information (header card with transport icon, route, company, date/time badges, ticket type badge)
+  2. Ticket Image/PDF & PNR Number (blurred until paid)
+  3. Route Details (from/to with boarding/dropping points)
+  4. Seat Information (class, deck, seat number, type, coach)
+  5. Delivery Information (online copy: email+dashboard download; counter copy: in-person/courier)
+  6. Description & Seller Notes
+- RIGHT column contains:
+  1. Price Breakdown (sticky, includes escrow protection info, purchase button/confirm dialog)
+  2. Seller Information (verified badge, name revealed after payment)
+- Added BRTA Regulations Notice at top of page
+- Date format: Date-MonthName-Year (e.g., "28-March-2025")
+- Time format: 12-hour AM/PM (e.g., "10:00 PM")
+- Added Scale, Download, Mail icon imports for BRTA notice and delivery info
+- Online Copy delivery now shows separate email + dashboard download items with icons
+- Post-purchase view also uses 2-column layout
+- Lint: 0 errors, 0 warnings
+- Agent Browser verification: all 7 checks PASS
+
+Stage Summary:
+- 2-column layout working with 2:1 ratio on desktop, single column on mobile
+- All sections correctly placed per user specification
+- BRTA notice, date/time formatting, delivery info all consistent with sell ticket page
+- Price card is sticky on right side with purchase CTA
