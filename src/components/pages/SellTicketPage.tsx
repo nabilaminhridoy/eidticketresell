@@ -56,6 +56,7 @@ import {
   ArrowRight,
   ArrowLeftRight,
   CloudUpload,
+  Scale,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -121,6 +122,38 @@ const initialForm: FormState = {
   deliveryCharge: '',
   description: '',
   sellerNotes: '',
+  confirmCorrect: false,
+  confirmLegalRight: false,
+  confirmFakeWarning: false,
+};
+
+/* Demo data for quick testing */
+const DEMO_FORM: FormState = {
+  transportType: 'bus',
+  transportCompany: 'Green Line Paribahan',
+  ticketType: 'online_copy',
+  pnrNumber: 'GL-2025-78341',
+  ticketDocument: '',
+  from: 'Dhaka',
+  to: 'Chittagong',
+  departureDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+  departureTime: '22:00',
+  boardingPoint: 'Gabtoli',
+  droppingPoint: 'Oxygen More',
+  seatClass: 'ac_business',
+  deckType: '',
+  seatNumber: 'A3',
+  coachNumber: '',
+  originalPrice: '800',
+  sellingPrice: '800',
+  deliveryType: '',
+  meetingPlace: '',
+  courierName: '',
+  deliverySpeed: '',
+  deliveryChargePaidBy: 'seller',
+  deliveryCharge: '',
+  description: 'Eid special AC Business class bus ticket. Non-stop service from Dhaka to Chittagong.',
+  sellerNotes: 'Please arrive 30 minutes before departure.',
   confirmCorrect: false,
   confirmLegalRight: false,
   confirmFakeWarning: false,
@@ -821,9 +854,9 @@ export default function SellTicketPage() {
           {!isCounterCopy && form.ticketDocument && (
             <>
               <Separator />
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <FileText className="w-3.5 h-3.5" />
-                <span className={fontClass}>{isBn ? 'ক্রেতা পেমেন্টের পর ইমেইলে PDF পাবেন' : 'Buyer will receive PDF via email after payment'}</span>
+              <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span className={fontClass}>{isBn ? 'ক্রেতা পেমেন্টের পর ইমেইলে PDF পাবেন অথবা ড্যাশবোর্ড → আমার অর্ডার থেকে ডাউনলোড করতে পারবেন' : 'Buyer will receive PDF via email or download from dashboard → My Orders after payment'}</span>
               </div>
             </>
           )}
@@ -837,25 +870,40 @@ export default function SellTicketPage() {
   /* ================================================================ */
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-6 max-w-4xl">
+    <div className="container mx-auto px-3 sm:px-4 py-6 max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Button variant="ghost" onClick={() => navigate('home')} className="gap-1.5">
           <ArrowLeft className="w-4 h-4" />
           <span className={fontClass}>{t('back', language)}</span>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowPreview(!showPreview)}
-          className="gap-1.5 lg:hidden"
-        >
-          <Eye className="w-4 h-4" />
-          {isBn ? 'প্রিভিউ' : 'Preview'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setForm(DEMO_FORM);
+              setUploadFileName('');
+              toast.success(isBn ? 'ডেমো ডেটা লোড হয়েছে' : 'Demo data loaded');
+            }}
+            className="gap-1.5 text-xs"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            {isBn ? 'ডেমো ডেটা' : 'Demo Data'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPreview(!showPreview)}
+            className="gap-1.5 lg:hidden"
+          >
+            <Eye className="w-4 h-4" />
+            {isBn ? 'প্রিভিউ' : 'Preview'}
+          </Button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Ticket className="w-5 h-5 text-primary" />
         </div>
@@ -866,6 +914,29 @@ export default function SellTicketPage() {
           </p>
         </div>
       </div>
+
+      {/* BRTA Regulations Notice */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20"
+      >
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+            <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className={`text-sm font-bold text-amber-800 dark:text-amber-300 mb-1 ${fontClass}`}>
+              {isBn ? 'বিআরটিএ (BRTA) প্রবিধান সতর্কতা' : 'BRTA Regulations Notice'}
+            </h3>
+            <p className={`text-sm text-amber-700 dark:text-amber-400 leading-relaxed ${fontClass}`}>
+              {isBn
+                ? 'বিআরটিএ প্রবিধান মেনে চলতে, ঈদ টিকেট পুনর্বিক্রয় মূল্য অফিসিয়াল ভাড়ার বেশি হতে পারে না। বিআরটিএ-অনুমোদিত ভাড়ার চেয়ে বেশি মূল্যের যেকোনো তালিকা অনুমোদিত হবে না।'
+                : 'To comply with BRTA regulations, Eid ticket resale prices must not exceed the official fare. Any listing priced above the BRTA-approved fare will not be approved.'}
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ---- FORM COLUMN ---- */}
@@ -1576,8 +1647,8 @@ export default function SellTicketPage() {
                           </p>
                           <p className={`text-sm text-muted-foreground mt-1 ${fontClass}`}>
                             {isBn
-                              ? 'ক্রেতা পেমেন্টের পর টিকেটটি PDF হিসেবে ইমেইলে পাবেন।'
-                              : 'Buyer will receive the ticket as PDF via email after payment.'}
+                              ? 'ক্রেতা পেমেন্টের পর টিকেটটি PDF হিসেবে ইমেইলে পাবেন অথবা তাদের ড্যাশবোর্ড থেকে → আমার অর্ডার থেকে ডাউনলোড করতে পারবেন।'
+                              : 'Buyer will receive the ticket as PDF via email or download from their dashboard → My Orders after payment.'}
                           </p>
                         </div>
                       </div>
@@ -1728,7 +1799,7 @@ export default function SellTicketPage() {
         </div>
 
         {/* ---- PREVIEW SIDEBAR (desktop) ---- */}
-        <div className="hidden lg:block w-80 shrink-0">
+        <div className="hidden lg:block w-[340px] xl:w-[360px] shrink-0">
           <div className="sticky top-6">
             <h3 className={`text-sm font-semibold flex items-center gap-2 mb-3 ${fontClass}`}>
               <Eye className="w-4 h-4" />

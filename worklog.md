@@ -24,3 +24,26 @@ Work Log:
 Stage Summary:
 - All 8 UI changes implemented and verified via Agent Browser
 - Transport tabs, ticket type tabs, drag-drop upload, side-by-side layouts, pricing panel, A-Z districts, same-district validation all working
+---
+Task ID: 1
+Agent: main
+Task: QC desktop responsive + add BRTA notice + demo data + update online copy delivery text
+
+Work Log:
+- Read full SellTicketPage.tsx (1744 lines) to understand structure
+- Added BRTA Regulations Notice as amber/yellow banner below page title with Scale icon
+- Added DEMO_FORM constant with realistic demo data (Green Line bus, Dhaka→Chittagong, ৳800)
+- Added "Demo Data" button in header next to Preview toggle
+- Updated Online Copy Delivery text in both the delivery info card and preview card to mention "email or download from their dashboard → My Orders"
+- Widened container from max-w-4xl to max-w-5xl for better desktop spacing
+- Widened preview sidebar from w-80 to w-[340px] xl:w-[360px] for better desktop readability
+- Added Scale icon import from lucide-react
+- Ran lint - no errors
+- Verified with agent browser - all features working correctly
+
+Stage Summary:
+- BRTA notice renders as amber banner with bilingual text
+- Demo Data button fills form with realistic bus ticket data
+- Desktop layout: form (608px) + sidebar (360px) at xl breakpoint
+- Online copy delivery mentions both email AND dashboard → My Orders
+- All existing features (price breakdown, validation) still working
