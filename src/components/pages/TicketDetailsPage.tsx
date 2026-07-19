@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useLanguageStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM, TICKET_STATUS } from '@/lib/constants';
+import { PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM, TICKET_STATUS, BUS_CLASSES, COURIER_COMPANIES, DELIVERY_SPEEDS, formatDepartureDate, formatDepartureTime } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -294,7 +294,7 @@ export default function TicketDetailsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{isBn ? 'যাত্রার তারিখ' : 'Travel Date'}</span>
-                <span className="font-medium">{ticket.departureDate} {ticket.departureTime}</span>
+                <span className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{formatDepartureDate(ticket.departureDate, language)} | {formatDepartureTime(ticket.departureTime, language)}</span>
               </div>
               {ticket.seatNumber && (
                 <div className="flex justify-between">
@@ -485,14 +485,14 @@ export default function TicketDetailsPage() {
                       <div className="flex items-center gap-2">
                         <Truck className="w-4 h-4 text-primary" />
                         <span className="text-muted-foreground">{isBn ? 'কুরিয়ার:' : 'Courier:'}</span>
-                        <span className="font-medium">{ticket.courierName}</span>
+                        <span className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{(() => { const cr = COURIER_COMPANIES.find(c => c.id === ticket.courierName); return cr ? (isBn ? cr.labelBn : cr.label) : ticket.courierName; })()}</span>
                       </div>
                     )}
                     {ticket.deliverySpeed && (
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-primary" />
                         <span className="text-muted-foreground">{isBn ? 'গতি:' : 'Speed:'}</span>
-                        <span className="font-medium capitalize">{ticket.deliverySpeed}</span>
+                        <span className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{(() => { const ds = DELIVERY_SPEEDS.find(d => d.id === ticket.deliverySpeed); return ds ? (isBn ? ds.labelBn : ds.label) : ticket.deliverySpeed; })()}</span>
                       </div>
                     )}
                     {ticket.deliveryCharge > 0 && (
@@ -612,14 +612,14 @@ export default function TicketDetailsPage() {
             </div>
 
             {/* Date & Time */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="w-4 h-4 text-primary shrink-0" />
-                <span className="font-medium">{ticket.departureDate}</span>
+                <span className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{formatDepartureDate(ticket.departureDate, language)}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4 text-primary shrink-0" />
-                <span className="font-medium">{ticket.departureTime}</span>
+                <span className="font-medium">{formatDepartureTime(ticket.departureTime, language)}</span>
               </div>
             </div>
 
@@ -649,13 +649,13 @@ export default function TicketDetailsPage() {
                 {ticket.seatClass && (
                   <div className="p-2 sm:p-2.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{isBn ? 'ক্লাস' : 'Class'}</p>
-                    <p className="font-medium">{ticket.seatClass}</p>
+                    <p className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{(() => { const cls = BUS_CLASSES.find(c => c.id === ticket.seatClass); return cls ? (isBn ? cls.labelBn : cls.label) : ticket.seatClass; })()}</p>
                   </div>
                 )}
                 {ticket.deckType && (
                   <div className="p-2 sm:p-2.5 rounded-lg bg-muted/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{isBn ? 'ডেক টাইপ' : 'Deck Type'}</p>
-                    <p className="font-medium">{ticket.deckType}</p>
+                    <p className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{(() => { const dt = [{id:'upper',labelBn:'আপার ডেক',label:'Upper Deck'},{id:'lower',labelBn:'লোয়ার ডেক',label:'Lower Deck'}].find(d => d.id === ticket.deckType); return dt ? (isBn ? dt.labelBn : dt.label) : ticket.deckType; })()}</p>
                   </div>
                 )}
                 {ticket.seatNumber && (
@@ -703,6 +703,12 @@ export default function TicketDetailsPage() {
             </div>
 
             <div className="space-y-2 text-sm">
+              {ticket.originalPrice > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{isBn ? 'মূল টিকেট মূল্য' : 'Original Ticket Price'}</span>
+                  <span>{t('bdt', language)}{ticket.originalPrice}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>{isBn ? 'বিক্রয় মূল্য' : 'Selling Price'}</span>
                 <span className="font-medium">{t('bdt', language)}{ticket.price}</span>
@@ -829,7 +835,30 @@ export default function TicketDetailsPage() {
         </Card>
       </motion.div>
 
-      {/* ─── Delivery Info (for counter copy) ───────────── */}
+      {/* ─── Delivery Info ───────────── */}
+      {isOnlineCopy && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
+          <Card className="border-emerald-200 dark:border-emerald-800/50 mb-4">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <h4 className={`font-semibold text-sm mb-1 ${isBn ? 'font-bangla' : ''}`}>
+                    {isBn ? 'অনলাইন কপি ডেলিভারি' : 'Online Copy Delivery'}
+                  </h4>
+                  <p className={`text-xs text-muted-foreground leading-relaxed ${isBn ? 'font-bangla' : ''}`}>
+                    {isBn
+                      ? 'ক্রেতা পেমেন্টের পর টিকেটটি PDF হিসেবে ইমেইলে পাবেন অথবা তাদের ড্যাশবোর্ড থেকে → আমার অর্ডার থেকে ডাউনলোড করতে পারবেন।'
+                      : 'Buyer will receive the ticket as PDF via email or download from their dashboard → My Orders after payment.'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
       {isCounterCopy && ticket.deliveryType && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
           <Card className="border-primary/10 mb-4">
@@ -857,14 +886,14 @@ export default function TicketDetailsPage() {
                     <div className="flex items-center gap-2">
                       <Truck className="w-4 h-4 text-primary" />
                       <span className="text-muted-foreground">{isBn ? 'কুরিয়ার:' : 'Courier:'}</span>
-                      <span className="font-medium">{ticket.courierName}</span>
+                      <span className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{(() => { const cr = COURIER_COMPANIES.find(c => c.id === ticket.courierName); return cr ? (isBn ? cr.labelBn : cr.label) : ticket.courierName; })()}</span>
                     </div>
                   )}
                   {ticket.deliverySpeed && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-primary" />
                       <span className="text-muted-foreground">{isBn ? 'গতি:' : 'Speed:'}</span>
-                      <span className="font-medium capitalize">{ticket.deliverySpeed}</span>
+                      <span className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{(() => { const ds = DELIVERY_SPEEDS.find(d => d.id === ticket.deliverySpeed); return ds ? (isBn ? ds.labelBn : ds.label) : ticket.deliverySpeed; })()}</span>
                     </div>
                   )}
                   {ticket.deliveryCharge > 0 && (

@@ -47,3 +47,39 @@ Stage Summary:
 - Desktop layout: form (608px) + sidebar (360px) at xl breakpoint
 - Online copy delivery mentions both email AND dashboard → My Orders
 - All existing features (price breakdown, validation) still working
+
+---
+Task ID: 2
+Agent: main
+Task: Update SearchPage and TicketDetailsPage with sell ticket info + date/time formatting + buyer price display
+
+Work Log:
+- Added formatDepartureDate() and formatDepartureTime() utility functions to constants.ts
+  - Date: "2025-03-22" → "22-March-2025" (en) / "২২-মার্চ-২০২৫" (bn)
+  - Time: "22:00" → "10:00 PM" (en) / "১০:০০ পিএম" (bn)
+- Completely rewrote SearchPage.tsx with:
+  - ALL_BD_DISTRICTS instead of BD_CITIES for filter dropdowns
+  - Ticket cards showing ticket type badges (Online Copy / Counter Copy)
+  - Transport company, seat class (labels not IDs), seat number
+  - Buyer price: online copy = selling price, counter copy = platform fee only
+  - Date in DD-MonthName-YYYY format, Time in 12h AM/PM format
+  - Route displayed with ArrowRight icon between from→to
+  - Animated card transitions
+- Updated TicketDetailsPage.tsx with:
+  - Date/time formatting using new utilities in 3 locations
+  - Online Copy delivery info card (email + dashboard → My Orders)
+  - Original ticket price shown in price breakdown
+  - Seat class labels from BUS_CLASSES (not raw IDs)
+  - Deck type labels (Upper Deck / Lower Deck)
+  - Courier company labels from COURIER_COMPANIES
+  - Delivery speed labels from DELIVERY_SPEEDS
+- Ran lint - no errors
+- Verified with agent browser - all features working correctly
+
+Stage Summary:
+- SearchPage now shows rich ticket cards matching sell ticket page data
+- TicketDetailsPage shows properly formatted dates and times
+- All labels use human-readable text instead of raw IDs
+- Online Copy delivery mentions both email AND dashboard download
+- Original price shown alongside selling price
+- Counter copy correctly shows "fee only" label

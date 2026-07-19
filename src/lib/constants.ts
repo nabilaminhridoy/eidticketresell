@@ -146,3 +146,67 @@ export const DELIVERY_SPEEDS = [
 ] as const;
 
 export const DECK_REQUIRED_CLASSES = ['ac_double_decker', 'ac_sleeper', 'ac_suite_sleeper'];
+
+/* ─── Date / Time Formatting Helpers ──────────────────── */
+
+const MONTH_NAMES_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+const MONTH_NAMES_BN = [
+  'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+  'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর',
+];
+
+/**
+ * Format a date string (YYYY-MM-DD) to "DD-MonthName-YYYY"
+ * e.g., "2025-03-22" → "22-March-2025" (en) / "২২-মার্চ-২০২৫" (bn)
+ */
+export function formatDepartureDate(dateStr: string, language: 'en' | 'bn' = 'en'): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const year = parts[0];
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+
+  if (month < 1 || month > 12) return dateStr;
+
+  const monthName = language === 'bn' ? MONTH_NAMES_BN[month - 1] : MONTH_NAMES_EN[month - 1];
+
+  if (language === 'bn') {
+    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const toBn = (n: number) => String(n).split('').map(d => bnDigits[parseInt(d)] || d).join('');
+    return `${toBn(day)}-${monthName}-${toBn(parseInt(year))}`;
+  }
+
+  return `${day}-${monthName}-${year}`;
+}
+
+/**
+ * Format a time string (HH:MM 24h) to "h:MM AM/PM" 12h format
+ * e.g., "22:00" → "10:00 PM", "09:30" → "9:30 AM"
+ */
+export function formatDepartureTime(timeStr: string, language: 'en' | 'bn' = 'en'): string {
+  if (!timeStr) return '';
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  if (isNaN(hours)) return timeStr;
+
+  const ampm = hours >= 12 ? (language === 'bn' ? 'PM' : 'PM') : (language === 'bn' ? 'AM' : 'AM');
+  const ampmBn = hours >= 12 ? 'পিএম' : 'এএম';
+  hours = hours % 12 || 12;
+
+  if (language === 'bn') {
+    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const toBn = (n: number) => String(n).split('').map(d => bnDigits[parseInt(d)] || d).join('');
+    const bnMinutes = toBn(parseInt(minutes));
+    return `${toBn(hours)}:${bnMinutes} ${ampmBn}`;
+  }
+
+  return `${hours}:${minutes} ${ampm}`;
+}
