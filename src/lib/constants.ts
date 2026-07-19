@@ -114,7 +114,8 @@ export const BD_DISTRICTS: Record<string, Array<{ label: string; labelBn: string
 
 export const ALL_BD_DISTRICTS = Object.values(BD_DISTRICTS)
   .flat()
-  .filter((dist, idx, arr) => arr.findIndex((d) => d.label === dist.label) === idx);
+  .filter((dist, idx, arr) => arr.findIndex((d) => d.label === dist.label) === idx)
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export const BUS_CLASSES = [
   { id: 'non_ac', label: 'Non AC', labelBn: 'নন এসি' },

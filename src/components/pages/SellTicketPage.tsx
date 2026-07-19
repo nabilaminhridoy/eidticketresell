@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import {
@@ -14,7 +14,7 @@ import {
   PLATFORM_FEE_PERCENTAGE,
   PLATFORM_FEE_MINIMUM,
 } from '@/lib/constants';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,6 @@ import {
   ArrowLeft,
   Upload,
   MapPin,
-  Clock,
   Bus,
   Train,
   Plane,
@@ -55,6 +54,8 @@ import {
   ShieldCheck,
   Lock,
   ArrowRight,
+  ArrowLeftRight,
+  CloudUpload,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -126,23 +127,15 @@ const initialForm: FormState = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Helper: transport icon                                             */
+/*  Transport tab config                                               */
 /* ------------------------------------------------------------------ */
 
-function TransportIcon({ type, className }: { type: string; className?: string }) {
-  switch (type) {
-    case 'bus':
-      return <Bus className={className} />;
-    case 'train':
-      return <Train className={className} />;
-    case 'flight':
-      return <Plane className={className} />;
-    case 'launch':
-      return <Ship className={className} />;
-    default:
-      return <Bus className={className} />;
-  }
-}
+const transportTabItems = [
+  { id: 'bus', icon: Bus, labelEn: 'Bus', labelBn: 'বাস', color: 'from-emerald-500 to-green-600' },
+  { id: 'train', icon: Train, labelEn: 'Train', labelBn: 'ট্রেন', color: 'from-teal-500 to-cyan-600' },
+  { id: 'flight', icon: Plane, labelEn: 'Flight', labelBn: 'ফ্লাইট', color: 'from-sky-500 to-blue-600' },
+  { id: 'launch', icon: Ship, labelEn: 'Launch', labelBn: 'লঞ্চ', color: 'from-violet-500 to-purple-600' },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Section wrapper                                                    */
@@ -210,6 +203,7 @@ export default function SellTicketPage() {
   const { user, token, isAuthenticated, updateUser } = useAuthStore();
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
+  const fontClass = isBn ? 'font-bangla' : '';
 
   const [form, setForm] = useState<FormState>(initialForm);
   const [uploading, setUploading] = useState(false);
@@ -220,6 +214,8 @@ export default function SellTicketPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [kycStatus, setKycStatus] = useState<'unknown' | 'none' | 'pending' | 'approved' | 'rejected'>('unknown');
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user profile & KYC status on mount
   useEffect(() => {
@@ -238,7 +234,6 @@ export default function SellTicketPage() {
           if (data.user?.isKycVerified) {
             setKycStatus('approved');
           } else {
-            // Check KYC application status
             const kycRes = await fetch('/api/kyc', {
               headers: { Authorization: `Bearer ${token}` },
             });
@@ -269,6 +264,12 @@ export default function SellTicketPage() {
     return Math.max(PLATFORM_FEE_MINIMUM, Math.round(sp * (PLATFORM_FEE_PERCENTAGE / 100)));
   }, [form.sellingPrice]);
 
+  const sellerReceives = useMemo(() => {
+    const sp = parseFloat(form.sellingPrice);
+    if (!sp || sp <= 0) return 0;
+    return sp - platformFee;
+  }, [form.sellingPrice, platformFee]);
+
   const showSeatClass = form.transportType === 'bus';
   const showDeckType = showSeatClass && DECK_REQUIRED_CLASSES.includes(form.seatClass);
   const isCounterCopy = form.ticketType === 'counter_copy';
@@ -278,11 +279,9 @@ export default function SellTicketPage() {
     <K extends keyof FormState>(key: K, value: FormState[K]) => {
       setForm((prev) => {
         const next = { ...prev, [key]: value };
-        // Reset deckType when class changes away from deck-requiring classes
         if (key === 'seatClass' && !DECK_REQUIRED_CLASSES.includes(value as string)) {
           next.deckType = '';
         }
-        // Reset delivery fields when ticket type changes
         if (key === 'ticketType') {
           next.deliveryType = '';
           next.meetingPlace = '';
@@ -293,12 +292,10 @@ export default function SellTicketPage() {
           next.ticketDocument = '';
           setUploadFileName('');
         }
-        // Reset transport-specific fields when transport type changes
         if (key === 'transportType') {
           next.seatClass = '';
           next.deckType = '';
         }
-        // Reset courier fields when delivery type changes
         if (key === 'deliveryType') {
           next.meetingPlace = '';
           next.courierName = '';
@@ -313,11 +310,7 @@ export default function SellTicketPage() {
   );
 
   /* ---- file upload ---- */
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type based on ticket type
+  const handleFileUpload = async (file: File) => {
     if (form.ticketType === 'online_copy') {
       if (file.type !== 'application/pdf') {
         toast.error(isBn ? 'শুধুমাত্র PDF ফাইল আপলোড করুন' : 'Only PDF files can be uploaded for Online Copy');
@@ -331,7 +324,6 @@ export default function SellTicketPage() {
       }
     }
 
-    // Validate file size (10MB for PDF, 5MB for images)
     const maxSize = form.ticketType === 'online_copy' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error(
@@ -372,6 +364,27 @@ export default function SellTicketPage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileUpload(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileUpload(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragOver(false);
   };
 
   /* ---- validation ---- */
@@ -489,11 +502,6 @@ export default function SellTicketPage() {
   const getDistrictLabel = (dist: (typeof ALL_BD_DISTRICTS)[number]) =>
     isBn ? dist.labelBn : dist.label;
 
-  const getTransportLabel = (id: string) => {
-    const tt = TRANSPORT_TYPES.find((t) => t.id === id);
-    return tt ? (isBn ? tt.labelBn : tt.label) : id;
-  };
-
   const getClassLabel = (id: string) => {
     const cls = BUS_CLASSES.find((c) => c.id === id);
     return cls ? (isBn ? cls.labelBn : cls.label) : id;
@@ -522,7 +530,7 @@ export default function SellTicketPage() {
     return (
       <div className="container mx-auto px-4 py-16 max-w-md text-center">
         <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary mb-4" />
-        <p className={`text-muted-foreground ${isBn ? 'font-bangla' : ''}`}>
+        <p className={`text-muted-foreground ${fontClass}`}>
           {isBn ? 'যাচাই করা হচ্ছে...' : 'Verifying...'}
         </p>
       </div>
@@ -538,10 +546,10 @@ export default function SellTicketPage() {
               <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-5">
                 <Lock className="w-8 h-8 text-primary" />
               </div>
-              <h2 className={`text-xl font-bold mb-2 ${isBn ? 'font-bangla' : ''}`}>
+              <h2 className={`text-xl font-bold mb-2 ${fontClass}`}>
                 {isBn ? 'লগইন প্রয়োজন' : 'Login Required'}
               </h2>
-              <p className={`text-muted-foreground mb-6 text-sm ${isBn ? 'font-bangla' : ''}`}>
+              <p className={`text-muted-foreground mb-6 text-sm ${fontClass}`}>
                 {isBn
                   ? 'টিকেট বিক্রি করতে আপনাকে প্রথমে লগইন করতে হবে।'
                   : 'You need to login first to sell tickets on our platform.'}
@@ -575,10 +583,10 @@ export default function SellTicketPage() {
               <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-5">
                 <ShieldCheck className="w-8 h-8 text-amber-600 dark:text-amber-400" />
               </div>
-              <h2 className={`text-xl font-bold mb-2 ${isBn ? 'font-bangla' : ''}`}>
+              <h2 className={`text-xl font-bold mb-2 ${fontClass}`}>
                 {isBn ? 'KYC যাচাইকরণ প্রয়োজন' : 'KYC Verification Required'}
               </h2>
-              <p className={`text-muted-foreground mb-6 text-sm ${isBn ? 'font-bangla' : ''}`}>
+              <p className={`text-muted-foreground mb-6 text-sm ${fontClass}`}>
                 {kycStatus === 'pending'
                   ? isBn
                     ? 'আপনার KYC আবেদন পর্যালোচনাধীন আছে। অনুমোদিত হলে আপনি টিকেট বিক্রি করতে পারবেন।'
@@ -595,27 +603,26 @@ export default function SellTicketPage() {
               {kycStatus === 'pending' && (
                 <div className="flex items-center justify-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg mb-6">
                   <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                  <span className={`text-sm text-amber-700 dark:text-amber-400 ${isBn ? 'font-bangla' : ''}`}>
+                  <span className={`text-sm text-amber-700 dark:text-amber-400 ${fontClass}`}>
                     {isBn ? 'পর্যালোচনাধীন — সাধারণত ২৪ ঘন্টার মধ্যে অনুমোদিত হয়' : 'Under review — usually approved within 24 hours'}
                   </span>
                 </div>
               )}
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                {kycStatus === 'none' || kycStatus === 'rejected' ? (
+                {(kycStatus === 'none' || kycStatus === 'rejected') && (
                   <Button onClick={() => navigate('kyc')} className="bg-gradient-to-r from-primary to-primary/90">
                     <ShieldCheck className="w-4 h-4 mr-2" />
                     {isBn ? 'KYC যাচাইকরণ শুরু করুন' : 'Start KYC Verification'}
                   </Button>
-                ) : null}
+                )}
                 <Button variant="outline" onClick={() => navigate('home')}>
                   {t('back', language)}
                 </Button>
               </div>
 
-              {/* Benefits list */}
               <div className="mt-6 pt-6 border-t text-left">
-                <p className={`text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 ${isBn ? 'font-bangla' : ''}`}>
+                <p className={`text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 ${fontClass}`}>
                   {isBn ? 'যাচাইকৃত বিক্রেতাদের সুবিধা' : 'Verified Seller Benefits'}
                 </p>
                 <ul className="space-y-2">
@@ -627,7 +634,7 @@ export default function SellTicketPage() {
                   ].map((benefit, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span className={isBn ? 'font-bangla' : ''}>{benefit}</span>
+                      <span className={fontClass}>{benefit}</span>
                     </li>
                   ))}
                 </ul>
@@ -654,10 +661,10 @@ export default function SellTicketPage() {
           <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-6">
             <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className={`text-2xl font-bold mb-3 ${isBn ? 'font-bangla' : ''}`}>
-            {t('success', language)}! 🎉
+          <h2 className={`text-2xl font-bold mb-3 ${fontClass}`}>
+            {t('success', language)}!
           </h2>
-          <p className={`text-muted-foreground mb-8 ${isBn ? 'font-bangla' : ''}`}>
+          <p className={`text-muted-foreground mb-8 ${fontClass}`}>
             {isBn
               ? 'আপনার টিকেট বিক্রির জন্য তালিকাভুক্ত হয়েছে। ক্রেতারা এখন এটি দেখতে পাবেন।'
               : 'Your ticket has been listed for sale. Buyers can now see it.'}
@@ -683,13 +690,17 @@ export default function SellTicketPage() {
   const PreviewCard = () => {
     const fromDist = ALL_BD_DISTRICTS.find((d) => d.label === form.from);
     const toDist = ALL_BD_DISTRICTS.find((d) => d.label === form.to);
+    const activeTransport = transportTabItems.find((t) => t.id === form.transportType);
+    const TransportIcon = activeTransport?.icon || Bus;
 
     return (
       <Card className="border-primary/20 shadow-md overflow-hidden">
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TransportIcon type={form.transportType} className="w-5 h-5 text-primary" />
-            <span className="font-semibold text-sm">{getTransportLabel(form.transportType)}</span>
+            <TransportIcon className="w-5 h-5 text-primary" />
+            <span className={`font-semibold text-sm ${fontClass}`}>
+              {activeTransport ? (isBn ? activeTransport.labelBn : activeTransport.labelEn) : ''}
+            </span>
           </div>
           <Badge variant={form.ticketType === 'online_copy' ? 'default' : 'secondary'} className="text-xs">
             {form.ticketType === 'online_copy'
@@ -702,14 +713,14 @@ export default function SellTicketPage() {
           <div className="flex items-center gap-3">
             <div className="flex-1 text-center">
               <p className="text-xs text-muted-foreground">{t('from', language)}</p>
-              <p className={`font-bold text-sm ${isBn ? 'font-bangla' : ''}`}>
+              <p className={`font-bold text-sm ${fontClass}`}>
                 {form.from ? (fromDist ? getDistrictLabel(fromDist) : form.from) : '—'}
               </p>
             </div>
             <div className="text-primary text-lg">→</div>
             <div className="flex-1 text-center">
               <p className="text-xs text-muted-foreground">{t('to', language)}</p>
-              <p className={`font-bold text-sm ${isBn ? 'font-bangla' : ''}`}>
+              <p className={`font-bold text-sm ${fontClass}`}>
                 {form.to ? (toDist ? getDistrictLabel(toDist) : form.to) : '—'}
               </p>
             </div>
@@ -719,7 +730,7 @@ export default function SellTicketPage() {
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <span className="text-muted-foreground">{t('transportCompany', language)}:</span>
-              <p className={`font-medium truncate ${isBn ? 'font-bangla' : ''}`}>{form.transportCompany || '—'}</p>
+              <p className={`font-medium truncate ${fontClass}`}>{form.transportCompany || '—'}</p>
             </div>
             <div>
               <span className="text-muted-foreground">{t('departureDate', language)}:</span>
@@ -736,13 +747,13 @@ export default function SellTicketPage() {
             {showSeatClass && form.seatClass && (
               <div>
                 <span className="text-muted-foreground">{isBn ? 'ক্লাস' : 'Class'}:</span>
-                <p className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{getClassLabel(form.seatClass)}</p>
+                <p className={`font-medium ${fontClass}`}>{getClassLabel(form.seatClass)}</p>
               </div>
             )}
             {showDeckType && form.deckType && (
               <div>
                 <span className="text-muted-foreground">{isBn ? 'ডেক' : 'Deck'}:</span>
-                <p className={`font-medium ${isBn ? 'font-bangla' : ''}`}>{getDeckLabel(form.deckType)}</p>
+                <p className={`font-medium ${fontClass}`}>{getDeckLabel(form.deckType)}</p>
               </div>
             )}
             {form.coachNumber && (
@@ -754,23 +765,19 @@ export default function SellTicketPage() {
           </div>
           <Separator />
           {/* Pricing */}
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">{isBn ? 'বিক্রয় মূল্য' : 'Selling Price'}</span>
-              <span className="font-semibold">
-                ৳{form.sellingPrice ? parseFloat(form.sellingPrice).toLocaleString() : '0'}
-              </span>
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-sm">
+              <span className={`text-muted-foreground ${fontClass}`}>{isBn ? 'টিকেট মূল্য' : 'Ticket Price'}</span>
+              <span className="font-semibold">৳{form.sellingPrice ? parseFloat(form.sellingPrice).toLocaleString() : '0'}</span>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">{t('platformFee', language)}</span>
-              <span className="text-amber-600 dark:text-amber-400">৳{platformFee.toLocaleString()}</span>
+            <div className="flex justify-between text-sm">
+              <span className={`text-muted-foreground ${fontClass}`}>{t('platformFee', language)} ({PLATFORM_FEE_PERCENTAGE}%)</span>
+              <span className="text-amber-600 dark:text-amber-400 font-medium">-৳{platformFee.toLocaleString()}</span>
             </div>
             <Separator />
             <div className="flex justify-between text-sm font-bold">
-              <span>{isBn ? 'ক্রেতা প্রদান করবে' : 'Buyer Pays'}</span>
-              <span className="text-primary">
-                ৳{form.sellingPrice ? (parseFloat(form.sellingPrice) + platformFee).toLocaleString() : '0'}
-              </span>
+              <span className={fontClass}>{isBn ? 'আপনি পাবেন' : 'You Receive'}</span>
+              <span className="text-emerald-600 dark:text-emerald-400">৳{sellerReceives.toLocaleString()}</span>
             </div>
           </div>
           {/* Delivery info */}
@@ -792,7 +799,7 @@ export default function SellTicketPage() {
               <Separator />
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <FileText className="w-3.5 h-3.5" />
-                <span>{isBn ? 'ক্রেতা পেমেন্টের পর ইমেইলে PDF পাবেন' : 'Buyer will receive PDF via email after payment'}</span>
+                <span className={fontClass}>{isBn ? 'ক্রেতা পেমেন্টের পর ইমেইলে PDF পাবেন' : 'Buyer will receive PDF via email after payment'}</span>
               </div>
             </>
           )}
@@ -806,18 +813,18 @@ export default function SellTicketPage() {
   /* ================================================================ */
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="container mx-auto px-3 sm:px-4 py-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Button variant="ghost" onClick={() => navigate('home')} className="gap-1.5">
           <ArrowLeft className="w-4 h-4" />
-          <span className={isBn ? 'font-bangla' : ''}>{t('back', language)}</span>
+          <span className={fontClass}>{t('back', language)}</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowPreview(!showPreview)}
-          className="gap-1.5 sm:hidden"
+          className="gap-1.5 lg:hidden"
         >
           <Eye className="w-4 h-4" />
           {isBn ? 'প্রিভিউ' : 'Preview'}
@@ -829,8 +836,8 @@ export default function SellTicketPage() {
           <Ticket className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h1 className={`text-xl font-bold ${isBn ? 'font-bangla' : ''}`}>{t('sellTicket', language)}</h1>
-          <p className={`text-sm text-muted-foreground ${isBn ? 'font-bangla' : ''}`}>
+          <h1 className={`text-xl font-bold ${fontClass}`}>{t('sellTicket', language)}</h1>
+          <p className={`text-sm text-muted-foreground ${fontClass}`}>
             {isBn ? 'আপনার টিকেটের বিস্তারিত তথ্য পূরণ করুন' : 'Fill in your ticket details to list for sale'}
           </p>
         </div>
@@ -840,69 +847,93 @@ export default function SellTicketPage() {
         {/* ---- FORM COLUMN ---- */}
         <div className="flex-1 min-w-0">
           <form onSubmit={handleSubmit} className="space-y-5">
+
             {/* ====== SECTION 1: Ticket Information ====== */}
             <FormSection
               title={isBn ? 'টিকেট তথ্য' : 'Ticket Information'}
               icon={<Ticket className="w-4 h-4 text-primary" />}
               language={language}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Transport Type */}
-                <div className="space-y-1.5">
-                  <FieldLabel required language={language}>{t('transport', language)}</FieldLabel>
-                  <Select value={form.transportType} onValueChange={(v) => set('transportType', v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TRANSPORT_TYPES.map((tt) => (
-                        <SelectItem key={tt.id} value={tt.id}>
-                          <span className="flex items-center gap-2">
-                            <TransportIcon type={tt.id} className="w-4 h-4" />
-                            {isBn ? tt.labelBn : tt.label}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Transport Type — Horizontal Tabs */}
+              <div className="space-y-1.5 mb-5">
+                <FieldLabel required language={language}>{t('transport', language)}</FieldLabel>
+                <div className="grid grid-cols-4 gap-2">
+                  {transportTabItems.map((item) => {
+                    const isActive = form.transportType === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => set('transportType', item.id)}
+                        className={`
+                          flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 
+                          py-3 px-2 rounded-xl border-2 transition-all text-sm font-medium
+                          min-h-[56px] sm:min-h-[48px]
+                          ${isActive
+                            ? `border-primary bg-gradient-to-br ${item.color} text-white shadow-md`
+                            : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+                          }
+                          ${fontClass}
+                        `}
+                      >
+                        <item.icon className="w-5 h-5 shrink-0" />
+                        <span className="text-xs sm:text-sm">{isBn ? item.labelBn : item.labelEn}</span>
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
 
-                {/* Ticket Type */}
-                <div className="space-y-1.5">
-                  <FieldLabel required language={language}>{t('ticketType', language)}</FieldLabel>
-                  <Select value={form.ticketType} onValueChange={(v) => set('ticketType', v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="online_copy">
-                        <span className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          {t('onlineCopy', language)}
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="counter_copy">
-                        <span className="flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4" />
-                          {t('counterCopy', language)}
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Ticket Type — Horizontal Tabs */}
+              <div className="space-y-1.5 mb-5">
+                <FieldLabel required language={language}>{t('ticketType', language)}</FieldLabel>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => set('ticketType', 'online_copy')}
+                    className={`
+                      flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 transition-all text-sm font-medium
+                      min-h-[48px]
+                      ${form.ticketType === 'online_copy'
+                        ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+                      }
+                      ${fontClass}
+                    `}
+                  >
+                    <FileText className="w-4 h-4 shrink-0" />
+                    {t('onlineCopy', language)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => set('ticketType', 'counter_copy')}
+                    className={`
+                      flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 transition-all text-sm font-medium
+                      min-h-[48px]
+                      ${form.ticketType === 'counter_copy'
+                        ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+                      }
+                      ${fontClass}
+                    `}
+                  >
+                    <ImageIcon className="w-4 h-4 shrink-0" />
+                    {t('counterCopy', language)}
+                  </button>
                 </div>
+              </div>
 
-                {/* Transport Company */}
+              {/* Transport Company + PNR */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>{t('transportCompany', language)}</FieldLabel>
                   <Input
                     value={form.transportCompany}
                     onChange={(e) => set('transportCompany', e.target.value)}
                     placeholder={isBn ? 'যেমন: Green Line, Shyamoli' : 'e.g. Green Line, Shyamoli'}
-                    className={isBn ? 'font-bangla' : ''}
+                    className={`h-11 ${fontClass}`}
                   />
                 </div>
-
-                {/* PNR / Ticket Number */}
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>
                     {isBn ? 'টিকেট/PNR নম্বর' : 'Ticket/PNR Number'}
@@ -911,12 +942,13 @@ export default function SellTicketPage() {
                     value={form.pnrNumber}
                     onChange={(e) => set('pnrNumber', e.target.value)}
                     placeholder={isBn ? 'যেমন: ETR-12345678' : 'e.g. ETR-12345678'}
+                    className="h-11"
                   />
                 </div>
               </div>
 
-              {/* File Upload */}
-              <div className="mt-4 space-y-1.5">
+              {/* File Upload — Full width drag & drop */}
+              <div className="space-y-1.5">
                 <FieldLabel required language={language}>
                   {isBn
                     ? form.ticketType === 'online_copy'
@@ -926,60 +958,81 @@ export default function SellTicketPage() {
                       ? 'Ticket PDF Upload'
                       : 'Ticket Image Upload'}
                 </FieldLabel>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('ticket-file-input')?.click()}
-                    disabled={uploading}
-                    className="gap-2"
+
+                {uploadFileName ? (
+                  <div className="flex items-center gap-3 p-4 rounded-xl border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400 truncate">{uploadFileName}</p>
+                      <p className={`text-xs text-emerald-600/70 dark:text-emerald-500 ${fontClass}`}>
+                        {isBn ? 'সফলভাবে আপলোড হয়েছে' : 'Uploaded successfully'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        set('ticketDocument', '');
+                        setUploadFileName('');
+                      }}
+                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`
+                      relative cursor-pointer rounded-xl border-2 border-dashed transition-all
+                      flex flex-col items-center justify-center gap-3 p-8 min-h-[160px]
+                      ${dragOver
+                        ? 'border-primary bg-primary/5 scale-[1.01]'
+                        : 'border-border hover:border-primary/40 hover:bg-primary/[0.02]'
+                      }
+                    `}
                   >
                     {uploading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <>
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                        <p className={`text-sm text-muted-foreground ${fontClass}`}>
+                          {isBn ? 'আপলোড হচ্ছে...' : 'Uploading...'}
+                        </p>
+                      </>
                     ) : (
-                      <Upload className="w-4 h-4" />
+                      <>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${dragOver ? 'bg-primary/10' : 'bg-muted/50'}`}>
+                          <CloudUpload className={`w-6 h-6 ${dragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+                        </div>
+                        <div className="text-center">
+                          <p className={`text-sm font-medium ${fontClass}`}>
+                            {isBn ? 'ফাইল এখানে ড্র্যাগ ও ড্রপ করুন' : 'Drag & drop your file here'}
+                          </p>
+                          <p className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>
+                            {isBn ? 'অথবা' : 'or'}{' '}
+                            <span className="text-primary font-medium underline underline-offset-2">
+                              {isBn ? 'ফাইল ব্রাউজ করুন' : 'browse files'}
+                            </span>
+                          </p>
+                        </div>
+                        <p className={`text-xs text-muted-foreground ${fontClass}`}>
+                          {form.ticketType === 'online_copy'
+                            ? isBn ? 'শুধুমাত্র PDF ফাইল (সর্বোচ্চ 10MB)' : 'Only PDF files allowed (max 10MB)'
+                            : isBn ? 'শুধুমাত্র PNG/JPG/JPEG ফাইল (সর্বোচ্চ 5MB)' : 'Only PNG/JPG/JPEG files allowed (max 5MB)'}
+                        </p>
+                      </>
                     )}
-                    {uploading
-                      ? isBn
-                        ? 'আপলোড হচ্ছে...'
-                        : 'Uploading...'
-                      : isBn
-                        ? 'ফাইল নির্বাচন করুন'
-                        : 'Choose File'}
-                  </Button>
-                  {uploadFileName && (
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span className="truncate max-w-[180px]">{uploadFileName}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          set('ticketDocument', '');
-                          setUploadFileName('');
-                        }}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <p className={`text-xs text-muted-foreground mt-1 ${isBn ? 'font-bangla' : ''}`}>
-                  {form.ticketType === 'online_copy'
-                    ? isBn
-                      ? 'শুধুমাত্র PDF ফাইল (সর্বোচ্চ 10MB)'
-                      : 'Only PDF files allowed (max 10MB)'
-                    : isBn
-                      ? 'শুধুমাত্র PNG/JPG/JPEG ফাইল (সর্বোচ্চ 5MB)'
-                      : 'Only PNG/JPG/JPEG files allowed (max 5MB)'}
-                </p>
-                <input
-                  id="ticket-file-input"
-                  type="file"
-                  className="hidden"
-                  accept={form.ticketType === 'online_copy' ? '.pdf' : '.png,.jpg,.jpeg'}
-                  onChange={handleFileUpload}
-                />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept={form.ticketType === 'online_copy' ? '.pdf' : '.png,.jpg,.jpeg'}
+                      onChange={handleFileInputChange}
+                    />
+                  </div>
+                )}
               </div>
             </FormSection>
 
@@ -989,42 +1042,75 @@ export default function SellTicketPage() {
               icon={<MapPin className="w-4 h-4 text-primary" />}
               language={language}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* From */}
+              {/* From & To — Side by side */}
+              <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-3 items-end mb-4">
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>{t('from', language)}</FieldLabel>
                   <Select value={form.from} onValueChange={(v) => set('from', v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isBn ? 'জেলা নির্বাচন করুন' : 'Select district'} />
+                    <SelectTrigger className="h-11 w-full">
+                      <SelectValue placeholder={isBn ? 'জেলা নির্বাচন' : 'Select district'} />
                     </SelectTrigger>
                     <SelectContent className="max-h-64">
                       {ALL_BD_DISTRICTS.map((dist) => (
-                        <SelectItem key={dist.label} value={dist.label}>
-                          {isBn ? dist.labelBn : dist.label}
+                        <SelectItem
+                          key={dist.label}
+                          value={dist.label}
+                          disabled={dist.label === form.to}
+                        >
+                          <span className={fontClass}>{isBn ? dist.labelBn : dist.label}</span>
+                          {dist.label === form.to && (
+                            <span className="text-xs text-muted-foreground ml-2">({isBn ? 'গন্তব্য' : 'destination'})</span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* To */}
+                <div className="flex items-center justify-center pb-1">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <ArrowLeftRight className="w-4 h-4 text-primary" />
+                  </div>
+                </div>
+
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>{t('to', language)}</FieldLabel>
                   <Select value={form.to} onValueChange={(v) => set('to', v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isBn ? 'জেলা নির্বাচন করুন' : 'Select district'} />
+                    <SelectTrigger className="h-11 w-full">
+                      <SelectValue placeholder={isBn ? 'জেলা নির্বাচন' : 'Select district'} />
                     </SelectTrigger>
                     <SelectContent className="max-h-64">
                       {ALL_BD_DISTRICTS.map((dist) => (
-                        <SelectItem key={dist.label} value={dist.label}>
-                          {isBn ? dist.labelBn : dist.label}
+                        <SelectItem
+                          key={dist.label}
+                          value={dist.label}
+                          disabled={dist.label === form.from}
+                        >
+                          <span className={fontClass}>{isBn ? dist.labelBn : dist.label}</span>
+                          {dist.label === form.from && (
+                            <span className="text-xs text-muted-foreground ml-2">({isBn ? 'শুরু' : 'origin'})</span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                {/* Travel Date */}
+              {/* Same district warning */}
+              {form.from && form.to && form.from === form.to && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center gap-2 mb-4"
+                >
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span className={fontClass}>{isBn ? 'শুরু ও গন্তব্য একই হতে পারে না' : 'From and To cannot be the same district'}</span>
+                </motion.div>
+              )}
+
+              {/* Departure Date & Time — Side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>{t('departureDate', language)}</FieldLabel>
                   <Input
@@ -1032,38 +1118,38 @@ export default function SellTicketPage() {
                     value={form.departureDate}
                     onChange={(e) => set('departureDate', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
+                    className="h-11"
                   />
                 </div>
-
-                {/* Departure Time */}
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>{t('departureTime', language)}</FieldLabel>
                   <Input
                     type="time"
                     value={form.departureTime}
                     onChange={(e) => set('departureTime', e.target.value)}
+                    className="h-11"
                   />
                 </div>
+              </div>
 
-                {/* Boarding Point */}
+              {/* Boarding & Dropping Point */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <FieldLabel language={language}>{isBn ? 'বোর্ডিং পয়েন্ট' : 'Boarding Point'}</FieldLabel>
                   <Input
                     value={form.boardingPoint}
                     onChange={(e) => set('boardingPoint', e.target.value)}
                     placeholder={isBn ? 'যেমন: Gabtoli, Sayedabad' : 'e.g. Gabtoli, Sayedabad'}
-                    className={isBn ? 'font-bangla' : ''}
+                    className={`h-11 ${fontClass}`}
                   />
                 </div>
-
-                {/* Dropping Point */}
                 <div className="space-y-1.5">
                   <FieldLabel language={language}>{isBn ? 'ড্রপিং পয়েন্ট' : 'Dropping Point'}</FieldLabel>
                   <Input
                     value={form.droppingPoint}
                     onChange={(e) => set('droppingPoint', e.target.value)}
                     placeholder={isBn ? 'যেমন: Oxygen More, CDA Market' : 'e.g. Oxygen More, CDA Market'}
-                    className={isBn ? 'font-bangla' : ''}
+                    className={`h-11 ${fontClass}`}
                   />
                 </div>
               </div>
@@ -1076,7 +1162,6 @@ export default function SellTicketPage() {
               language={language}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Seat Class - only for Bus */}
                 <AnimatePresence mode="wait">
                   {showSeatClass && (
                     <motion.div
@@ -1087,13 +1172,13 @@ export default function SellTicketPage() {
                     >
                       <FieldLabel required language={language}>{isBn ? 'ক্লাস' : 'Class'}</FieldLabel>
                       <Select value={form.seatClass} onValueChange={(v) => set('seatClass', v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={isBn ? 'ক্লাস নির্বাচন করুন' : 'Select class'} />
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder={isBn ? 'ক্লাস নির্বাচন' : 'Select class'} />
                         </SelectTrigger>
                         <SelectContent>
                           {BUS_CLASSES.map((cls) => (
                             <SelectItem key={cls.id} value={cls.id}>
-                              {isBn ? cls.labelBn : cls.label}
+                              <span className={fontClass}>{isBn ? cls.labelBn : cls.label}</span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1102,7 +1187,6 @@ export default function SellTicketPage() {
                   )}
                 </AnimatePresence>
 
-                {/* Deck Type - only for certain classes */}
                 <AnimatePresence mode="wait">
                   {showDeckType && (
                     <motion.div
@@ -1113,13 +1197,13 @@ export default function SellTicketPage() {
                     >
                       <FieldLabel required language={language}>{isBn ? 'ডেক টাইপ' : 'Deck Type'}</FieldLabel>
                       <Select value={form.deckType} onValueChange={(v) => set('deckType', v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={isBn ? 'ডেক নির্বাচন করুন' : 'Select deck'} />
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder={isBn ? 'ডেক নির্বাচন' : 'Select deck'} />
                         </SelectTrigger>
                         <SelectContent>
                           {DECK_TYPES.map((dk) => (
                             <SelectItem key={dk.id} value={dk.id}>
-                              {isBn ? dk.labelBn : dk.label}
+                              <span className={fontClass}>{isBn ? dk.labelBn : dk.label}</span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1128,31 +1212,24 @@ export default function SellTicketPage() {
                   )}
                 </AnimatePresence>
 
-                {/* Seat Number */}
                 <div className="space-y-1.5">
                   <FieldLabel language={language}>{t('seatNumber', language)}</FieldLabel>
                   <Input
                     value={form.seatNumber}
                     onChange={(e) => set('seatNumber', e.target.value)}
                     placeholder={isBn ? 'যেমন: A1, B3' : 'e.g. A1, B3'}
+                    className="h-11"
                   />
                 </div>
 
-                {/* Coach/Cabin/Room Number */}
                 <div className="space-y-1.5">
                   <FieldLabel language={language}>
                     {form.transportType === 'train'
-                      ? isBn
-                        ? 'কোচ/ক্যাবিন নম্বর'
-                        : 'Coach/Cabin Number'
+                      ? isBn ? 'কোচ/ক্যাবিন নম্বর' : 'Coach/Cabin Number'
                       : form.transportType === 'flight'
-                        ? isBn
-                          ? 'রুম/সিট নম্বর'
-                          : 'Room/Seat Number'
+                        ? isBn ? 'রুম/সিট নম্বর' : 'Room/Seat Number'
                         : form.transportType === 'launch'
-                          ? isBn
-                            ? 'ক্যাবিন/রুম নম্বর'
-                            : 'Cabin/Room Number'
+                          ? isBn ? 'ক্যাবিন/রুম নম্বর' : 'Cabin/Room Number'
                           : t('coachNumber', language)}
                   </FieldLabel>
                   <Input
@@ -1160,37 +1237,25 @@ export default function SellTicketPage() {
                     onChange={(e) => set('coachNumber', e.target.value)}
                     placeholder={
                       form.transportType === 'train'
-                        ? isBn
-                          ? 'যেমন: S-1, KA-3'
-                          : 'e.g. S-1, KA-3'
+                        ? isBn ? 'যেমন: S-1, KA-3' : 'e.g. S-1, KA-3'
                         : form.transportType === 'launch'
-                          ? isBn
-                            ? 'যেমন: Cabin-12'
-                            : 'e.g. Cabin-12'
-                          : isBn
-                            ? 'যেমন: Coach-1'
-                            : 'e.g. Coach-1'
+                          ? isBn ? 'যেমন: Cabin-12' : 'e.g. Cabin-12'
+                          : isBn ? 'যেমন: Coach-1' : 'e.g. Coach-1'
                     }
+                    className="h-11"
                   />
                 </div>
               </div>
 
-              {/* Info message when not bus */}
               {!showSeatClass && (
                 <div className="flex items-center gap-2 mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
                   <Info className="w-4 h-4 shrink-0" />
-                  <span className={isBn ? 'font-bangla' : ''}>
+                  <span className={fontClass}>
                     {form.transportType === 'train'
-                      ? isBn
-                        ? 'ট্রেনের ক্লাস নির্বাচন এখানে প্রযোজ্য নয়'
-                        : 'Class selection is not applicable for train tickets'
+                      ? isBn ? 'ট্রেনের ক্লাস নির্বাচন এখানে প্রযোজ্য নয়' : 'Class selection is not applicable for train tickets'
                       : form.transportType === 'flight'
-                        ? isBn
-                          ? 'ফ্লাইটের ক্লাস টিকেটে উল্লেখ থাকবে'
-                          : 'Flight class is mentioned on the ticket'
-                        : isBn
-                          ? 'লঞ্চের ক্যাবিন টাইপ টিকেটে উল্লেখ থাকবে'
-                          : 'Launch cabin type is mentioned on the ticket'}
+                        ? isBn ? 'ফ্লাইটের ক্লাস টিকেটে উল্লেখ থাকবে' : 'Flight class is mentioned on the ticket'
+                        : isBn ? 'লঞ্চের ক্যাবিন টাইপ টিকেটে উল্লেখ থাকবে' : 'Launch cabin type is mentioned on the ticket'}
                   </span>
                 </div>
               )}
@@ -1202,8 +1267,7 @@ export default function SellTicketPage() {
               icon={<DollarSign className="w-4 h-4 text-primary" />}
               language={language}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Original Price */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>
                     {isBn ? 'মূল টিকেট মূল্য (৳)' : 'Original Ticket Price (৳)'}
@@ -1214,10 +1278,9 @@ export default function SellTicketPage() {
                     value={form.originalPrice}
                     onChange={(e) => set('originalPrice', e.target.value)}
                     placeholder="0"
+                    className="h-11"
                   />
                 </div>
-
-                {/* Selling Price */}
                 <div className="space-y-1.5">
                   <FieldLabel required language={language}>
                     {isBn ? 'বিক্রয় মূল্য (৳)' : 'Selling Price (৳)'}
@@ -1228,40 +1291,44 @@ export default function SellTicketPage() {
                     value={form.sellingPrice}
                     onChange={(e) => set('sellingPrice', e.target.value)}
                     placeholder="0"
+                    className="h-11"
                   />
                 </div>
               </div>
 
-              {/* Platform Fee */}
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+              {/* Price breakdown panel */}
+              <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Info className="w-4 h-4 text-muted-foreground" />
-                    <span className={`text-sm text-muted-foreground ${isBn ? 'font-bangla' : ''}`}>
-                      {t('platformFee', language)}
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                    ৳{platformFee.toLocaleString()}
+                  <span className={`text-sm ${fontClass}`}>{isBn ? 'টিকেট মূল্য' : 'Ticket Price'}</span>
+                  <span className="text-sm font-semibold">
+                    ৳{form.sellingPrice ? parseFloat(form.sellingPrice).toLocaleString() : '0'}
                   </span>
                 </div>
-                <p className={`text-xs text-muted-foreground mt-1 ${isBn ? 'font-bangla' : ''}`}>
-                  {isBn
-                    ? `${PLATFORM_FEE_PERCENTAGE}% (সর্বনিম্ন ৳${PLATFORM_FEE_MINIMUM})`
-                    : `${PLATFORM_FEE_PERCENTAGE}% (min ৳${PLATFORM_FEE_MINIMUM})`}
-                </p>
-
-                {/* Total buyer pays */}
-                {form.sellingPrice && parseFloat(form.sellingPrice) > 0 && (
-                  <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                    <span className={`text-sm font-medium ${isBn ? 'font-bangla' : ''}`}>
-                      {isBn ? 'ক্রেতা সর্বমোট প্রদান করবে' : 'Buyer will pay total'}
-                    </span>
-                    <span className="text-base font-bold text-primary">
-                      ৳{(parseFloat(form.sellingPrice) + platformFee).toLocaleString()}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm text-muted-foreground ${fontClass}`}>
+                    {t('platformFee', language)} {PLATFORM_FEE_PERCENTAGE}% ({isBn ? `সর্বনিম্ন ৳${PLATFORM_FEE_MINIMUM}` : `min ৳${PLATFORM_FEE_MINIMUM}`})
+                  </span>
+                  <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                    -৳{platformFee.toLocaleString()}
+                  </span>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm font-bold ${fontClass}`}>
+                    {isBn ? 'ক্রেতা প্রদান করবে মোট' : 'Buyer will pay to you (seller) total'}
+                  </span>
+                  <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+                    ৳{form.sellingPrice ? (parseFloat(form.sellingPrice) + platformFee).toLocaleString() : '0'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm font-medium ${fontClass}`}>
+                    {isBn ? 'আপনি পাবেন (ফি কাটার পর)' : 'You will receive (after fee deduction)'}
+                  </span>
+                  <span className="text-sm font-bold text-primary">
+                    ৳{sellerReceives.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </FormSection>
 
@@ -1280,14 +1347,13 @@ export default function SellTicketPage() {
                     icon={<Truck className="w-4 h-4 text-primary" />}
                     language={language}
                   >
-                    {/* Delivery Type */}
                     <div className="space-y-1.5 mb-4">
                       <FieldLabel required language={language}>
                         {isBn ? 'টিকেট ডেলিভারি ধরন' : 'Ticket Delivery Type'}
                       </FieldLabel>
                       <Select value={form.deliveryType} onValueChange={(v) => set('deliveryType', v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={isBn ? 'ডেলিভারি ধরন নির্বাচন করুন' : 'Select delivery type'} />
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder={isBn ? 'ডেলিভারি ধরন নির্বাচন' : 'Select delivery type'} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="in_person">
@@ -1306,7 +1372,6 @@ export default function SellTicketPage() {
                       </Select>
                     </div>
 
-                    {/* In Person: Meeting Place */}
                     <AnimatePresence mode="wait">
                       {form.deliveryType === 'in_person' && (
                         <motion.div
@@ -1322,13 +1387,12 @@ export default function SellTicketPage() {
                             value={form.meetingPlace}
                             onChange={(e) => set('meetingPlace', e.target.value)}
                             placeholder={isBn ? 'যেমন: কমলাপুর রেলস্টেশন, গেট নং ৩' : 'e.g. Kamalapur Railway Station, Gate 3'}
-                            className={isBn ? 'font-bangla' : ''}
+                            className={`h-11 ${fontClass}`}
                           />
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    {/* Courier fields */}
                     <AnimatePresence mode="wait">
                       {form.deliveryType === 'courier' && (
                         <motion.div
@@ -1337,45 +1401,44 @@ export default function SellTicketPage() {
                           exit={{ opacity: 0, height: 0 }}
                           className="space-y-4"
                         >
-                          {/* Courier Name */}
-                          <div className="space-y-1.5">
-                            <FieldLabel required language={language}>
-                              {isBn ? 'কুরিয়ার সার্ভিস' : 'Courier Name'}
-                            </FieldLabel>
-                            <Select value={form.courierName} onValueChange={(v) => set('courierName', v)}>
-                              <SelectTrigger>
-                                <SelectValue placeholder={isBn ? 'কুরিয়ার নির্বাচন করুন' : 'Select courier'} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {COURIER_COMPANIES.map((cr) => (
-                                  <SelectItem key={cr.id} value={cr.id}>
-                                    {isBn ? cr.labelBn : cr.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <FieldLabel required language={language}>
+                                {isBn ? 'কুরিয়ার সার্ভিস' : 'Courier Name'}
+                              </FieldLabel>
+                              <Select value={form.courierName} onValueChange={(v) => set('courierName', v)}>
+                                <SelectTrigger className="h-11">
+                                  <SelectValue placeholder={isBn ? 'কুরিয়ার নির্বাচন' : 'Select courier'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {COURIER_COMPANIES.map((cr) => (
+                                    <SelectItem key={cr.id} value={cr.id}>
+                                      <span className={fontClass}>{isBn ? cr.labelBn : cr.label}</span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <FieldLabel required language={language}>
+                                {isBn ? 'ডেলিভারি ধরন' : 'Delivery Type'}
+                              </FieldLabel>
+                              <Select value={form.deliverySpeed} onValueChange={(v) => set('deliverySpeed', v)}>
+                                <SelectTrigger className="h-11">
+                                  <SelectValue placeholder={isBn ? 'ধরন নির্বাচন' : 'Select type'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {DELIVERY_SPEEDS.map((ds) => (
+                                    <SelectItem key={ds.id} value={ds.id}>
+                                      <span className={fontClass}>{isBn ? ds.labelBn : ds.label}</span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
 
-                          {/* Delivery Speed */}
-                          <div className="space-y-1.5">
-                            <FieldLabel required language={language}>
-                              {isBn ? 'ডেলিভারি ধরন' : 'Delivery Type'}
-                            </FieldLabel>
-                            <Select value={form.deliverySpeed} onValueChange={(v) => set('deliverySpeed', v)}>
-                              <SelectTrigger>
-                                <SelectValue placeholder={isBn ? 'ধরন নির্বাচন করুন' : 'Select type'} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {DELIVERY_SPEEDS.map((ds) => (
-                                  <SelectItem key={ds.id} value={ds.id}>
-                                    {isBn ? ds.labelBn : ds.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Delivery Charge Paid By */}
                           <div className="space-y-2">
                             <FieldLabel language={language}>
                               {isBn ? 'ডেলিভারি চার্জ প্রদানকারী' : 'Delivery Charge Paid by'}
@@ -1387,20 +1450,19 @@ export default function SellTicketPage() {
                             >
                               <div className="flex items-center gap-2">
                                 <RadioGroupItem value="seller" id="paid-seller" />
-                                <Label htmlFor="paid-seller" className={`text-sm ${isBn ? 'font-bangla' : ''}`}>
+                                <Label htmlFor="paid-seller" className={`text-sm ${fontClass}`}>
                                   {isBn ? 'বিক্রেতা (আপনি)' : 'Seller (You)'}
                                 </Label>
                               </div>
                               <div className="flex items-center gap-2">
                                 <RadioGroupItem value="buyer" id="paid-buyer" />
-                                <Label htmlFor="paid-buyer" className={`text-sm ${isBn ? 'font-bangla' : ''}`}>
+                                <Label htmlFor="paid-buyer" className={`text-sm ${fontClass}`}>
                                   {t('buyer', language)}
                                 </Label>
                               </div>
                             </RadioGroup>
                           </div>
 
-                          {/* Delivery Charge - only when buyer pays */}
                           <AnimatePresence mode="wait">
                             {form.deliveryChargePaidBy === 'buyer' && (
                               <motion.div
@@ -1418,6 +1480,7 @@ export default function SellTicketPage() {
                                   value={form.deliveryCharge}
                                   onChange={(e) => set('deliveryCharge', e.target.value)}
                                   placeholder="0"
+                                  className="h-11"
                                 />
                               </motion.div>
                             )}
@@ -1440,10 +1503,10 @@ export default function SellTicketPage() {
                       <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg">
                         <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                         <div>
-                          <p className={`text-sm font-medium ${isBn ? 'font-bangla' : ''}`}>
+                          <p className={`text-sm font-medium ${fontClass}`}>
                             {isBn ? 'অনলাইন কপি ডেলিভারি' : 'Online Copy Delivery'}
                           </p>
-                          <p className={`text-sm text-muted-foreground mt-1 ${isBn ? 'font-bangla' : ''}`}>
+                          <p className={`text-sm text-muted-foreground mt-1 ${fontClass}`}>
                             {isBn
                               ? 'ক্রেতা পেমেন্টের পর টিকেটটি PDF হিসেবে ইমেইলে পাবেন।'
                               : 'Buyer will receive the ticket as PDF via email after payment.'}
@@ -1463,23 +1526,16 @@ export default function SellTicketPage() {
               language={language}
             >
               <div className="space-y-4">
-                {/* Description */}
                 <div className="space-y-1.5">
                   <FieldLabel language={language}>{t('description', language)}</FieldLabel>
                   <Textarea
                     value={form.description}
                     onChange={(e) => set('description', e.target.value)}
-                    placeholder={
-                      isBn
-                        ? 'টিকেট সম্পর্কে বিস্তারিত লিখুন...'
-                        : 'Write details about the ticket...'
-                    }
+                    placeholder={isBn ? 'টিকেট সম্পর্কে বিস্তারিত লিখুন...' : 'Write details about the ticket...'}
                     rows={3}
-                    className={isBn ? 'font-bangla' : ''}
+                    className={fontClass}
                   />
                 </div>
-
-                {/* Seller Notes */}
                 <div className="space-y-1.5">
                   <FieldLabel language={language}>
                     {isBn ? 'বিক্রেতা নোট' : 'Seller Notes'}
@@ -1487,13 +1543,9 @@ export default function SellTicketPage() {
                   <Textarea
                     value={form.sellerNotes}
                     onChange={(e) => set('sellerNotes', e.target.value)}
-                    placeholder={
-                      isBn
-                        ? 'ক্রেতার জন্য বিশেষ নোট...'
-                        : 'Special notes for the buyer...'
-                    }
+                    placeholder={isBn ? 'ক্রেতার জন্য বিশেষ নোট...' : 'Special notes for the buyer...'}
                     rows={2}
-                    className={isBn ? 'font-bangla' : ''}
+                    className={fontClass}
                   />
                 </div>
               </div>
@@ -1509,7 +1561,7 @@ export default function SellTicketPage() {
                     exit={{ opacity: 0, height: 0 }}
                   >
                     <div className="mb-2">
-                      <h3 className={`text-sm font-semibold flex items-center gap-2 ${isBn ? 'font-bangla' : ''}`}>
+                      <h3 className={`text-sm font-semibold flex items-center gap-2 ${fontClass}`}>
                         <Eye className="w-4 h-4" />
                         {isBn ? 'টিকেট প্রিভিউ' : 'Ticket Preview'}
                       </h3>
@@ -1523,7 +1575,7 @@ export default function SellTicketPage() {
             {/* ====== AGREEMENTS ====== */}
             <Card className="border-border/50 shadow-sm">
               <CardContent className="p-4 sm:p-6 space-y-4">
-                <h3 className={`text-sm font-semibold flex items-center gap-2 ${isBn ? 'font-bangla' : ''}`}>
+                <h3 className={`text-sm font-semibold flex items-center gap-2 ${fontClass}`}>
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                   {isBn ? 'চুক্তি ও নিশ্চিতকরণ' : 'Agreements & Confirmation'}
                 </h3>
@@ -1536,7 +1588,7 @@ export default function SellTicketPage() {
                       onCheckedChange={(v) => set('confirmCorrect', v === true)}
                       className="mt-0.5"
                     />
-                    <Label htmlFor="confirm-correct" className={`text-sm leading-relaxed cursor-pointer ${isBn ? 'font-bangla' : ''}`}>
+                    <Label htmlFor="confirm-correct" className={`text-sm leading-relaxed cursor-pointer ${fontClass}`}>
                       {isBn
                         ? 'আমি নিশ্চিত করছি যে এই টিকেট তথ্য সঠিক।'
                         : 'I confirm this ticket information is correct.'}
@@ -1550,7 +1602,7 @@ export default function SellTicketPage() {
                       onCheckedChange={(v) => set('confirmLegalRight', v === true)}
                       className="mt-0.5"
                     />
-                    <Label htmlFor="confirm-legal" className={`text-sm leading-relaxed cursor-pointer ${isBn ? 'font-bangla' : ''}`}>
+                    <Label htmlFor="confirm-legal" className={`text-sm leading-relaxed cursor-pointer ${fontClass}`}>
                       {isBn
                         ? 'আমার এই টিকেট হস্তান্তরের আইনি অধিকার আছে।'
                         : 'I have the legal right to transfer this ticket.'}
@@ -1564,7 +1616,7 @@ export default function SellTicketPage() {
                       onCheckedChange={(v) => set('confirmFakeWarning', v === true)}
                       className="mt-0.5"
                     />
-                    <Label htmlFor="confirm-fake" className={`text-sm leading-relaxed cursor-pointer ${isBn ? 'font-bangla' : ''}`}>
+                    <Label htmlFor="confirm-fake" className={`text-sm leading-relaxed cursor-pointer ${fontClass}`}>
                       {isBn
                         ? 'আমি বুঝতে পেরেছি যে জাল টিকেট জমা দিলে আমার অ্যাকাউন্ট স্থগিত হতে পারে।'
                         : 'I understand fake ticket submission may result in account suspension.'}
@@ -1579,9 +1631,10 @@ export default function SellTicketPage() {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive"
+                className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive flex items-center gap-2"
               >
-                {error}
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span className={fontClass}>{error}</span>
               </motion.div>
             )}
 
@@ -1609,7 +1662,7 @@ export default function SellTicketPage() {
         {/* ---- PREVIEW SIDEBAR (desktop) ---- */}
         <div className="hidden lg:block w-80 shrink-0">
           <div className="sticky top-6">
-            <h3 className={`text-sm font-semibold flex items-center gap-2 mb-3 ${isBn ? 'font-bangla' : ''}`}>
+            <h3 className={`text-sm font-semibold flex items-center gap-2 mb-3 ${fontClass}`}>
               <Eye className="w-4 h-4" />
               {isBn ? 'টিকেট প্রিভিউ' : 'Ticket Preview'}
             </h3>

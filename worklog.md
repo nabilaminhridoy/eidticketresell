@@ -1,24 +1,26 @@
 ---
-Task ID: 1
+Task ID: 2
 Agent: Main Agent
-Task: QC testing all pages, remove Google login option
+Task: Redesign Sell Ticket Page UI per user requirements
 
 Work Log:
-- Explored full project structure: 9 page components, 19 API routes, 48 UI components
-- QC'd each page: LoginPage, RegisterPage, SearchPage, SellTicketPage, DashboardPage, TicketDetailsPage, KycPage, InfoPage, AdminPage
-- Found and fixed bugs:
-  1. LoginPage: Removed Google login button and "Or login with" divider
-  2. LoginPage: Fixed resend timer bug (useState → useEffect for interval cleanup)
-  3. SearchPage: Fixed loading state never showing (refactored to use useCallback + fetchIdRef pattern)
-  4. SellTicketPage: Fixed operator precedence bug in error message (added parentheses)
-  5. i18n.ts: Removed googleLogin and orLoginWith translation keys from both EN and BN
-- Ran lint check: all passing with 0 errors
-- Verified with Agent Browser: All pages pass QA on both desktop and mobile viewports
+- Rewrote SellTicketPage.tsx completely with all requested UI changes
+- Transport Type: Changed from dropdown to horizontal 4-column button tabs (Bus|Train|Flight|Launch) with icons, gradient active states, and smooth transitions
+- Ticket Type: Changed from dropdown to horizontal 2-column button tabs (Online Copy|Counter Copy) with icons
+- Upload: Full-width drag & drop zone with CloudUpload icon, dashed border, "browse files" link, drag event handlers (onDrop, onDragOver, onDragLeave), and uploaded file preview with remove button
+- From & To: Side-by-side layout using grid-cols-[1fr_auto_1fr] with ArrowLeftRight icon in circular badge between them
+- Departure Date & Time: Side-by-side in 2-column grid
+- Price Panel: Redesigned with 4-line breakdown:
+  1. Ticket Price → ৳amount
+  2. Platform Fee 2% (min ৳20) → -৳fee
+  3. Buyer will pay to you (seller) total → ৳total
+  4. You will receive (after fee deduction) → ৳sellerReceives
+- District Dropdown: Sorted A-Z using localeCompare, all 64 unique districts
+- Same District Validation: Disabled option in From if selected in To (and vice versa) with "(origin)"/"(destination)" labels, plus warning message
+- Updated constants.ts: Added .sort() to ALL_BD_DISTRICTS
+- Lint: 0 errors, 0 warnings
+- Browser verification: 8/8 checks PASS
 
 Stage Summary:
-- Google login fully removed from LoginPage (button, divider, SVG, i18n keys)
-- All pages render correctly on desktop (1920×1080) and mobile (375×812)
-- Login OTP/Password toggle works correctly
-- Mobile hamburger menu, language switcher, and theme toggle all functional
-- Search page now shows proper loading spinner during data fetch
-- No blocking issues found
+- All 8 UI changes implemented and verified via Agent Browser
+- Transport tabs, ticket type tabs, drag-drop upload, side-by-side layouts, pricing panel, A-Z districts, same-district validation all working
