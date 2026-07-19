@@ -998,8 +998,8 @@ export default function SellTicketPage() {
                       <SelectValue placeholder={isBn ? 'জেলা নির্বাচন করুন' : 'Select district'} />
                     </SelectTrigger>
                     <SelectContent className="max-h-64">
-                      {ALL_BD_DISTRICTS.map((dist, idx) => (
-                        <SelectItem key={`${dist.label}-${idx}`} value={dist.label}>
+                      {ALL_BD_DISTRICTS.map((dist) => (
+                        <SelectItem key={dist.label} value={dist.label}>
                           {isBn ? dist.labelBn : dist.label}
                         </SelectItem>
                       ))}
@@ -1015,8 +1015,8 @@ export default function SellTicketPage() {
                       <SelectValue placeholder={isBn ? 'জেলা নির্বাচন করুন' : 'Select district'} />
                     </SelectTrigger>
                     <SelectContent className="max-h-64">
-                      {ALL_BD_DISTRICTS.map((dist, idx) => (
-                        <SelectItem key={`${dist.label}-${idx}`} value={dist.label}>
+                      {ALL_BD_DISTRICTS.map((dist) => (
+                        <SelectItem key={dist.label} value={dist.label}>
                           {isBn ? dist.labelBn : dist.label}
                         </SelectItem>
                       ))}
