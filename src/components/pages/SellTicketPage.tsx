@@ -264,15 +264,33 @@ export default function SellTicketPage() {
     return Math.max(PLATFORM_FEE_MINIMUM, Math.round(sp * (PLATFORM_FEE_PERCENTAGE / 100)));
   }, [form.sellingPrice]);
 
+  const isCounterCopy = form.ticketType === 'counter_copy';
+
   const sellerReceives = useMemo(() => {
     const sp = parseFloat(form.sellingPrice);
     if (!sp || sp <= 0) return 0;
     return sp - platformFee;
   }, [form.sellingPrice, platformFee]);
 
+  // Buyer Pays depends on ticket type:
+  // Online Copy: Buyer Pays = Selling Price
+  // Counter Copy: Buyer Pays = Platform Fee
+  const buyerPays = useMemo(() => {
+    const sp = parseFloat(form.sellingPrice);
+    if (!sp || sp <= 0) return 0;
+    return isCounterCopy ? platformFee : sp;
+  }, [form.sellingPrice, platformFee, isCounterCopy]);
+
+  // Selling price exceeds original price check
+  const sellingPriceExceedsOriginal = useMemo(() => {
+    const sp = parseFloat(form.sellingPrice);
+    const op = parseFloat(form.originalPrice);
+    if (!sp || !op || sp <= 0 || op <= 0) return false;
+    return sp > op;
+  }, [form.sellingPrice, form.originalPrice]);
+
   const showSeatClass = form.transportType === 'bus';
   const showDeckType = showSeatClass && DECK_REQUIRED_CLASSES.includes(form.seatClass);
-  const isCounterCopy = form.ticketType === 'counter_copy';
 
   /* ---- setters ---- */
   const set = useCallback(
@@ -405,6 +423,8 @@ export default function SellTicketPage() {
       return isBn ? 'মূল টিকেটের মূল্য দিন' : 'Original ticket price is required';
     if (!form.sellingPrice || parseFloat(form.sellingPrice) <= 0)
       return isBn ? 'বিক্রয় মূল্য দিন' : 'Selling price is required';
+    if (parseFloat(form.sellingPrice) > parseFloat(form.originalPrice))
+      return isBn ? 'বিক্রয় মূল্য মূল টিকেট মূল্যের বেশি হতে পারে না' : 'Selling price cannot exceed original ticket price';
 
     if (isCounterCopy) {
       if (!form.deliveryType) return isBn ? 'ডেলিভারি টাইপ নির্বাচন করুন' : 'Delivery type is required for counter copy';
@@ -771,13 +791,17 @@ export default function SellTicketPage() {
               <span className="font-semibold">৳{form.sellingPrice ? parseFloat(form.sellingPrice).toLocaleString() : '0'}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className={`text-muted-foreground ${fontClass}`}>{t('platformFee', language)} ({PLATFORM_FEE_PERCENTAGE}%)</span>
+              <span className={`text-muted-foreground ${fontClass}`}>{t('platformFee', language)} {PLATFORM_FEE_PERCENTAGE}% ({isBn ? `সর্বনিম্ন ৳${PLATFORM_FEE_MINIMUM}` : `min ৳${PLATFORM_FEE_MINIMUM}`})</span>
               <span className="text-amber-600 dark:text-amber-400 font-medium">-৳{platformFee.toLocaleString()}</span>
             </div>
             <Separator />
             <div className="flex justify-between text-sm font-bold">
-              <span className={fontClass}>{isBn ? 'আপনি পাবেন' : 'You Receive'}</span>
-              <span className="text-emerald-600 dark:text-emerald-400">৳{sellerReceives.toLocaleString()}</span>
+              <span className={fontClass}>{isBn ? 'ক্রেতা প্রদান করবে' : 'Buyer Pays'}</span>
+              <span className="text-emerald-600 dark:text-emerald-400">৳{buyerPays.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className={`text-muted-foreground font-medium ${fontClass}`}>{isBn ? 'আপনি পাবেন (ফি কাটার পর)' : 'You Receive (after fee)'}</span>
+              <span className="text-primary font-bold">৳{sellerReceives.toLocaleString()}</span>
             </div>
           </div>
           {/* Delivery info */}
@@ -1288,13 +1312,37 @@ export default function SellTicketPage() {
                   <Input
                     type="number"
                     min="0"
+                    max={form.originalPrice || undefined}
                     value={form.sellingPrice}
                     onChange={(e) => set('sellingPrice', e.target.value)}
-                    placeholder="0"
-                    className="h-11"
+                    placeholder={form.originalPrice ? isBn ? `সর্বোচ্চ ৳${form.originalPrice}` : `Max ৳${form.originalPrice}` : '0'}
+                    className={`h-11 ${sellingPriceExceedsOriginal ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                   />
+                  {form.originalPrice && (
+                    <p className={`text-xs text-muted-foreground ${fontClass}`}>
+                      {isBn
+                        ? `বিক্রয় মূল্য মূল মূল্যের (৳${parseFloat(form.originalPrice).toLocaleString()}) সমান বা কম হতে হবে`
+                        : `Selling price must be equal to or less than original price (৳${parseFloat(form.originalPrice).toLocaleString()})`}
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {/* Selling price exceeds original price warning */}
+              {sellingPriceExceedsOriginal && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center gap-2 mb-5"
+                >
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span className={fontClass}>
+                    {isBn
+                      ? 'বিক্রয় মূল্য মূল টিকেট মূল্যের বেশি হতে পারে না'
+                      : 'Selling price cannot exceed original ticket price'}
+                  </span>
+                </motion.div>
+              )}
 
               {/* Price breakdown panel */}
               <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
@@ -1315,10 +1363,10 @@ export default function SellTicketPage() {
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className={`text-sm font-bold ${fontClass}`}>
-                    {isBn ? 'ক্রেতা প্রদান করবে মোট' : 'Buyer will pay to you (seller) total'}
+                    {isBn ? 'ক্রেতা প্রদান করবে' : 'Buyer Pays'}
                   </span>
                   <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
-                    ৳{form.sellingPrice ? (parseFloat(form.sellingPrice) + platformFee).toLocaleString() : '0'}
+                    ৳{buyerPays.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1329,6 +1377,26 @@ export default function SellTicketPage() {
                     ৳{sellerReceives.toLocaleString()}
                   </span>
                 </div>
+                {isCounterCopy && (
+                  <div className="flex items-start gap-2 p-2.5 bg-primary/5 rounded-lg mt-1">
+                    <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <span className={`text-xs text-muted-foreground ${fontClass}`}>
+                      {isBn
+                        ? 'কাউন্টার কপির ক্ষেত্রে ক্রেতা শুধুমাত্র প্ল্যাটফর্ম ফি প্রদান করবেন, বাকি টাকা বিক্রেতার সাথে সরাসরি লেনদেন হবে'
+                        : 'For Counter Copy, buyer only pays the platform fee. The remaining amount is transacted directly with the seller.'}
+                    </span>
+                  </div>
+                )}
+                {!isCounterCopy && (
+                  <div className="flex items-start gap-2 p-2.5 bg-primary/5 rounded-lg mt-1">
+                    <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <span className={`text-xs text-muted-foreground ${fontClass}`}>
+                      {isBn
+                        ? 'অনলাইন কপির ক্ষেত্রে ক্রেতা বিক্রয় মূল্য প্রদান করবেন, যার থেকে প্ল্যাটফর্ম ফি কেটে আপনি পাবেন'
+                        : 'For Online Copy, buyer pays the selling price. Platform fee is deducted and you receive the rest.'}
+                    </span>
+                  </div>
+                )}
               </div>
             </FormSection>
 
