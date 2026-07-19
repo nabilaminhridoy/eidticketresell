@@ -116,3 +116,29 @@ Stage Summary:
 - All sections correctly placed per user specification
 - BRTA notice, date/time formatting, delivery info all consistent with sell ticket page
 - Price card is sticky on right side with purchase CTA
+---
+Task ID: 4
+Agent: Main Agent
+Task: Redesign search page ticket cards with new 6-row layout
+
+Work Log:
+- Completely rewrote SearchPage.tsx ticket cards with 6-row layout matching user specification
+- Changed from 3-column grid (sm:grid-cols-2 lg:grid-cols-3) to single-column vertical stack (space-y-3)
+- Row 1: Transport Type badge (color-coded) | Ticket Type badge (Online/Counter Copy) | Save Price badge (green, conditional)
+- Row 2: From → To (font-bold text-lg)
+- Row 3: Transport Company Name (muted, truncated)
+- Row 4: Departure Date (Date-MonthName-Year) | Departure Time (12h AM/PM) with icons
+- Row 5: Class badge (armchair icon) | Seat badge (conditional, only if seatClass/seatNumber exist)
+- Row 6: Bottom bar with bg-muted/30 and border-t: Original Price (strikethrough if discount) | Selling Price (bold primary) | "View Ticket" button (gradient)
+- Added getSaveInfo() helper to calculate saved amount and percentage
+- Added Save badge: green "Save ৳X (Y%)" with Tag icon (only shown when originalPrice > price)
+- Added Tag and ChevronRight icon imports
+- Updated seed data: 5 of 12 tickets now have originalPrice > price for discount visibility
+- Lint: 0 errors, 0 warnings
+- Agent Browser verification: all checks pass (vertical stack, 6-row layout, Save badges, strikethrough prices, View Ticket button)
+
+Stage Summary:
+- Ticket cards now match the exact 6-row layout specified by user
+- 5 tickets show discount badges: Green Line (20%), Shohagh (21%), Biman (18%), US-Bangla (12%), Sundarban (22%)
+- Strikethrough original price shown next to bold selling price for discounted tickets
+- Cards are stacked vertically in a single column list

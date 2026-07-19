@@ -17,10 +17,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import {
   Bus, TrainFront, Plane, Ship, Search, MapPin, Calendar, Clock,
   Loader2, FileText, Image as ImageIcon, Armchair, ArrowRight,
+  Tag, ChevronRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -128,10 +128,12 @@ export default function SearchPage() {
     return cls ? (isBn ? cls.labelBn : cls.label) : id;
   };
 
-  // Calculate buyer pays based on ticket type
-  const getBuyerPays = (tk: Ticket) => {
-    const fee = Math.max(PLATFORM_FEE_MINIMUM, Math.round(tk.price * PLATFORM_FEE_PERCENTAGE / 100));
-    return tk.ticketType === 'counter_copy' ? fee : tk.price;
+  // Calculate saved amount and percentage
+  const getSaveInfo = (tk: Ticket) => {
+    if (!tk.originalPrice || tk.originalPrice <= tk.price) return { amount: 0, percent: 0 };
+    const saved = tk.originalPrice - tk.price;
+    const percent = Math.round((saved / tk.originalPrice) * 100);
+    return { amount: saved, percent };
   };
 
   return (
@@ -220,14 +222,14 @@ export default function SearchPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {tickets.map((tk) => {
               const Icon = transportIcons[tk.transportType] || Bus;
               const color = transportColors[tk.transportType] || transportColors.bus;
               const isOnlineCopy = tk.ticketType === 'online_copy';
-              const buyerPays = getBuyerPays(tk);
-              const fee = Math.max(PLATFORM_FEE_MINIMUM, Math.round(tk.price * PLATFORM_FEE_PERCENTAGE / 100));
+              const saveInfo = getSaveInfo(tk);
+              const hasDiscount = saveInfo.amount > 0;
 
               return (
                 <motion.div
@@ -239,20 +241,20 @@ export default function SearchPage() {
                   transition={{ duration: 0.25 }}
                 >
                   <Card
-                    className="cursor-pointer hover:border-primary/30 hover:shadow-md transition-all group h-full"
+                    className="cursor-pointer hover:border-primary/30 hover:shadow-md transition-all group"
                     onClick={() => navigate('ticket-details', { id: tk.id })}
                   >
-                    <CardContent className="p-4 flex flex-col h-full">
-                      {/* Header: Transport + Ticket Type + Status */}
-                      <div className="flex items-start justify-between mb-3 gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge className={`${color} text-xs gap-1`}>
+                    <CardContent className="p-0">
+                      {/* ── Row 1: Transport Type | Ticket Type | Save Price ── */}
+                      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${color} text-xs gap-1 font-semibold`}>
                             <Icon className="w-3 h-3" />
                             {isBn ? TRANSPORT_TYPES.find((x) => x.id === tk.transportType)?.labelBn || tk.transportType : (TRANSPORT_TYPES.find((x) => x.id === tk.transportType)?.label || tk.transportType)}
                           </Badge>
                           <Badge
                             variant="outline"
-                            className={`text-[10px] ${
+                            className={`text-[10px] font-medium ${
                               isOnlineCopy
                                 ? 'border-emerald-300 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400'
                                 : 'border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-400'
@@ -264,82 +266,92 @@ export default function SearchPage() {
                             }
                           </Badge>
                         </div>
-                        {tk.status !== 'active' && (
-                          <Badge variant="secondary" className="text-xs">{tk.status}</Badge>
+                        {hasDiscount && (
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] gap-0.5 font-semibold">
+                            <Tag className="w-3 h-3" />
+                            {isBn
+                              ? `৳${saveInfo.amount.toLocaleString()} সাশ্রয় (${saveInfo.percent}%)`
+                              : `Save ৳${saveInfo.amount.toLocaleString()} (${saveInfo.percent}%)`
+                            }
+                          </Badge>
                         )}
                       </div>
 
-                      {/* Route */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`font-semibold text-base ${fontClass}`}>{tk.from}</span>
-                        <ArrowRight className="w-4 h-4 text-primary shrink-0" />
-                        <span className={`font-semibold text-base ${fontClass}`}>{tk.to}</span>
+                      {/* ── Row 2: From -> To ── */}
+                      <div className="px-4 pb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold text-lg ${fontClass}`}>{tk.from}</span>
+                          <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+                          <span className={`font-bold text-lg ${fontClass}`}>{tk.to}</span>
+                        </div>
                       </div>
 
-                      {/* Company */}
-                      <p className={`text-sm text-muted-foreground mb-2 truncate ${fontClass}`}>
-                        {tk.transportCompany}
-                      </p>
-
-                      {/* Date & Time - formatted */}
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2 flex-wrap">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-primary" />
-                          <span className={fontClass}>{formatDepartureDate(tk.departureDate, language)}</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-primary" />
-                          <span>{formatDepartureTime(tk.departureTime, language)}</span>
-                        </span>
+                      {/* ── Row 3: Transport Company ── */}
+                      <div className="px-4 pb-2">
+                        <p className={`text-sm text-muted-foreground truncate ${fontClass}`}>
+                          {tk.transportCompany}
+                        </p>
                       </div>
 
-                      {/* Seat info */}
+                      {/* ── Row 4: Departure Date | Departure Time ── */}
+                      <div className="px-4 pb-2">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                            <span className={`font-medium ${fontClass}`}>{formatDepartureDate(tk.departureDate, language)}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-primary" />
+                            <span className="font-medium">{formatDepartureTime(tk.departureTime, language)}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* ── Row 5: Class | Seat ── */}
                       {(tk.seatClass || tk.seatNumber) && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 flex-wrap">
-                          {tk.seatClass && (
-                            <span className="flex items-center gap-1">
-                              <Armchair className="w-3 h-3" />
-                              <span className={fontClass}>{getSeatClassLabel(tk.seatClass)}</span>
-                            </span>
-                          )}
-                          {tk.seatNumber && (
-                            <span>{isBn ? 'আসন' : 'Seat'}: {tk.seatNumber}</span>
-                          )}
+                        <div className="px-4 pb-2">
+                          <div className="flex items-center gap-3 text-xs">
+                            {tk.seatClass && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted/60 font-medium">
+                                <Armchair className="w-3 h-3 text-primary" />
+                                <span className={fontClass}>{getSeatClassLabel(tk.seatClass)}</span>
+                              </span>
+                            )}
+                            {tk.seatNumber && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted/60 font-medium">
+                                {isBn ? 'আসন' : 'Seat'}: {tk.seatNumber}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
 
-                      <div className="mt-auto">
-                        <Separator className="mb-3" />
-
-                        {/* Price section */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-lg font-bold text-primary">
-                                ৳{buyerPays.toLocaleString()}
+                      {/* ── Row 6: Original Price | Selling Price | View Ticket ── */}
+                      <div className="flex items-center justify-between px-4 py-3 bg-muted/30 rounded-b-lg border-t border-border/50">
+                        <div className="flex items-center gap-2.5">
+                          {hasDiscount ? (
+                            <>
+                              <span className={`text-sm line-through text-muted-foreground ${fontClass}`}>
+                                ৳{tk.originalPrice.toLocaleString()}
                               </span>
-                              {tk.ticketType === 'counter_copy' && (
-                                <span className={`text-[10px] text-amber-600 dark:text-amber-400 font-medium ${fontClass}`}>
-                                  {isBn ? 'ফি মাত্র' : 'fee only'}
-                                </span>
-                              )}
-                            </div>
-                            <p className={`text-[10px] text-muted-foreground ${fontClass}`}>
-                              {isOnlineCopy
-                                ? (isBn ? `বিক্রয় মূল্য ৳${tk.price.toLocaleString()}` : `Selling price ৳${tk.price.toLocaleString()}`)
-                                : (isBn ? `টিকেট মূল্য ৳${tk.price.toLocaleString()} ডেলিভারিতে দিন` : `Ticket ৳${tk.price.toLocaleString()} pay on delivery`)
-                              }
-                            </p>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="min-h-[40px] group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                            onClick={(e) => { e.stopPropagation(); navigate('ticket-details', { id: tk.id }); }}
-                          >
-                            {t('viewDetails', language)}
-                          </Button>
+                              <span className={`text-lg font-bold text-primary ${fontClass}`}>
+                                ৳{tk.price.toLocaleString()}
+                              </span>
+                            </>
+                          ) : (
+                            <span className={`text-lg font-bold text-primary ${fontClass}`}>
+                              ৳{tk.price.toLocaleString()}
+                            </span>
+                          )}
                         </div>
+                        <Button
+                          size="sm"
+                          className="min-h-[36px] bg-gradient-to-r from-primary to-primary/90 group-hover:shadow-md transition-shadow gap-1"
+                          onClick={(e) => { e.stopPropagation(); navigate('ticket-details', { id: tk.id }); }}
+                        >
+                          {isBn ? 'টিকেট দেখুন' : 'View Ticket'}
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
