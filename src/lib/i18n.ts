@@ -99,7 +99,6 @@ type TranslationKeys = {
   resetPassword: string;
   emailOtp: string;
   mobileOtp: string;
-  googleLogin: string;
   alreadyHaveAccount: string;
   dontHaveAccount: string;
   createAccount: string;
@@ -141,7 +140,6 @@ type TranslationKeys = {
   step: string;
   of: string;
   continueBtn: string;
-  orLoginWith: string;
 
   // KYC
   kycVerification: string;
@@ -410,7 +408,6 @@ const en: TranslationKeys = {
   resetPassword: 'Reset Password',
   emailOtp: 'Email OTP',
   mobileOtp: 'Mobile OTP',
-  googleLogin: 'Continue with Google',
   alreadyHaveAccount: 'Already have an account?',
   dontHaveAccount: "Don't have an account?",
   createAccount: 'Create Account',
@@ -452,7 +449,6 @@ const en: TranslationKeys = {
   step: 'Step',
   of: 'of',
   continueBtn: 'Continue',
-  orLoginWith: 'Or login with',
 
   kycVerification: 'KYC Verification',
   kycPending: 'KYC Pending',
@@ -712,7 +708,6 @@ const bn: TranslationKeys = {
   resetPassword: 'পাসওয়ার্ড রিসেট',
   emailOtp: 'ইমেইল ওটিপি',
   mobileOtp: 'মোবাইল ওটিপি',
-  googleLogin: 'গুগল দিয়ে চালিয়ে যান',
   alreadyHaveAccount: 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
   dontHaveAccount: 'অ্যাকাউন্ট নেই?',
   createAccount: 'অ্যাকাউন্ট তৈরি করুন',
@@ -754,7 +749,6 @@ const bn: TranslationKeys = {
   step: 'ধাপ',
   of: 'এর মধ্যে',
   continueBtn: 'চালিয়ে যান',
-  orLoginWith: 'অথবা এই দিয়ে লগইন',
 
   kycVerification: 'কেওয়াইসি যাচাই',
   kycPending: 'কেওয়াইসি অপেক্ষমাণ',

@@ -471,7 +471,7 @@ export default function SellTicketPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || isBn ? 'টিকেট তৈরি ব্যর্থ' : 'Failed to create ticket');
+        throw new Error(data.error || (isBn ? 'টিকেট তৈরি ব্যর্থ' : 'Failed to create ticket'));
       }
 
       setSuccess(true);
