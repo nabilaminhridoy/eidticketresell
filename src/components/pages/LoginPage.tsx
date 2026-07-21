@@ -145,12 +145,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero-light p-3 sm:p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-mesh p-3 sm:p-4">
       {/* Animated background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue/6 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-orange/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] gradient-orb-green" />
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] gradient-orb-blue" />
+        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] gradient-orb-orange" />
       </div>
 
       <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md mx-auto relative">
@@ -161,7 +161,7 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/25">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/25 shadow-gradient-green">
             <Ticket className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className={`text-2xl font-bold ${fontClass}`}>
@@ -177,9 +177,9 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <Card className="shadow-2xl border-primary/10 overflow-hidden">
-            {/* Gradient top border */}
-            <div className="h-1 bg-gradient-spectrum" />
+          <Card className="shadow-2xl border-primary/10 overflow-hidden card-gradient-border">
+            {/* Gradient top border - enhanced */}
+            <div className="h-1.5 bg-gradient-spectrum" />
 
             <CardHeader className="pb-2 px-4 sm:px-6 pt-5">
               {/* Login mode toggle */}
@@ -222,7 +222,7 @@ export default function LoginPage() {
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       placeholder={isBn ? 'ফোন / ইমেইল / ইউজারনেম' : 'Phone / Email / Username'}
-                      className="pl-10 h-11 border-primary/20 focus:border-primary"
+                      className="pl-10 h-11 border-primary/20 focus:border-primary ring-gradient-focus"
                     />
                   </div>
                 </div>
@@ -247,7 +247,7 @@ export default function LoginPage() {
                           type={showPassword ? 'text' : 'password'}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="pl-10 pr-10 h-11 border-primary/20 focus:border-primary"
+                          className="pl-10 pr-10 h-11 border-primary/20 focus:border-primary ring-gradient-focus"
                         />
                         <button
                           type="button"
@@ -349,7 +349,7 @@ export default function LoginPage() {
                 {/* Submit button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 btn-gradient-primary rounded-xl text-base"
+                  className="w-full h-12 btn-gradient-brand rounded-xl text-base shadow-gradient-brand hover:shadow-gradient-spectrum"
                   disabled={loading || (loginMode === 'otp' && otpSent && otp.length !== 6)}
                 >
                   {loading ? (
@@ -366,7 +366,7 @@ export default function LoginPage() {
                 {t('dontHaveAccount', language)}{' '}
                 <button
                   onClick={() => navigate('register')}
-                  className="text-primary font-semibold hover:underline min-h-[44px] inline-flex items-center px-1"
+                  className="text-primary font-semibold hover:underline min-h-[44px] inline-flex items-center px-1 hover-gradient-underline"
                 >
                   {t('createNow', language)}
                 </button>

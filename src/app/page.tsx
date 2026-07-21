@@ -160,12 +160,13 @@ function HomePage() {
   return (
     <>
       {/* ========== HERO SECTION ========== */}
-      <section className="relative overflow-hidden bg-gradient-hero-light">
+      <section className="relative overflow-hidden bg-gradient-mesh-animated">
         {/* Animated background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue/6 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange/4 rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] gradient-orb-green" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] gradient-orb-blue" />
+          <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] gradient-orb-orange" />
+          <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] gradient-orb-green" />
           <motion.div className="absolute top-20 left-[10%] text-primary/8" animate={{ y: [-10, 10, -10] }} transition={{ duration: 4, repeat: Infinity }}>
             <Bus className="w-14 h-14" />
           </motion.div>
@@ -185,7 +186,7 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <Badge className="mb-6 px-4 py-1.5 text-sm bg-gradient-to-r from-primary/15 to-orange/15 text-primary border-primary/20 hover:from-primary/20 hover:to-orange/20">
+              <Badge className="mb-6 px-4 py-1.5 text-sm bg-gradient-to-r from-primary/15 via-orange/10 to-blue/15 text-primary border-primary/20 hover:from-primary/20 hover:via-orange/15 hover:to-blue/20">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 {language === 'en' ? 'Eid Special 2025' : 'ঈদ স্পেশাল ২০২৫'}
               </Badge>
@@ -220,7 +221,7 @@ function HomePage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="max-w-xl mx-auto mb-8"
             >
-              <div className="flex items-center gap-2 p-2 rounded-2xl bg-card border-2 border-primary/20 shadow-xl shadow-primary/5 focus-within:border-primary/40 transition-colors">
+              <div className="flex items-center gap-2 p-2 rounded-2xl bg-card border-2 border-primary/20 shadow-gradient-brand focus-within:border-primary/40 focus-within:shadow-gradient-spectrum transition-all duration-300">
                 <div className="flex-1 flex items-center gap-2 px-3">
                   <Search className="w-5 h-5 text-muted-foreground shrink-0" />
                   <Input
@@ -248,12 +249,12 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <Button size="lg" onClick={() => navigate('search')} className="btn-gradient-brand rounded-xl text-base px-8 h-12">
+              <Button size="lg" onClick={() => navigate('search')} className="btn-gradient-brand rounded-xl text-base px-8 h-12 shadow-gradient-brand hover:shadow-gradient-spectrum">
                 <Ticket className="w-5 h-5 mr-2" />
                 {t('searchTickets', language)}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8 h-12 rounded-xl border-orange/30 hover:bg-orange/10 hover:text-orange hover:border-orange">
+              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8 h-12 rounded-xl border-orange/30 hover:bg-gradient-to-r hover:from-orange/10 hover:to-orange/5 hover:text-orange hover:border-orange">
                 {t('sellTickets', language)}
               </Button>
             </motion.div>
@@ -295,7 +296,7 @@ function HomePage() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               <Card
-                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 card-gradient-hover`}
+                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 card-gradient-hover glow-gradient`}
                 onClick={() => navigate('search', { transportType: transport.id })}
               >
                 <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center gap-4">
@@ -345,7 +346,7 @@ function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
-                <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover">
+                <Card className={`h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover ${index === 0 ? 'accent-line-green' : index === 1 ? 'accent-line-orange' : index === 2 ? 'accent-line-blue' : 'accent-line-brand'}`}>
                   <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                     <div className={`w-14 h-14 rounded-2xl ${item.gradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
                       {item.step}
@@ -386,7 +387,7 @@ function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover">
+              <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover accent-line-brand">
                 <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                   <div className={`w-14 h-14 rounded-2xl ${feature.gradient} flex items-center justify-center shadow-lg`}>
                     <feature.icon className="w-7 h-7 text-white" />
@@ -401,7 +402,7 @@ function HomePage() {
       </section>
 
       {/* ========== STATS ========== */}
-      <section className="relative overflow-hidden bg-gradient-hero py-16 lg:py-20">
+      <section className="relative overflow-hidden bg-gradient-hero bg-gradient-animated py-16 lg:py-20">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
         <div className="container mx-auto px-4 lg:px-8 relative">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -450,7 +451,7 @@ function HomePage() {
               transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               <Card
-                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300 card-gradient-hover"
+                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300 card-gradient-hover accent-line-green"
                 onClick={() => navigate('search', { from: route.from, to: route.to })}
               >
                 <CardContent className="p-5 flex items-center gap-3">
@@ -475,10 +476,11 @@ function HomePage() {
       </section>
 
       {/* ========== CTA ========== */}
-      <section className="relative overflow-hidden bg-gradient-spectrum-light">
+      <section className="relative overflow-hidden bg-gradient-mesh">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary/6 rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange/6 rounded-full blur-3xl" />
+          <div className="absolute -top-20 -right-20 w-80 h-80 gradient-orb-green" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 gradient-orb-orange" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 gradient-orb-blue" />
         </div>
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20 relative">
           <div className="max-w-2xl mx-auto text-center">
@@ -501,7 +503,7 @@ function HomePage() {
                 {language === 'en' ? 'Join thousands of verified sellers and reach millions of travelers across Bangladesh' : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং বাংলাদেশ জুড়ে লক্ষ লক্ষ যাত্রীর কাছে পৌঁছান'}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="lg" onClick={() => navigate('sell-ticket')} className="btn-gradient-orange rounded-xl px-8 h-12 text-base">
+                <Button size="lg" onClick={() => navigate('sell-ticket')} className="btn-gradient-orange rounded-xl px-8 h-12 text-base shadow-gradient-orange hover:shadow-gradient-brand">
                   <Ticket className="w-5 h-5 mr-2" />
                   {t('sellTickets', language)}
                 </Button>

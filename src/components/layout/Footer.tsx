@@ -57,7 +57,7 @@ export default function Footer() {
       <div className="divider-gradient" />
 
       {/* Main Footer Content */}
-      <div className="bg-gradient-hero-light">
+      <div className="bg-gradient-mesh">
         <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
 
@@ -74,10 +74,10 @@ export default function Footer() {
                   onClick={() => handleNavigate('home')}
                   className="flex items-center gap-2.5 mb-5 group"
                 >
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-primary shadow-md group-hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-primary shadow-md group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow">
                     <MoonStar className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <span className={`text-lg font-bold text-gradient-brand ${language === 'bn' ? 'font-bangla' : ''}`}>
+                  <span className={`text-lg font-bold text-gradient-spectrum ${language === 'bn' ? 'font-bangla' : ''}`}>
                     {t('appName', language)}
                   </span>
                 </button>
@@ -132,7 +132,7 @@ export default function Footer() {
                       href={social.href}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className={`flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary hover:text-primary-foreground transition-colors ${social.color}`}
+                      className={`flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary transition-all duration-300 icon-hover-gradient ${social.color}`}
                       aria-label={social.label}
                     >
                       <social.icon className="w-4 h-4" />
@@ -150,7 +150,7 @@ export default function Footer() {
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <h3 className={`text-sm font-semibold text-foreground mb-5 uppercase tracking-wider flex items-center gap-2 ${language === 'bn' ? 'font-bangla' : ''}`}>
-                <div className="w-1 h-5 rounded-full bg-gradient-primary" />
+                <div className="w-1.5 h-5 rounded-full bg-gradient-spectrum" />
                 {t('transport', language)}
               </h3>
               <ul className="space-y-3">
@@ -158,9 +158,9 @@ export default function Footer() {
                   <li key={link.labelKey}>
                     <button
                       onClick={() => handleNavigate(link.page)}
-                      className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group w-full"
+                      className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group w-full hover-gradient-underline"
                     >
-                      <span className={`flex items-center justify-center w-8 h-8 rounded-lg ${link.color} text-[0.65rem] shadow-sm group-hover:scale-105 transition-transform`}>
+                      <span className={`flex items-center justify-center w-8 h-8 rounded-lg ${link.color} text-[0.65rem] shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all`}>
                         <link.icon className="w-4 h-4 text-white" />
                       </span>
                       <span className={language === 'bn' ? 'font-bangla' : ''}>
@@ -181,7 +181,7 @@ export default function Footer() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h3 className={`text-sm font-semibold text-foreground mb-5 uppercase tracking-wider flex items-center gap-2 ${language === 'bn' ? 'font-bangla' : ''}`}>
-                <div className="w-1 h-5 rounded-full bg-gradient-brand" />
+                <div className="w-1.5 h-5 rounded-full bg-gradient-brand" />
                 {language === 'en' ? 'Quick Links' : 'দ্রুত লিংক'}
               </h3>
               <ul className="space-y-3">
@@ -189,9 +189,9 @@ export default function Footer() {
                   <li key={link.labelKey}>
                     <button
                       onClick={() => handleNavigate(link.page)}
-                      className={`text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group ${language === 'bn' ? 'font-bangla' : ''}`}
+                      className={`text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group hover-gradient-underline ${language === 'bn' ? 'font-bangla' : ''}`}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gradient-brand group-hover:opacity-100 transition-opacity opacity-40" />
                       {t(link.labelKey, language)}
                     </button>
                   </li>
@@ -207,7 +207,7 @@ export default function Footer() {
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <h3 className={`text-sm font-semibold text-foreground mb-5 uppercase tracking-wider flex items-center gap-2 ${language === 'bn' ? 'font-bangla' : ''}`}>
-                <div className="w-1 h-5 rounded-full bg-gradient-cool" />
+                <div className="w-1.5 h-5 rounded-full bg-gradient-cool" />
                 {language === 'en' ? 'Legal' : 'আইনি'}
               </h3>
               <ul className="space-y-3">
@@ -215,9 +215,9 @@ export default function Footer() {
                   <li key={link.labelKey}>
                     <button
                       onClick={() => handleNavigate(link.page)}
-                      className={`text-sm text-muted-foreground hover:text-blue transition-colors flex items-center gap-2 group ${language === 'bn' ? 'font-bangla' : ''}`}
+                      className={`text-sm text-muted-foreground hover:text-blue transition-colors flex items-center gap-2 group hover-gradient-underline ${language === 'bn' ? 'font-bangla' : ''}`}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue/40 group-hover:bg-blue transition-colors" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gradient-cool group-hover:opacity-100 transition-opacity opacity-40" />
                       {t(link.labelKey, language)}
                     </button>
                   </li>
@@ -229,7 +229,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="bg-gradient-primary">
+      <div className="bg-gradient-spectrum shadow-gradient-spectrum">
         <div className="container mx-auto px-4 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Copyright */}

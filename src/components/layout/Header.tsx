@@ -90,7 +90,7 @@ export default function Header() {
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
-          ? 'glass shadow-lg border-b border-border/50'
+          ? 'glass shadow-lg border-b-0'
           : 'bg-background/80 backdrop-blur-md border-b border-border/30'
       }`}
     >
@@ -103,11 +103,11 @@ export default function Header() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-primary shadow-md group-hover:shadow-lg transition-shadow shrink-0">
+          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-primary shadow-md group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow shrink-0">
             <MoonStar className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className={`text-base font-bold leading-tight text-gradient-brand truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+            <span className={`text-base font-bold leading-tight text-gradient-spectrum truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
               {t('appName', language)}
             </span>
             <span className={`text-[10px] text-muted-foreground leading-tight truncate hidden sm:block ${language === 'bn' ? 'font-bangla' : ''}`}>
@@ -134,8 +134,8 @@ export default function Header() {
               onClick={() => handleNavigate('search')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 ['bus', 'train', 'flight', 'launch', 'search'].includes(currentPage)
-                  ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'text-primary bg-gradient-to-r from-primary/10 to-primary/5'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground hover-gradient-brand'
               } ${language === 'bn' ? 'font-bangla' : ''}`}
             >
               <Ticket className="w-4 h-4" />
@@ -359,7 +359,7 @@ export default function Header() {
               <Button
                 size="sm"
                 onClick={() => handleNavigate('register')}
-                className="btn-gradient-primary rounded-lg"
+                className="btn-gradient-brand rounded-lg shadow-gradient-brand hover:shadow-gradient-spectrum"
               >
                 {t('register', language)}
               </Button>
@@ -380,7 +380,7 @@ export default function Header() {
                   <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-primary shadow-md">
                     <MoonStar className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <span className={`text-lg text-gradient-brand font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+                  <span className={`text-lg text-gradient-spectrum font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
                     {t('appName', language)}
                   </span>
                 </SheetTitle>
@@ -607,7 +607,7 @@ export default function Header() {
       </div>
 
       {/* Gradient divider line under header when scrolled */}
-      {scrolled && <div className="divider-gradient" />}
+      {scrolled && <div className="h-1 bg-gradient-spectrum" />}
     </motion.header>
   );
 }
@@ -629,8 +629,8 @@ function NavButton({
       onClick={onClick}
       className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
         active
-          ? 'text-primary bg-primary/10'
-          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+          ? 'text-primary bg-gradient-to-r from-primary/10 to-primary/5'
+          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground hover-gradient-brand'
       } ${lang === 'bn' ? 'font-bangla' : ''}`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -639,7 +639,7 @@ function NavButton({
       {active && (
         <motion.div
           layoutId="activeNav"
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 bg-gradient-brand rounded-full"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 bg-gradient-spectrum rounded-full"
           transition={{ type: 'spring', stiffness: 380, damping: 30 }}
         />
       )}
@@ -670,10 +670,10 @@ function MobileNavItem({
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left min-h-[44px] ${
         active
-          ? 'bg-gradient-to-r from-primary/10 to-primary/5 text-primary'
+          ? 'bg-gradient-to-r from-primary/10 via-orange/5 to-primary/5 text-primary'
           : destructive
           ? 'text-destructive hover:bg-destructive/10'
-          : 'text-foreground hover:bg-accent'
+          : 'text-foreground hover:bg-accent hover-gradient-brand'
       } ${lang === 'bn' ? 'font-bangla' : ''}`}
       whileTap={{ scale: 0.98 }}
     >
