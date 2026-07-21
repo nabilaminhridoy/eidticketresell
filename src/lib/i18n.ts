@@ -52,6 +52,11 @@ type TranslationKeys = {
   launch: string;
   transport: string;
   allTransport: string;
+  transportType: string;
+  journeyDate: string;
+  selectTransport: string;
+  selectCity: string;
+  selectDate: string;
 
   // Tickets
   tickets: string;
@@ -363,6 +368,11 @@ const en: TranslationKeys = {
   launch: 'Launch',
   transport: 'Transport',
   allTransport: 'All Transport',
+  transportType: 'Transport Type',
+  journeyDate: 'Journey Date',
+  selectTransport: 'Select transport',
+  selectCity: 'Select city',
+  selectDate: 'Select date',
 
   tickets: 'Tickets',
   ticketDetails: 'Ticket Details',
@@ -663,6 +673,11 @@ const bn: TranslationKeys = {
   launch: 'লঞ্চ',
   transport: 'যানবাহন',
   allTransport: 'সকল যানবাহন',
+  transportType: 'যানবাহনের ধরন',
+  journeyDate: 'যাত্রার তারিখ',
+  selectTransport: 'যানবাহন বেছে নিন',
+  selectCity: 'শহর বেছে নিন',
+  selectDate: 'তারিখ বেছে নিন',
 
   tickets: 'টিকেট',
   ticketDetails: 'টিকেট বিস্তারিত',

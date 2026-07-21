@@ -37,3 +37,27 @@ Stage Summary:
 - Comprehensive gradient theme implemented across all major components
 - Colors: Green (#16a34a) → Orange (#f97316) → Blue (#2563eb) with White (#ffffff) base
 - Lint passes, server compiles and renders successfully
+
+---
+Task ID: 3
+Agent: main
+Task: Fix blank preview panel + Replace search bar with Transport Search Form
+
+Work Log:
+- Diagnosed blank preview panel: server was dying between sessions, causing Caddy to show Z.ai fallback
+- Created robust watchdog script (keep-server-alive.sh) with auto-restart on crash
+- Used start-stop-daemon for proper daemonization
+- Verified page renders correctly via Caddy proxy (HTTP 200, 1.2MB full-page screenshot)
+- Replaced simple search bar with comprehensive Transport Search Form
+- New form has: Transport Type (Bus/Train/Flight/Launch), From (BD cities), To (BD cities), Journey Date
+- Added swap cities button between From and To fields
+- Search button navigates to search page with all filter params
+- Added i18n translations for: transportType, journeyDate, selectTransport, selectCity, selectDate
+- Verified desktop layout (4-column grid) and mobile layout (stacked vertically)
+- Lint passes clean
+
+Stage Summary:
+- Preview panel now shows full content (server running persistently via watchdog)
+- Transport Search Form implemented with all 4 fields + search button
+- Responsive: 4-column on desktop, stacked on mobile
+- Both English and Bengali translations added

@@ -1,20 +1,23 @@
 'use client';
 
-import { useState, useEffect, lazy, Suspense, ComponentType } from 'react';
+import { useState, useEffect, lazy, Suspense, ComponentType, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import AppShell from '@/components/layout/AppShell';
 import { useAppStore, useLanguageStore } from '@/lib/store';
 import {
   MoonStar, Ticket, ArrowRight, Bus, TrainFront, Plane, Ship,
   Shield, Star, Users, Zap, Search, ChevronRight, TrendingUp,
-  Clock, MapPin, Heart, CheckCircle2, Sparkles
+  Clock, MapPin, Heart, CheckCircle2, Sparkles, ArrowLeftRight,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { t } from '@/lib/i18n';
-import { POPULAR_ROUTES } from '@/lib/constants';
+import { POPULAR_ROUTES, BD_CITIES } from '@/lib/constants';
 
 // Loading fallback
 function PageLoader() {
@@ -100,6 +103,28 @@ const authPages = new Set(['login', 'register', 'forgot-password']);
 function HomePage() {
   const { navigate } = useAppStore();
   const { language } = useLanguageStore();
+  const isBn = language === 'bn';
+  const fontClass = isBn ? 'font-bangla' : '';
+
+  // Search form state
+  const [transportType, setTransportType] = useState('');
+  const [fromCity, setFromCity] = useState('');
+  const [toCity, setToCity] = useState('');
+  const [journeyDate, setJourneyDate] = useState('');
+
+  const swapCities = useCallback(() => {
+    setFromCity(toCity);
+    setToCity(fromCity);
+  }, [fromCity, toCity]);
+
+  const handleSearch = () => {
+    navigate('search', {
+      ...(transportType && { transportType }),
+      ...(fromCity && { from: fromCity }),
+      ...(toCity && { to: toCity }),
+      ...(journeyDate && { date: journeyDate }),
+    });
+  };
 
   const transportTypes = [
     { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, gradient: 'icon-bg-green', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
@@ -214,31 +239,124 @@ function HomePage() {
               {t('heroSubtitle', language)}
             </motion.p>
 
-            {/* Search Bar */}
+            {/* Transport Search Form */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="max-w-xl mx-auto mb-8"
+              className="max-w-3xl mx-auto mb-8"
             >
-              <div className="flex items-center gap-2 p-2 rounded-2xl bg-card border-2 border-primary/20 shadow-gradient-brand focus-within:border-primary/40 focus-within:shadow-gradient-spectrum transition-all duration-300">
-                <div className="flex-1 flex items-center gap-2 px-3">
-                  <Search className="w-5 h-5 text-muted-foreground shrink-0" />
-                  <Input
-                    placeholder={t('searchPlaceholder', language)}
-                    className="border-0 shadow-none focus-visible:ring-0 h-10 text-base"
-                    onClick={() => navigate('search')}
-                    readOnly
-                  />
+              <div className="rounded-2xl bg-card/90 backdrop-blur-sm border-2 border-primary/15 shadow-xl shadow-primary/5 p-5 sm:p-6 card-gradient-border">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Transport Type */}
+                  <div className="space-y-2">
+                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
+                      {t('transportType', language)}
+                    </Label>
+                    <Select value={transportType} onValueChange={setTransportType}>
+                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ring-gradient-focus ${fontClass}`}>
+                        <div className="flex items-center gap-2">
+                          <Bus className="w-4 h-4 text-primary shrink-0" />
+                          <SelectValue placeholder={t('selectTransport', language)} />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {transportTypes.map((tp) => (
+                          <SelectItem key={tp.id} value={tp.id} className={fontClass}>
+                            <div className="flex items-center gap-2">
+                              <tp.icon className="w-4 h-4" />
+                              {t(tp.labelKey, language)}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* From */}
+                  <div className="space-y-2">
+                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
+                      {t('from', language)}
+                    </Label>
+                    <Select value={fromCity} onValueChange={setFromCity}>
+                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ring-gradient-focus ${fontClass}`}>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-primary shrink-0" />
+                          <SelectValue placeholder={t('selectCity', language)} />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {BD_CITIES.map((city) => (
+                          <SelectItem key={city} value={city} className={fontClass}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* To + Swap */}
+                  <div className="space-y-2 relative">
+                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
+                      {t('to', language)}
+                    </Label>
+                    <Select value={toCity} onValueChange={setToCity}>
+                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ring-gradient-focus ${fontClass}`}>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-orange shrink-0" />
+                          <SelectValue placeholder={t('selectCity', language)} />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {BD_CITIES.map((city) => (
+                          <SelectItem key={city} value={city} className={fontClass}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {/* Swap button */}
+                    <button
+                      type="button"
+                      onClick={swapCities}
+                      className="absolute -left-6 top-[38px] z-10 w-8 h-8 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm hover:shadow-md"
+                      title={isBn ? 'শহর অদলাবদল' : 'Swap cities'}
+                    >
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Journey Date */}
+                  <div className="space-y-2">
+                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
+                      {t('journeyDate', language)}
+                    </Label>
+                    <div className="relative">
+                      <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue pointer-events-none" />
+                      <Input
+                        type="date"
+                        value={journeyDate}
+                        onChange={(e) => setJourneyDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className={`h-11 rounded-xl border-primary/20 bg-background pl-9 ring-gradient-focus ${fontClass}`}
+                        placeholder={t('selectDate', language)}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Button
-                  size="lg"
-                  onClick={() => navigate('search')}
-                  className="btn-gradient-primary rounded-xl px-6 h-10"
-                >
-                  <Search className="w-4 h-4 mr-2" />
-                  {t('search', language)}
-                </Button>
+
+                {/* Search Button */}
+                <div className="mt-5 flex justify-center">
+                  <Button
+                    size="lg"
+                    onClick={handleSearch}
+                    className="btn-gradient-brand rounded-xl text-base px-10 h-12 shadow-gradient-brand hover:shadow-gradient-spectrum transition-all duration-300 w-full sm:w-auto"
+                  >
+                    <Search className="w-5 h-5 mr-2" />
+                    {t('searchTickets', language)}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             </motion.div>
 
