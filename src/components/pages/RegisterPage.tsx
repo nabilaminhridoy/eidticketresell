@@ -294,11 +294,12 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-3 sm:p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-hero-light p-3 sm:p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/8 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue/6 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange/5 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-lg mx-auto relative">
@@ -309,7 +310,7 @@ export default function RegisterPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-3 shadow-lg">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-primary flex items-center justify-center mb-3 shadow-lg">
             <Ticket className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className={`text-2xl font-bold ${fontClass}`}>{t('appName', language)}</h1>
@@ -322,7 +323,7 @@ export default function RegisterPage() {
             <div key={step.number} className="flex items-center">
               <div className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 currentStep >= step.number
-                  ? 'bg-primary text-primary-foreground shadow-md'
+                  ? 'bg-gradient-primary text-primary-foreground shadow-md'
                   : 'bg-muted text-muted-foreground'
               } ${fontClass}`}>
                 <step.icon className="w-3.5 h-3.5" />
@@ -338,7 +339,8 @@ export default function RegisterPage() {
           ))}
         </div>
 
-        <Card className="shadow-xl border-primary/10 overflow-hidden">
+        <Card className="shadow-2xl border-primary/10 overflow-hidden">
+          <div className="h-1 bg-gradient-spectrum" />
           <CardHeader className="pb-4 px-4 sm:px-6">
             <CardTitle className={`text-xl text-center ${fontClass}`}>
               {currentStep === 1 && t('personalInfo', language)}
@@ -372,7 +374,7 @@ export default function RegisterPage() {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder={isBn ? 'আপনার পূর্ণ নাম' : 'Your full name'}
-                        className="pl-10"
+                        className="pl-10 border-primary/20 focus:border-primary"
                       />
                     </div>
                   </div>
@@ -388,7 +390,7 @@ export default function RegisterPage() {
                         value={username}
                         onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                         placeholder={isBn ? 'ইউজারনেম' : 'username'}
-                        className="pl-10"
+                        className="pl-10 border-primary/20 focus:border-primary"
                       />
                       {usernameStatus === 'checking' && (
                         <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
@@ -423,7 +425,7 @@ export default function RegisterPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@gmail.com"
-                        className="pl-10"
+                        className="pl-10 border-primary/20 focus:border-primary"
                       />
                     </div>
                     <p className={`text-xs text-muted-foreground ${fontClass}`}>
@@ -443,7 +445,7 @@ export default function RegisterPage() {
                         value={phone}
                         onChange={handlePhoneChange}
                         placeholder="+8801712345678"
-                        className="pl-10"
+                        className="pl-10 border-primary/20 focus:border-primary"
                       />
                     </div>
                     <p className={`text-xs text-muted-foreground ${fontClass}`}>
@@ -478,7 +480,7 @@ export default function RegisterPage() {
                           type="date"
                           value={dateOfBirth}
                           onChange={(e) => setDateOfBirth(e.target.value)}
-                          className="pl-10"
+                          className="pl-10 border-primary/20 focus:border-primary"
                           max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                         />
                       </div>
@@ -496,7 +498,7 @@ export default function RegisterPage() {
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 border-primary/20 focus:border-primary"
                       />
                       <button
                         type="button"
@@ -511,7 +513,7 @@ export default function RegisterPage() {
                     {password && (
                       <div className="space-y-2 mt-2">
                         <div className="flex items-center gap-2">
-                          <Progress value={passwordStrength.score * 20} className="h-1.5 flex-1" />
+                          <Progress value={passwordStrength.score * 20} className="h-1.5 flex-1 [&_[data-slot=progress-indicator]]:bg-gradient-primary" />
                           <span className={`text-xs font-medium ${fontClass}`} style={{
                             color: passwordStrength.score <= 1 ? '#ef4444' :
                               passwordStrength.score === 2 ? '#f97316' :
@@ -556,7 +558,7 @@ export default function RegisterPage() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 border-primary/20 focus:border-primary"
                       />
                       <button
                         type="button"
@@ -663,14 +665,14 @@ export default function RegisterPage() {
                   className="space-y-5"
                 >
                   {/* Email OTP */}
-                  <div className="space-y-3 p-3 sm:p-4 rounded-xl border bg-card">
+                  <div className="space-y-3 p-3 sm:p-4 rounded-xl border-orange/20 bg-orange/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-primary" />
+                        <span className="icon-bg-orange"><Mail className="w-4 h-4" /></span>
                         <Label className={`text-sm font-medium ${fontClass}`}>{t('emailOtp', language)}</Label>
                       </div>
                       {emailOtpVerified ? (
-                        <Badge variant="default" className="bg-emerald-600"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
+                        <Badge variant="default" className="bg-orange"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
                       ) : (
                         <Badge variant="secondary" className="max-w-[140px] truncate">{email}</Badge>
                       )}
@@ -732,14 +734,14 @@ export default function RegisterPage() {
                   </div>
 
                   {/* Phone OTP */}
-                  <div className="space-y-3 p-3 sm:p-4 rounded-xl border bg-card">
+                  <div className="space-y-3 p-3 sm:p-4 rounded-xl border-orange/20 bg-orange/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-primary" />
+                        <span className="icon-bg-orange"><Phone className="w-4 h-4" /></span>
                         <Label className={`text-sm font-medium ${fontClass}`}>{t('mobileOtp', language)}</Label>
                       </div>
                       {phoneOtpVerified ? (
-                        <Badge variant="default" className="bg-emerald-600"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
+                        <Badge variant="default" className="bg-orange"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
                       ) : (
                         <Badge variant="secondary" className="max-w-[140px] truncate">{phone}</Badge>
                       )}
@@ -829,7 +831,7 @@ export default function RegisterPage() {
                 <Button
                   variant="outline"
                   onClick={() => setCurrentStep((prev) => (prev - 1) as Step)}
-                  className={`h-11 ${fontClass}`}
+                  className={`h-11 border-primary/20 hover:bg-primary/10 hover:text-primary ${fontClass}`}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   {t('back', language)}
@@ -850,7 +852,7 @@ export default function RegisterPage() {
                     }
                     setCurrentStep((prev) => (prev + 1) as Step);
                   }}
-                  className="flex-1 h-11 bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 h-11 btn-gradient-primary rounded-xl"
                   disabled={currentStep === 1 && !isStep1Valid()}
                 >
                   {t('continueBtn', language)}
@@ -860,7 +862,7 @@ export default function RegisterPage() {
                 <Button
                   onClick={handleRegister}
                   disabled={!isStep3Valid() || loading}
-                  className="flex-1 h-11 bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 h-11 btn-gradient-primary rounded-xl"
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -11,7 +11,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Badge } from '@/components/ui/badge';
 import {
   Ticket, Eye, EyeOff, Loader2, Phone, Mail, AtSign,
-  Lock, Shield, ArrowRight, AlertCircle, KeyRound
+  Lock, Shield, ArrowRight, AlertCircle, KeyRound, MoonStar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -72,7 +72,7 @@ export default function LoginPage() {
       const body: Record<string, string> = { type: 'login' };
       if (identifier.includes('@')) body.email = identifier;
       else if (/^\+?\d/.test(identifier)) body.phone = identifier;
-      else body.email = identifier; // default fallback for username
+      else body.email = identifier;
 
       const res = await fetch('/api/auth/otp/send', {
         method: 'POST',
@@ -145,226 +145,246 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-3 sm:p-4">
-      {/* Background decoration */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-hero-light p-3 sm:p-4">
+      {/* Animated background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue/6 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-orange/5 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md mx-auto relative">
         {/* Logo */}
         <motion.div
-          className="text-center mb-6"
+          className="text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-3 shadow-lg">
-            <Ticket className="w-7 h-7 text-primary-foreground" />
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/25">
+            <Ticket className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className={`text-2xl font-bold ${fontClass}`}>{t('login', language)}</h1>
-          <p className={`text-sm text-muted-foreground mt-1 ${fontClass}`}>
+          <h1 className={`text-2xl font-bold ${fontClass}`}>
+            <span className="text-gradient-brand">{t('login', language)}</span>
+          </h1>
+          <p className={`text-sm text-muted-foreground mt-2 ${fontClass}`}>
             {isBn ? 'আপনার অ্যাকাউন্টে প্রবেশ করুন' : 'Welcome back! Sign in to continue'}
           </p>
         </motion.div>
 
-        <Card className="shadow-xl border-primary/10 overflow-hidden">
-          <CardHeader className="pb-2 px-4 sm:px-6">
-            {/* Login mode toggle */}
-            <div className="flex rounded-lg border bg-muted/50 p-1">
-              <button
-                onClick={() => { setLoginMode('password'); setError(''); setOtpSent(false); }}
-                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-2 rounded-md text-sm font-medium transition-all min-h-[44px] ${
-                  loginMode === 'password'
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                } ${fontClass}`}
-              >
-                <Lock className="w-3.5 h-3.5" />
-                {isBn ? 'পাসওয়ার্ড' : 'Password'}
-              </button>
-              <button
-                onClick={() => { setLoginMode('otp'); setError(''); }}
-                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-2 rounded-md text-sm font-medium transition-all min-h-[44px] ${
-                  loginMode === 'otp'
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                } ${fontClass}`}
-              >
-                <KeyRound className="w-3.5 h-3.5" />
-                {isBn ? 'ওটিপি' : 'OTP'}
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <form onSubmit={handleLogin} className="space-y-4">
-              {/* Identifier input */}
-              <div className="space-y-1.5">
-                <Label className={`text-sm font-medium ${fontClass}`}>
-                  {t('phoneEmailUsername', language)} <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <IdentifierIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder={isBn ? 'ফোন / ইমেইল / ইউজারনেম' : 'Phone / Email / Username'}
-                    className="pl-10 h-11"
-                  />
-                </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className="shadow-2xl border-primary/10 overflow-hidden">
+            {/* Gradient top border */}
+            <div className="h-1 bg-gradient-spectrum" />
+
+            <CardHeader className="pb-2 px-4 sm:px-6 pt-5">
+              {/* Login mode toggle */}
+              <div className="flex rounded-xl border bg-muted/50 p-1">
+                <button
+                  onClick={() => { setLoginMode('password'); setError(''); setOtpSent(false); }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
+                    loginMode === 'password'
+                      ? 'bg-gradient-primary text-primary-foreground shadow-md'
+                      : 'text-muted-foreground hover:text-foreground'
+                  } ${fontClass}`}
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  {isBn ? 'পাসওয়ার্ড' : 'Password'}
+                </button>
+                <button
+                  onClick={() => { setLoginMode('otp'); setError(''); }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
+                    loginMode === 'otp'
+                      ? 'bg-gradient-orange text-orange-foreground shadow-md'
+                      : 'text-muted-foreground hover:text-foreground'
+                  } ${fontClass}`}
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  {isBn ? 'ওটিপি' : 'OTP'}
+                </button>
               </div>
+            </CardHeader>
 
-              <AnimatePresence mode="wait">
-                {/* Password mode */}
-                {loginMode === 'password' && (
-                  <motion.div
-                    key="password-mode"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-1.5"
-                  >
-                    <Label className={`text-sm font-medium ${fontClass}`}>
-                      {t('password', language)} <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10 h-11"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => navigate('forgot-password')}
-                        className={`text-xs sm:text-sm text-primary hover:underline py-1 min-h-[36px] inline-flex items-center ${fontClass}`}
-                      >
-                        {t('forgotPassword', language)}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+            <CardContent className="px-4 sm:px-6 pb-6">
+              <form onSubmit={handleLogin} className="space-y-4">
+                {/* Identifier input */}
+                <div className="space-y-1.5">
+                  <Label className={`text-sm font-medium ${fontClass}`}>
+                    {t('phoneEmailUsername', language)} <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <IdentifierIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder={isBn ? 'ফোন / ইমেইল / ইউজারনেম' : 'Phone / Email / Username'}
+                      className="pl-10 h-11 border-primary/20 focus:border-primary"
+                    />
+                  </div>
+                </div>
 
-                {/* OTP mode */}
-                {loginMode === 'otp' && (
-                  <motion.div
-                    key="otp-mode"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-3"
-                  >
-                    {!otpSent ? (
-                      <div className="p-4 rounded-xl border bg-muted/30 text-center space-y-3">
-                        <Shield className="w-8 h-8 text-primary mx-auto" />
-                        <p className={`text-sm text-muted-foreground ${fontClass}`}>
-                          {isBn ? 'আপনার ফোন বা ইমেইলে ওটিপি পাঠানো হবে' : 'We\'ll send an OTP to your registered phone or email'}
-                        </p>
-                        <Button
+                <AnimatePresence mode="wait">
+                  {/* Password mode */}
+                  {loginMode === 'password' && (
+                    <motion.div
+                      key="password-mode"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-1.5"
+                    >
+                      <Label className={`text-sm font-medium ${fontClass}`}>
+                        {t('password', language)} <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pl-10 pr-10 h-11 border-primary/20 focus:border-primary"
+                        />
+                        <button
                           type="button"
-                          variant="outline"
-                          onClick={handleSendLoginOtp}
-                          disabled={!identifier || sendingOtp}
-                          className="w-full"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                         >
-                          {sendingOtp ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <KeyRound className="w-4 h-4 mr-2" />}
-                          {t('sendOtp', language)}
-                        </Button>
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <Label className={`text-sm font-medium ${fontClass}`}>{t('otpVerification', language)}</Label>
-                        <div className="flex justify-center">
-                          <InputOTP maxLength={6} value={otp} onChange={setOtp} containerClassName="flex items-center gap-1 sm:gap-2">
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
-                              <InputOTPSlot index={1} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
-                              <InputOTPSlot index={2} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
-                            </InputOTPGroup>
-                            <InputOTPGroup>
-                              <InputOTPSlot index={3} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
-                              <InputOTPSlot index={4} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
-                              <InputOTPSlot index={5} className="h-12 w-10 sm:h-12 sm:w-10 text-base" />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </div>
-                        <div className="flex items-center justify-center gap-2">
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => navigate('forgot-password')}
+                          className={`text-xs sm:text-sm text-primary hover:underline py-1 min-h-[36px] inline-flex items-center ${fontClass}`}
+                        >
+                          {t('forgotPassword', language)}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* OTP mode */}
+                  {loginMode === 'otp' && (
+                    <motion.div
+                      key="otp-mode"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-3"
+                    >
+                      {!otpSent ? (
+                        <div className="p-4 rounded-xl border border-orange/20 bg-orange/5 text-center space-y-3">
+                          <div className="w-12 h-12 rounded-xl icon-bg-orange mx-auto flex items-center justify-center">
+                            <Shield className="w-6 h-6 text-white" />
+                          </div>
+                          <p className={`text-sm text-muted-foreground ${fontClass}`}>
+                            {isBn ? 'আপনার ফোন বা ইমেইলে ওটিপি পাঠানো হবে' : 'We\'ll send an OTP to your registered phone or email'}
+                          </p>
                           <Button
                             type="button"
-                            variant="ghost"
-                            size="sm"
+                            variant="outline"
                             onClick={handleSendLoginOtp}
-                            disabled={resendTimer > 0 || sendingOtp}
+                            disabled={!identifier || sendingOtp}
+                            className="w-full border-orange/30 hover:bg-orange/10 hover:text-orange hover:border-orange"
                           >
-                            {resendTimer > 0
-                              ? `${isBn ? 'পুনঃপ্রেরণ' : 'Resend'} (${resendTimer}s)`
-                              : t('resendOtp', language)}
+                            {sendingOtp ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <KeyRound className="w-4 h-4 mr-2" />}
+                            {t('sendOtp', language)}
                           </Button>
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="space-y-3">
+                          <Label className={`text-sm font-medium ${fontClass}`}>{t('otpVerification', language)}</Label>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={otp} onChange={setOtp} containerClassName="flex items-center gap-1 sm:gap-2">
+                              <InputOTPGroup>
+                                <InputOTPSlot index={0} className="h-12 w-10 sm:h-12 sm:w-10 text-base border-primary/20 focus:border-primary" />
+                                <InputOTPSlot index={1} className="h-12 w-10 sm:h-12 sm:w-10 text-base border-primary/20 focus:border-primary" />
+                                <InputOTPSlot index={2} className="h-12 w-10 sm:h-12 sm:w-10 text-base border-primary/20 focus:border-primary" />
+                              </InputOTPGroup>
+                              <InputOTPGroup>
+                                <InputOTPSlot index={3} className="h-12 w-10 sm:h-12 sm:w-10 text-base border-primary/20 focus:border-primary" />
+                                <InputOTPSlot index={4} className="h-12 w-10 sm:h-12 sm:w-10 text-base border-primary/20 focus:border-primary" />
+                                <InputOTPSlot index={5} className="h-12 w-10 sm:h-12 sm:w-10 text-base border-primary/20 focus:border-primary" />
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleSendLoginOtp}
+                              disabled={resendTimer > 0 || sendingOtp}
+                            >
+                              {resendTimer > 0
+                                ? `${isBn ? 'পুনঃপ্রেরণ' : 'Resend'} (${resendTimer}s)`
+                                : t('resendOtp', language)}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Error message */}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm flex items-center gap-2 border border-destructive/20"
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span className={fontClass}>{error}</span>
                   </motion.div>
                 )}
-              </AnimatePresence>
 
-              {/* Error message */}
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2"
+                {/* Submit button */}
+                <Button
+                  type="submit"
+                  className="w-full h-12 btn-gradient-primary rounded-xl text-base"
+                  disabled={loading || (loginMode === 'otp' && otpSent && otp.length !== 6)}
                 >
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span className={fontClass}>{error}</span>
-                </motion.div>
-              )}
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                  )}
+                  {t('login', language)}
+                </Button>
+              </form>
 
-              {/* Submit button */}
-              <Button
-                type="submit"
-                className="w-full h-11 bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/30 transition-shadow"
-                disabled={loading || (loginMode === 'otp' && otpSent && otp.length !== 6)}
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                )}
-                {t('login', language)}
-              </Button>
-            </form>
-
-            {/* Register link */}
-            <p className={`text-center text-sm text-muted-foreground mt-5 ${fontClass}`}>
-              {t('dontHaveAccount', language)}{' '}
-              <button
-                onClick={() => navigate('register')}
-                className="text-primary font-medium hover:underline min-h-[44px] inline-flex items-center px-1"
-              >
-                {t('createNow', language)}
-              </button>
-            </p>
-          </CardContent>
-        </Card>
+              {/* Register link */}
+              <p className={`text-center text-sm text-muted-foreground mt-6 ${fontClass}`}>
+                {t('dontHaveAccount', language)}{' '}
+                <button
+                  onClick={() => navigate('register')}
+                  className="text-primary font-semibold hover:underline min-h-[44px] inline-flex items-center px-1"
+                >
+                  {t('createNow', language)}
+                </button>
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Security note */}
-        <div className={`flex items-center justify-center gap-1.5 mt-4 text-xs text-muted-foreground ${fontClass}`}>
-          <Shield className="w-3 h-3" />
+        <motion.div
+          className={`flex items-center justify-center gap-1.5 mt-5 text-xs text-muted-foreground ${fontClass}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Shield className="w-3 h-3 text-primary" />
           {isBn ? 'আপনার তথ্য এন্ড-টু-এন্ড এনক্রিপ্টেড ও সুরক্ষিত' : 'Your data is encrypted and secure'}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

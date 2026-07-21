@@ -4,10 +4,15 @@ import { useState, useEffect, lazy, Suspense, ComponentType } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import AppShell from '@/components/layout/AppShell';
 import { useAppStore, useLanguageStore } from '@/lib/store';
-import { MoonStar, Ticket, ArrowRight, Bus, TrainFront, Plane, Ship, Shield, Star, Users, Zap } from 'lucide-react';
+import {
+  MoonStar, Ticket, ArrowRight, Bus, TrainFront, Plane, Ship,
+  Shield, Star, Users, Zap, Search, ChevronRight, TrendingUp,
+  Clock, MapPin, Heart, CheckCircle2, Sparkles
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { t } from '@/lib/i18n';
 import { POPULAR_ROUTES } from '@/lib/constants';
 
@@ -97,65 +102,110 @@ function HomePage() {
   const { language } = useLanguageStore();
 
   const transportTypes = [
-    { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, color: 'from-emerald-500 to-green-600' },
-    { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const, color: 'from-teal-500 to-cyan-600' },
-    { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const, color: 'from-sky-500 to-blue-600' },
-    { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, color: 'from-violet-500 to-purple-600' },
+    { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, gradient: 'icon-bg-green', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
+    { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const, gradient: 'icon-bg-blue', lightBg: 'bg-blue/10', hoverBorder: 'hover:border-blue/30' },
+    { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const, gradient: 'icon-bg-orange', lightBg: 'bg-orange/10', hoverBorder: 'hover:border-orange/30' },
+    { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, gradient: 'icon-bg-green', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
   ];
 
   const features = [
-    { icon: Shield, title: t('verified', language) + ' ' + t('seller', language), desc: language === 'en' ? 'All sellers go through KYC verification for your safety' : 'আপনার নিরাপত্তার জন্য সকল বিক্রেতা কেওয়াইসি যাচাইয় যান' },
-    { icon: Star, title: language === 'en' ? 'Escrow Protection' : 'এসক্রো সুরক্ষা', desc: language === 'en' ? 'Your payment is held securely until the journey is complete' : 'যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট নিরাপদে রাখা হয়' },
-    { icon: Zap, title: language === 'en' ? 'Instant Delivery' : 'তাৎক্ষণিক ডেলিভারি', desc: language === 'en' ? 'Get your tickets delivered instantly to your device' : 'আপনার ডিভাইসে তাৎক্ষণিক টিকেট ডেলিভারি' },
-    { icon: Users, title: language === 'en' ? '24/7 Support' : '২৪/৭ সাহায্য', desc: language === 'en' ? 'Our support team is always here to help you' : 'আমাদের সাহায্য দল সবসময় আপনাকে সাহায্য করতে এখানে' },
+    {
+      icon: Shield, title: t('verified', language) + ' ' + t('seller', language),
+      desc: language === 'en' ? 'All sellers go through KYC verification for your safety' : 'আপনার নিরাপত্তার জন্য সকল বিক্রেতা কেওয়াইসি যাচাইয় যান',
+      gradient: 'icon-bg-green'
+    },
+    {
+      icon: Star, title: language === 'en' ? 'Escrow Protection' : 'এসক্রো সুরক্ষা',
+      desc: language === 'en' ? 'Your payment is held securely until the journey is complete' : 'যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট নিরাপদে রাখা হয়',
+      gradient: 'icon-bg-orange'
+    },
+    {
+      icon: Zap, title: language === 'en' ? 'Instant Delivery' : 'তাৎক্ষণিক ডেলিভারি',
+      desc: language === 'en' ? 'Get your tickets delivered instantly to your device' : 'আপনার ডিভাইসে তাৎক্ষণিক টিকেট ডেলিভারি',
+      gradient: 'icon-bg-blue'
+    },
+    {
+      icon: Users, title: language === 'en' ? '24/7 Support' : '২৪/৭ সাহায্য',
+      desc: language === 'en' ? 'Our support team is always here to help you' : 'আমাদের সাহায্য দল সবসময় আপনাকে সাহায্য করতে এখানে',
+      gradient: 'icon-bg-green'
+    },
   ];
 
   const stats = [
-    { value: '10,000+', label: language === 'en' ? 'Tickets Sold' : 'টিকেট বিক্রি' },
-    { value: '5,000+', label: language === 'en' ? 'Happy Users' : 'সুখী ব্যবহারকারী' },
-    { value: '500+', label: language === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা' },
-    { value: '64+', label: language === 'en' ? 'Cities Covered' : 'শহর কভারেজ' },
+    { value: '10,000+', label: language === 'en' ? 'Tickets Sold' : 'টিকেট বিক্রি', color: 'text-primary' },
+    { value: '5,000+', label: language === 'en' ? 'Happy Users' : 'সুখী ব্যবহারকারী', color: 'text-orange' },
+    { value: '500+', label: language === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা', color: 'text-blue' },
+    { value: '64+', label: language === 'en' ? 'Cities Covered' : 'শহর কভারেজ', color: 'text-primary' },
+  ];
+
+  const steps = [
+    {
+      step: '01', title: t('step1Title', language), desc: t('step1Desc', language),
+      gradient: 'icon-bg-green', accent: 'bg-primary/10 border-primary/20'
+    },
+    {
+      step: '02', title: t('step2Title', language), desc: t('step2Desc', language),
+      gradient: 'icon-bg-orange', accent: 'bg-orange/10 border-orange/20'
+    },
+    {
+      step: '03', title: t('step3Title', language), desc: t('step3Desc', language),
+      gradient: 'icon-bg-blue', accent: 'bg-blue/10 border-blue/20'
+    },
+    {
+      step: '04', title: t('step4Title', language), desc: t('step4Desc', language),
+      gradient: 'icon-bg-green', accent: 'bg-primary/10 border-primary/20'
+    },
   ];
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10">
+      {/* ========== HERO SECTION ========== */}
+      <section className="relative overflow-hidden bg-gradient-hero-light">
+        {/* Animated background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-          <motion.div className="absolute top-20 left-[10%] text-primary/10" animate={{ y: [-10, 10, -10] }} transition={{ duration: 4, repeat: Infinity }}>
-            <Bus className="w-12 h-12" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue/6 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange/4 rounded-full blur-3xl" />
+          <motion.div className="absolute top-20 left-[10%] text-primary/8" animate={{ y: [-10, 10, -10] }} transition={{ duration: 4, repeat: Infinity }}>
+            <Bus className="w-14 h-14" />
           </motion.div>
-          <motion.div className="absolute top-40 right-[15%] text-primary/10" animate={{ y: [10, -10, 10] }} transition={{ duration: 3.5, repeat: Infinity }}>
-            <Plane className="w-10 h-10" />
+          <motion.div className="absolute top-40 right-[12%] text-orange/8" animate={{ y: [10, -10, 10] }} transition={{ duration: 3.5, repeat: Infinity }}>
+            <Plane className="w-12 h-12" />
           </motion.div>
-          <motion.div className="absolute bottom-40 left-[20%] text-primary/10" animate={{ y: [-8, 8, -8] }} transition={{ duration: 5, repeat: Infinity }}>
-            <TrainFront className="w-14 h-14" />
+          <motion.div className="absolute bottom-32 left-[18%] text-blue/8" animate={{ y: [-8, 8, -8] }} transition={{ duration: 5, repeat: Infinity }}>
+            <TrainFront className="w-16 h-16" />
           </motion.div>
         </div>
 
-        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-24 relative">
-          <div className="max-w-3xl mx-auto text-center">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm bg-primary/10 text-primary border-primary/20">
-                🌙 {language === 'en' ? 'Eid Special 2025' : 'ঈদ স্পেশাল ২০২৫'}
+        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-28 relative">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Badge className="mb-6 px-4 py-1.5 text-sm bg-gradient-to-r from-primary/15 to-orange/15 text-primary border-primary/20 hover:from-primary/20 hover:to-orange/20">
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                {language === 'en' ? 'Eid Special 2025' : 'ঈদ স্পেশাল ২০২৫'}
               </Badge>
             </motion.div>
 
+            {/* Title */}
             <motion.h1
-              className={`text-4xl lg:text-6xl font-bold tracking-tight mb-6 ${language === 'bn' ? 'font-bangla' : ''}`}
+              className={`text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] ${language === 'bn' ? 'font-bangla' : ''}`}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              <span className="text-gradient-hero">
                 {t('heroTitle', language)}
               </span>
             </motion.h1>
 
+            {/* Subtitle */}
             <motion.p
-              className={`text-lg lg:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto ${language === 'bn' ? 'font-bangla' : ''}`}
+              className={`text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -163,128 +213,303 @@ function HomePage() {
               {t('heroSubtitle', language)}
             </motion.p>
 
+            {/* Search Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="max-w-xl mx-auto mb-8"
+            >
+              <div className="flex items-center gap-2 p-2 rounded-2xl bg-card border-2 border-primary/20 shadow-xl shadow-primary/5 focus-within:border-primary/40 transition-colors">
+                <div className="flex-1 flex items-center gap-2 px-3">
+                  <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <Input
+                    placeholder={t('searchPlaceholder', language)}
+                    className="border-0 shadow-none focus-visible:ring-0 h-10 text-base"
+                    onClick={() => navigate('search')}
+                    readOnly
+                  />
+                </div>
+                <Button
+                  size="lg"
+                  onClick={() => navigate('search')}
+                  className="btn-gradient-primary rounded-xl px-6 h-10"
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  {t('search', language)}
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* CTA Buttons */}
             <motion.div
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <Button size="lg" onClick={() => navigate('search')} className="bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/30 transition-shadow text-base px-8">
+              <Button size="lg" onClick={() => navigate('search')} className="btn-gradient-brand rounded-xl text-base px-8 h-12">
                 <Ticket className="w-5 h-5 mr-2" />
                 {t('searchTickets', language)}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8">
+              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8 h-12 rounded-xl border-orange/30 hover:bg-orange/10 hover:text-orange hover:border-orange">
                 {t('sellTickets', language)}
               </Button>
             </motion.div>
           </div>
         </div>
+
+        {/* Wave divider */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            <path d="M0 60L48 55C96 50 192 40 288 35C384 30 480 30 576 33.3C672 36.7 768 43.3 864 45C960 46.7 1056 43.3 1152 38.3C1248 33.3 1344 26.7 1392 23.3L1440 20V60H0Z" className="fill-background" />
+          </svg>
+        </div>
       </section>
 
-      {/* Transport Types */}
-      <section className="container mx-auto px-4 lg:px-8 py-12">
-        <div className="text-center mb-8">
-          <h2 className={`text-2xl lg:text-3xl font-bold mb-2 ${language === 'bn' ? 'font-bangla' : ''}`}>
+      {/* ========== TRANSPORT TYPES ========== */}
+      <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+        <motion.div
+          className="text-center mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <Badge variant="secondary" className="mb-3 bg-primary/10 text-primary border-primary/20">
             {t('allTransport', language)}
+          </Badge>
+          <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+            {language === 'en' ? 'Choose Your Transport' : 'আপনার যানবাহন বেছে নিন'}
           </h2>
-        </div>
+        </motion.div>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {transportTypes.map((transport, index) => (
-            <Card key={transport.id} className="group cursor-pointer border-2 border-transparent hover:border-primary/30 transition-all hover:shadow-lg" onClick={() => navigate('search', { transportType: transport.id })}>
-              <CardContent className="p-6 flex flex-col items-center text-center gap-3">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${transport.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                  <transport.icon className="w-7 h-7 text-white" />
-                </div>
-                <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{t(transport.labelKey, language)}</h3>
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="bg-muted/30 py-16">
-        <div className="container mx-auto px-4 lg:px-8">
-          <h2 className={`text-2xl lg:text-3xl font-bold mb-8 text-center ${language === 'bn' ? 'font-bangla' : ''}`}>{t('howItWorksTitle', language)}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { step: '1', title: t('step1Title', language), desc: t('step1Desc', language) },
-              { step: '2', title: t('step2Title', language), desc: t('step2Desc', language) },
-              { step: '3', title: t('step3Title', language), desc: t('step3Desc', language) },
-              { step: '4', title: t('step4Title', language), desc: t('step4Desc', language) },
-            ].map((item, index) => (
-              <Card key={index} className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-md">
-                <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold text-lg shadow-lg">{item.step}</div>
-                  <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{item.title}</h3>
-                  <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{item.desc}</p>
+            <motion.div
+              key={transport.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+            >
+              <Card
+                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 card-gradient-hover`}
+                onClick={() => navigate('search', { transportType: transport.id })}
+              >
+                <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center gap-4">
+                  <div className={`w-16 h-16 rounded-2xl ${transport.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
+                    <transport.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>
+                    {t(transport.labelKey, language)}
+                  </h3>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                    <span className={language === 'bn' ? 'font-bangla' : ''}>
+                      {language === 'en' ? 'Browse tickets' : 'টিকেট দেখুন'}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </CardContent>
               </Card>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ========== HOW IT WORKS ========== */}
+      <section className="bg-section-green">
+        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
+              {t('howItWorks', language)}
+            </Badge>
+            <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+              {t('howItWorksTitle', language)}
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {steps.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+              >
+                <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover">
+                  <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl ${item.gradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+                      {item.step}
+                    </div>
+                    <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{item.title}</h3>
+                    <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{item.desc}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="container mx-auto px-4 lg:px-8 py-16">
-        <h2 className={`text-2xl lg:text-3xl font-bold mb-8 text-center ${language === 'bn' ? 'font-bangla' : ''}`}>{t('whyChooseUs', language)}</h2>
+      {/* ========== WHY CHOOSE US ========== */}
+      <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <Badge variant="secondary" className="mb-3 bg-blue/10 text-blue border-blue/20">
+            {t('whyChooseUs', language)}
+          </Badge>
+          <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+            {t('whyChooseUs', language)}
+          </h2>
+        </motion.div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <Card key={index} className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-md">
-              <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"><feature.icon className="w-6 h-6 text-primary" /></div>
-                <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.title}</h3>
-                <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.desc}</p>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+            >
+              <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover">
+                <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                  <div className={`w-14 h-14 rounded-2xl ${feature.gradient} flex items-center justify-center shadow-lg`}>
+                    <feature.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.title}</h3>
+                  <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.desc}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="bg-gradient-to-r from-primary to-primary/80 py-16">
-        <div className="container mx-auto px-4 lg:px-8">
+      {/* ========== STATS ========== */}
+      <section className="relative overflow-hidden bg-gradient-hero py-16 lg:py-20">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
+        <div className="container mx-auto px-4 lg:px-8 relative">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl lg:text-4xl font-bold text-primary-foreground mb-2">{stat.value}</div>
-                <div className={`text-primary-foreground/80 ${language === 'bn' ? 'font-bangla' : ''}`}>{stat.label}</div>
-              </div>
+              <motion.div
+                key={index}
+                className="text-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+              >
+                <div className="text-3xl lg:text-5xl font-bold text-white mb-2">{stat.value}</div>
+                <div className={`text-white/80 text-sm lg:text-base ${language === 'bn' ? 'font-bangla' : ''}`}>{stat.label}</div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Popular Routes */}
-      <section className="container mx-auto px-4 lg:px-8 py-16">
-        <h2 className={`text-2xl lg:text-3xl font-bold mb-8 text-center ${language === 'bn' ? 'font-bangla' : ''}`}>{t('popularRoutes', language)}</h2>
+      {/* ========== POPULAR ROUTES ========== */}
+      <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+        <motion.div
+          className="text-center mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            {t('popularRoutes', language)}
+          </Badge>
+          <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+            {t('popularRoutes', language)}
+          </h2>
+        </motion.div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {POPULAR_ROUTES.map((route, index) => (
-            <Card key={index} className="group cursor-pointer hover:border-primary/30 hover:shadow-md transition-all" onClick={() => navigate('search', { from: route.from, to: route.to })}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <span className={`font-medium truncate ${language === 'bn' ? 'font-bangla' : ''}`}>{language === 'bn' ? route.fromBn : route.from}</span>
-                <ArrowRight className="w-4 h-4 text-primary shrink-0" />
-                <span className={`font-medium truncate ${language === 'bn' ? 'font-bangla' : ''}`}>{language === 'bn' ? route.toBn : route.to}</span>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+            >
+              <Card
+                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300 card-gradient-hover"
+                onClick={() => navigate('search', { from: route.from, to: route.to })}
+              >
+                <CardContent className="p-5 flex items-center gap-3">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-gradient-primary group-hover:text-primary-foreground transition-all">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className={`font-medium truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+                      {language === 'bn' ? route.fromBn : route.from}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+                    <span className={`font-medium truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+                      {language === 'bn' ? route.toBn : route.to}
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-gradient-to-r from-primary/10 to-primary/5 py-16">
-        <div className="container mx-auto px-4 lg:px-8 text-center">
-          <h2 className={`text-2xl lg:text-3xl font-bold mb-4 ${language === 'bn' ? 'font-bangla' : ''}`}>
-            {language === 'en' ? 'Start Selling Your Tickets Today' : 'আজই আপনার টিকেট বিক্রি শুরু করুন'}
-          </h2>
-          <p className={`text-muted-foreground mb-8 max-w-lg mx-auto ${language === 'bn' ? 'font-bangla' : ''}`}>
-            {language === 'en' ? 'Join thousands of verified sellers and reach millions of travelers' : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন'}
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" onClick={() => navigate('sell-ticket')} className="bg-gradient-to-r from-primary to-primary/90 shadow-lg px-8">{t('sellTickets', language)}</Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('how-it-works')}>{language === 'en' ? 'Learn More' : 'আরও জানুন'}</Button>
+      {/* ========== CTA ========== */}
+      <section className="relative overflow-hidden bg-gradient-spectrum-light">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary/6 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange/6 rounded-full blur-3xl" />
+        </div>
+        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20 relative">
+          <div className="max-w-2xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <Badge className="mb-4 bg-orange/15 text-orange border-orange/20">
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                {language === 'en' ? 'Start Earning' : 'আয় শুরু করুন'}
+              </Badge>
+              <h2 className={`text-2xl lg:text-4xl font-bold mb-4 ${language === 'bn' ? 'font-bangla' : ''}`}>
+                <span className="text-gradient-brand">
+                  {language === 'en' ? 'Start Selling Your Tickets Today' : 'আজই আপনার টিকেট বিক্রি শুরু করুন'}
+                </span>
+              </h2>
+              <p className={`text-muted-foreground mb-8 max-w-lg mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>
+                {language === 'en' ? 'Join thousands of verified sellers and reach millions of travelers across Bangladesh' : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং বাংলাদেশ জুড়ে লক্ষ লক্ষ যাত্রীর কাছে পৌঁছান'}
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button size="lg" onClick={() => navigate('sell-ticket')} className="btn-gradient-orange rounded-xl px-8 h-12 text-base">
+                  <Ticket className="w-5 h-5 mr-2" />
+                  {t('sellTickets', language)}
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => navigate('how-it-works')} className="rounded-xl px-8 h-12 text-base border-blue/30 hover:bg-blue/10 hover:text-blue hover:border-blue">
+                  {language === 'en' ? 'Learn More' : 'আরও জানুন'}
+                </Button>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
