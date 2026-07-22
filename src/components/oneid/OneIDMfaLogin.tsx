@@ -306,7 +306,7 @@ export default function OneIDMfaLogin({ mfaToken, user }: OneIDMfaLoginProps) {
       {/* Icon area */}
       <div className="relative">
         <motion.div
-          className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25"
+          className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25"
           animate={pushStatus === 'pending' ? { scale: [1, 1.05, 1] } : {}}
           transition={pushStatus === 'pending' ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } : {}}
         >
@@ -394,7 +394,7 @@ export default function OneIDMfaLogin({ mfaToken, user }: OneIDMfaLoginProps) {
             {t('oneidPushSelectNumber', language).replace('{number}', '')}
           </p>
           <Badge
-            className="text-2xl font-bold px-6 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg"
+            className="text-2xl font-bold px-6 py-3 bg-primary text-primary-foreground shadow-lg"
           >
             {validNumber}
           </Badge>
@@ -506,7 +506,7 @@ export default function OneIDMfaLogin({ mfaToken, user }: OneIDMfaLoginProps) {
       className="flex flex-col items-center text-center space-y-5 py-4"
     >
       {/* Icon */}
-      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+      <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
         <KeyRound className="w-10 h-10 text-primary-foreground" />
       </div>
 
@@ -557,7 +557,7 @@ export default function OneIDMfaLogin({ mfaToken, user }: OneIDMfaLoginProps) {
       <Button
         onClick={handleVerifyTotp}
         disabled={totpCode.length !== 6 || verifying}
-        className="w-full h-11 bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/30 transition-shadow"
+        className="w-full h-11 bg-primary shadow-lg hover:shadow-primary/30 transition-shadow"
       >
         {verifying ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -582,7 +582,7 @@ export default function OneIDMfaLogin({ mfaToken, user }: OneIDMfaLoginProps) {
   // ─── Main render ─────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-3 sm:p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-3 sm:p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
@@ -597,7 +597,7 @@ export default function OneIDMfaLogin({ mfaToken, user }: OneIDMfaLoginProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-3 shadow-lg">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-3 shadow-lg">
             <Shield className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className={`text-2xl font-bold ${fontClass}`}>
@@ -611,7 +611,7 @@ export default function OneIDMfaLogin({ mfaToken, user }: OneIDMfaLoginProps) {
         <Card className="shadow-xl border-primary/10 overflow-hidden">
           <CardHeader className="pb-2 px-4 sm:px-6 pt-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 {mode === 'push' ? (
                   <Smartphone className="w-4 h-4 text-primary-foreground" />
                 ) : (

@@ -103,7 +103,7 @@ export default function DashboardPage() {
             <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('escrowBalance', language)}</p><p className="text-lg sm:text-xl font-bold">{t('bdt', language)}{walletData.escrow}</p></CardContent></Card>
             <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('totalEarnings', language)}</p><p className="text-lg sm:text-xl font-bold">{t('bdt', language)}{walletData.totalEarnings}</p></CardContent></Card>
           </div>
-          <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px] w-full sm:w-auto">{t('withdraw', language)}</Button>
+          <Button className="bg-primary min-h-[44px] w-full sm:w-auto">{t('withdraw', language)}</Button>
         </TabsContent>
 
         <TabsContent value="kyc">
@@ -133,7 +133,7 @@ export default function DashboardPage() {
                   <p className={`text-xs text-muted-foreground ${language === 'bn' ? 'font-bangla' : ''}`}>
                     {language === 'en' ? 'Complete KYC verification to unlock seller features, wallet, and withdrawal capabilities.' : 'বিক্রেতা বৈশিষ্ট্য, ওয়ালেট এবং উত্তোলন সক্ষমতা আনলক করতে কেওয়াইসি যাচাই সম্পন্ন করুন।'}
                   </p>
-                  <Button className="bg-gradient-to-r from-primary to-primary/90" onClick={() => navigate('kyc')}>
+                  <Button className="bg-primary" onClick={() => navigate('kyc')}>
                     <ShieldCheck className="w-4 h-4 mr-2" />{t('kycVerification', language)}
                   </Button>
                 </div>

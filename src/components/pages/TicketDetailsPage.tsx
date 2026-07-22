@@ -1091,7 +1091,7 @@ export default function TicketDetailsPage() {
                         </div>
                         <div className="flex flex-col gap-2">
                           <Button
-                            className="w-full bg-gradient-to-r from-primary to-primary/90 min-h-[44px]"
+                            className="w-full bg-primary min-h-[44px]"
                             size="lg"
                             onClick={handlePurchase}
                             disabled={buying}
@@ -1111,7 +1111,7 @@ export default function TicketDetailsPage() {
                       </motion.div>
                     ) : (
                       <Button
-                        className="w-full bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-primary/20 transition-shadow min-h-[48px] text-base"
+                        className="w-full bg-primary shadow-lg hover:shadow-primary/20 transition-shadow min-h-[48px] text-base"
                         size="lg"
                         onClick={() => {
                           if (!token || !isAuthenticated) {

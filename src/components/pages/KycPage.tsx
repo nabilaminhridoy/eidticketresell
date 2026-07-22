@@ -329,7 +329,7 @@ export default function KycPage() {
   // Show status page if already submitted
   if (kycStatus === 'pending' && existingKyc) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <Card className="w-full max-w-md shadow-xl border-primary/10">
           <CardContent className="p-8 text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
@@ -351,7 +351,7 @@ export default function KycPage() {
 
   if (kycStatus === 'approved') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <Card className="w-full max-w-md shadow-xl border-emerald-200 dark:border-emerald-900/30">
           <CardContent className="p-8 text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
@@ -371,7 +371,7 @@ export default function KycPage() {
                 </div>
               ))}
             </div>
-            <Button onClick={() => navigate('home')} className="bg-gradient-to-r from-emerald-600 to-emerald-500">
+            <Button onClick={() => navigate('home')} className="bg-primary">
               {isBn ? 'হোমে যান' : 'Go Home'}
             </Button>
           </CardContent>
@@ -381,11 +381,11 @@ export default function KycPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 py-4 sm:py-6 px-3 sm:px-4 overflow-x-hidden">
+    <div className="min-h-screen bg-muted/30 py-4 sm:py-6 px-3 sm:px-4 overflow-x-hidden">
       <div className="w-full max-w-2xl mx-auto">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-4 sm:mb-6">
-          <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-2 sm:mb-3 shadow-lg">
+          <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary flex items-center justify-center mb-2 sm:mb-3 shadow-lg">
             <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
           </div>
           <h1 className={`text-xl sm:text-2xl font-bold ${fontClass}`}>{t('kycVerification', language)}</h1>
@@ -807,7 +807,7 @@ export default function KycPage() {
                     }
                     setCurrentStep(2);
                   }}
-                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 min-h-[44px] bg-primary"
                   disabled={!isStep1Valid()}
                 >
                   {t('next', language)}<ArrowRight className="w-4 h-4 ml-1 sm:ml-2" />
@@ -816,7 +816,7 @@ export default function KycPage() {
                 <Button
                   onClick={handleSubmit}
                   disabled={!isStep2Valid() || loading}
-                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+                  className="flex-1 min-h-[44px] bg-primary"
                 >
                   {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
                   {t('submit', language)}

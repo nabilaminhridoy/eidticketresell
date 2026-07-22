@@ -20,7 +20,7 @@ export default function OrderPendingPage() {
         <h1 className={`text-2xl font-bold mb-2 ${fontClass}`}>{isBn ? 'অর্ডার পেন্ডিং' : 'Order Pending'}</h1>
         <p className={`text-muted-foreground mb-6 ${fontClass}`}>{isBn ? 'আপনার পেমেন্ট প্রক্রিয়াধীন। অনুগ্রহ করে অপেক্ষা করুন।' : 'Your payment is being processed. Please wait.'}</p>
         <div className="flex flex-col gap-3">
-          <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px]" onClick={() => navigate('my-orders')}>{isBn ? 'আমার অর্ডার' : 'My Orders'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
+          <Button className="bg-primary min-h-[44px]" onClick={() => navigate('my-orders')}>{isBn ? 'আমার অর্ডার' : 'My Orders'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('home')}>{isBn ? 'হোম যান' : 'Go Home'}</Button>
         </div>
       </CardContent></Card>

@@ -154,9 +154,11 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/25">
-            <Ticket className="w-8 h-8 text-primary-foreground" />
-          </div>
+          <img
+            src={isBn ? '/logo-bn.svg' : '/logo-en.svg'}
+            alt={t('appName', language)}
+            className="mx-auto h-12 w-auto object-contain mb-4"
+          />
           <h1 className={`text-2xl font-bold ${fontClass}`}>
             <span className="text-primary">{t('login', language)}</span>
           </h1>

@@ -116,7 +116,7 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between"><span className="text-sm">{language === 'en' ? 'Ticket Listing' : 'টিকেট তালিকা'}</span><Switch defaultChecked /></div>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px] w-full sm:w-auto">{t('save', language)}</Button>
+            <Button className="bg-primary min-h-[44px] w-full sm:w-auto">{t('save', language)}</Button>
           </CardContent></Card>
         </TabsContent>
       </Tabs>

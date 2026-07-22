@@ -191,8 +191,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats — Green gradient background (only section with gradient) */}
-      <section className="bg-gradient-to-r from-primary to-primary/90 py-16">
+      {/* Stats — Solid green background */}
+      <section className="bg-primary py-16">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (

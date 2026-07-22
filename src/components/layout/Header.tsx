@@ -103,17 +103,11 @@ export default function Header() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-primary shadow-md group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow shrink-0">
-            <MoonStar className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className={`text-base font-bold leading-tight text-primary truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
-              {t('appName', language)}
-            </span>
-            <span className={`text-[10px] text-muted-foreground leading-tight truncate hidden sm:block ${language === 'bn' ? 'font-bangla' : ''}`}>
-              {t('appSlogan', language)}
-            </span>
-          </div>
+          <img
+            src={language === 'bn' ? '/logo-bn.svg' : '/logo-en.svg'}
+            alt={t('appName', language)}
+            className="h-9 w-auto object-contain shrink-0 group-hover:scale-[1.02] transition-transform"
+          />
         </motion.button>
 
         {/* === CENTER: Desktop Navigation === */}
@@ -377,12 +371,11 @@ export default function Header() {
             <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 overflow-y-auto">
               <SheetHeader className="p-5 pb-3 border-b">
                 <SheetTitle className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary shadow-md">
-                    <MoonStar className="w-5 h-5 text-primary-foreground" />
-                  </div>
-                  <span className={`text-lg text-primary font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
-                    {t('appName', language)}
-                  </span>
+                  <img
+                    src={language === 'bn' ? '/logo-bn.svg' : '/logo-en.svg'}
+                    alt={t('appName', language)}
+                    className="h-9 w-auto object-contain"
+                  />
                 </SheetTitle>
               </SheetHeader>
 

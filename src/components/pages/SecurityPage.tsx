@@ -265,7 +265,7 @@ export default function SecurityPage() {
                 {!mfaEnabled ? (
                   <Button
                     onClick={() => setView('setup')}
-                    className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800"
+                    className="flex-1 bg-primary hover:bg-primary/90"
                   >
                     <ShieldCheck className="w-4 h-4 mr-2" />
                     {t('oneidEnableMfa', language)}

@@ -49,7 +49,7 @@ export default function CheckoutPage() {
             <Separator />
             <div className="flex justify-between font-bold"><span className={fontClass}>{isBn ? 'সর্বমোট' : 'Total'}</span><span className="text-primary">৳0</span></div>
           </div>
-          <Button className="w-full min-h-[44px] bg-gradient-to-r from-primary to-primary/90">{isBn ? 'পেমেন্ট করুন' : 'Pay Now'}</Button>
+          <Button className="w-full min-h-[44px] bg-primary">{isBn ? 'পেমেন্ট করুন' : 'Pay Now'}</Button>
         </CardContent>
       </Card>
     </div>

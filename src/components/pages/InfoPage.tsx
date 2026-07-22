@@ -55,7 +55,7 @@ export default function InfoPage() {
       case 'contact': return (
         <div className="space-y-4">
           <div className="space-y-2 text-sm"><div className="flex items-center gap-2"><Mail className="w-4 h-4 text-primary" />support@eidticketresell.com</div><div className="flex items-center gap-2"><Phone className="w-4 h-4 text-primary" />+880 1234-567890</div><div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" />{isBn?'ঢাকা, বাংলাদেশ':'Dhaka, Bangladesh'}</div></div>
-          <div className="space-y-3"><div className="space-y-1.5"><Label>{t('name',language)}</Label><Input /></div><div className="space-y-1.5"><Label>{t('email',language)}</Label><Input type="email" /></div><div className="space-y-1.5"><Label>{t('description',language)}</Label><Textarea rows={3} /></div><Button className="bg-gradient-to-r from-primary to-primary/90">{isBn?'পাঠান':'Send'} <Send className="w-4 h-4 ml-1" /></Button></div>
+          <div className="space-y-3"><div className="space-y-1.5"><Label>{t('name',language)}</Label><Input /></div><div className="space-y-1.5"><Label>{t('email',language)}</Label><Input type="email" /></div><div className="space-y-1.5"><Label>{t('description',language)}</Label><Textarea rows={3} /></div><Button className="bg-primary">{isBn?'পাঠান':'Send'} <Send className="w-4 h-4 ml-1" /></Button></div>
         </div>
       );
       case 'how-it-works': return (
@@ -65,7 +65,7 @@ export default function InfoPage() {
           {n:'3',t:t('step3Title',language),d:t('step3Desc',language)},
           {n:'4',t:t('step4Title',language),d:t('step4Desc',language)},
         ].map((s,i)=>(
-          <Card key={i}><CardContent className="p-4 flex items-start gap-4"><div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-bold shrink-0">{s.n}</div><div><p className={`font-semibold ${cls}`}>{s.t}</p><p className={`text-sm text-muted-foreground ${cls}`}>{s.d}</p></div></CardContent></Card>
+          <Card key={i}><CardContent className="p-4 flex items-start gap-4"><div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">{s.n}</div><div><p className={`font-semibold ${cls}`}>{s.t}</p><p className={`text-sm text-muted-foreground ${cls}`}>{s.d}</p></div></CardContent></Card>
         ))}</div>
       );
       case 'faq': return (

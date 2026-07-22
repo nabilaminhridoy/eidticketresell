@@ -20,7 +20,7 @@ export default function OrderCancelledPage() {
         <h1 className={`text-2xl font-bold mb-2 ${fontClass}`}>{isBn ? 'অর্ডার বাতিল!' : 'Order Cancelled'}</h1>
         <p className={`text-muted-foreground mb-6 ${fontClass}`}>{isBn ? 'আপনার অর্ডার বাতিল করা হয়েছে।' : 'Your order has been cancelled.'}</p>
         <div className="flex flex-col gap-3">
-          <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px]" onClick={() => navigate('search')}>{isBn ? 'টিকেট খুঁজুন' : 'Search Tickets'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
+          <Button className="bg-primary min-h-[44px]" onClick={() => navigate('search')}>{isBn ? 'টিকেট খুঁজুন' : 'Search Tickets'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('home')}>{isBn ? 'হোম যান' : 'Go Home'}</Button>
         </div>
       </CardContent></Card>

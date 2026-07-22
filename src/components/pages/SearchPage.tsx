@@ -346,7 +346,7 @@ export default function SearchPage() {
                         </div>
                         <Button
                           size="sm"
-                          className="min-h-[36px] bg-gradient-to-r from-primary to-primary/90 group-hover:shadow-md transition-shadow gap-1"
+                          className="min-h-[36px] bg-primary group-hover:shadow-md transition-shadow gap-1"
                           onClick={(e) => { e.stopPropagation(); navigate('ticket-details', { id: tk.id }); }}
                         >
                           {isBn ? 'টিকেট দেখুন' : 'View Ticket'}

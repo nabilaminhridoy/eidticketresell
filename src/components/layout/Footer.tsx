@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import {
-  MoonStar, Bus, TrainFront, Plane, Ship,
+  Bus, TrainFront, Plane, Ship,
   Facebook, Twitter, Instagram, Youtube, Mail,
   Phone, MapPin, Heart, ArrowRight, Shield, Zap
 } from 'lucide-react';
@@ -74,12 +74,11 @@ export default function Footer() {
                   onClick={() => handleNavigate('home')}
                   className="flex items-center gap-2.5 mb-5 group"
                 >
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary shadow-md group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow">
-                    <MoonStar className="w-5 h-5 text-primary-foreground" />
-                  </div>
-                  <span className={`text-lg font-bold text-primary ${language === 'bn' ? 'font-bangla' : ''}`}>
-                    {t('appName', language)}
-                  </span>
+                  <img
+                    src={language === 'bn' ? '/logo-bn.svg' : '/logo-en.svg'}
+                    alt={t('appName', language)}
+                    className="h-10 w-auto object-contain group-hover:scale-[1.02] transition-transform"
+                  />
                 </button>
 
                 <p className={`text-sm text-muted-foreground leading-relaxed mb-6 ${language === 'bn' ? 'font-bangla' : ''}`}>

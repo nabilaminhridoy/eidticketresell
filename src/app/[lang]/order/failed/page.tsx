@@ -20,7 +20,7 @@ export default function OrderFailedPage() {
         <h1 className={`text-2xl font-bold mb-2 ${fontClass}`}>{isBn ? 'অর্ডার ব্যর্থ!' : 'Order Failed!'}</h1>
         <p className={`text-muted-foreground mb-6 ${fontClass}`}>{isBn ? 'পেমেন্ট প্রক্রিয়ায় সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।' : 'There was an issue processing your payment. Please try again.'}</p>
         <div className="flex flex-col gap-3">
-          <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px]" onClick={() => navigate('search')}>{isBn ? 'টিকেট খুঁজুন' : 'Search Tickets'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
+          <Button className="bg-primary min-h-[44px]" onClick={() => navigate('search')}>{isBn ? 'টিকেট খুঁজুন' : 'Search Tickets'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('home')}>{isBn ? 'হোম যান' : 'Go Home'}</Button>
         </div>
       </CardContent></Card>

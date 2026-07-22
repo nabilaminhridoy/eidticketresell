@@ -294,7 +294,7 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero-light p-3 sm:p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-3 sm:p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/8 rounded-full blur-3xl" />
@@ -310,7 +310,7 @@ export default function RegisterPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-primary flex items-center justify-center mb-3 shadow-lg">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-3 shadow-lg">
             <Ticket className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className={`text-2xl font-bold ${fontClass}`}>{t('appName', language)}</h1>
@@ -323,7 +323,7 @@ export default function RegisterPage() {
             <div key={step.number} className="flex items-center">
               <div className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 currentStep >= step.number
-                  ? 'bg-gradient-primary text-primary-foreground shadow-md'
+                  ? 'bg-primary text-primary-foreground shadow-md'
                   : 'bg-muted text-muted-foreground'
               } ${fontClass}`}>
                 <step.icon className="w-3.5 h-3.5" />
@@ -340,7 +340,7 @@ export default function RegisterPage() {
         </div>
 
         <Card className="shadow-2xl border-primary/10 overflow-hidden">
-          <div className="h-1 bg-gradient-spectrum" />
+          <div className="h-1 bg-primary" />
           <CardHeader className="pb-4 px-4 sm:px-6">
             <CardTitle className={`text-xl text-center ${fontClass}`}>
               {currentStep === 1 && t('personalInfo', language)}
@@ -513,7 +513,7 @@ export default function RegisterPage() {
                     {password && (
                       <div className="space-y-2 mt-2">
                         <div className="flex items-center gap-2">
-                          <Progress value={passwordStrength.score * 20} className="h-1.5 flex-1 [&_[data-slot=progress-indicator]]:bg-gradient-primary" />
+                          <Progress value={passwordStrength.score * 20} className="h-1.5 flex-1 [&_[data-slot=progress-indicator]]:bg-primary" />
                           <span className={`text-xs font-medium ${fontClass}`} style={{
                             color: passwordStrength.score <= 1 ? '#ef4444' :
                               passwordStrength.score === 2 ? '#f97316' :
@@ -852,7 +852,7 @@ export default function RegisterPage() {
                     }
                     setCurrentStep((prev) => (prev + 1) as Step);
                   }}
-                  className="flex-1 h-11 btn-gradient-primary rounded-xl"
+                  className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl"
                   disabled={currentStep === 1 && !isStep1Valid()}
                 >
                   {t('continueBtn', language)}
@@ -862,7 +862,7 @@ export default function RegisterPage() {
                 <Button
                   onClick={handleRegister}
                   disabled={!isStep3Valid() || loading}
-                  className="flex-1 h-11 btn-gradient-primary rounded-xl"
+                  className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl"
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

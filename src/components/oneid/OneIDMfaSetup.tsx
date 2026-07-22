@@ -175,12 +175,12 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="flex flex-col items-center text-center space-y-5 py-4"
     >
-      {/* Shield icon with gradient */}
+      {/* Shield icon */}
       <div className="relative">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+        <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
           <Shield className="w-10 h-10 text-white" />
         </div>
-        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md">
+        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md">
           <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
         <Button
           onClick={handleStartSetup}
           disabled={loading}
-          className="w-full h-11 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg hover:shadow-emerald-500/25 transition-all"
+          className="w-full h-11 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-primary/25 transition-all"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -272,7 +272,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
 
       {/* QR Code display */}
       <div className="flex flex-col items-center space-y-4">
-        <div className="relative p-4 rounded-2xl bg-white border-2 border-emerald-100 shadow-lg shadow-emerald-500/5">
+        <div className="relative p-4 rounded-2xl bg-white border-2 border-emerald-100 shadow-lg shadow-primary/5">
           {qrCode ? (
             <img
               src={`data:image/png;base64,${qrCode}`}
@@ -362,7 +362,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
       {/* Continue button */}
       <Button
         onClick={() => { setError(''); setTotpCode(''); setStep('verify'); }}
-        className="w-full h-11 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg hover:shadow-emerald-500/25 transition-all"
+        className="w-full h-11 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-primary/25 transition-all"
       >
         <span className={fontClass}>{t('oneidEnterTotp', language)}</span>
         <ArrowRight className="w-4 h-4 ml-2" />
@@ -397,7 +397,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
 
       {/* Header */}
       <div className="text-center space-y-2">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+        <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto shadow-lg shadow-primary/20">
           <KeyRound className="w-7 h-7 text-white" />
         </div>
         <h3 className={`text-lg font-bold ${fontClass}`}>
@@ -446,7 +446,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
       <Button
         onClick={handleVerifyTotp}
         disabled={totpCode.length !== 6 || verifying}
-        className="w-full h-11 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg hover:shadow-emerald-500/25 transition-all"
+        className="w-full h-11 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-primary/25 transition-all"
       >
         {verifying ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -477,7 +477,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
         className="relative"
       >
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-xl shadow-emerald-500/30">
+        <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center shadow-xl shadow-primary/30">
           <CheckCircle2 className="w-12 h-12 text-white" />
         </div>
         {/* Radiating circles */}
@@ -531,7 +531,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
       >
         <Button
           onClick={onSuccess}
-          className="w-full h-11 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg hover:shadow-emerald-500/25 transition-all"
+          className="w-full h-11 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-primary/25 transition-all"
         >
           <span className={fontClass}>
             {isBn ? 'চালিয়ে যান' : 'Continue'}
@@ -561,7 +561,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
   // ─── Main render ────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-500/5 via-background to-primary/10 p-3 sm:p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-3 sm:p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
@@ -588,7 +588,7 @@ export default function OneIDMfaSetup({ onSuccess, onSkip, required = false }: O
         <Card className="shadow-xl border-emerald-500/10 overflow-hidden">
           <CardHeader className="pb-2 px-4 sm:px-6 pt-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <Shield className="w-4 h-4 text-white" />
               </div>
               <div className="min-w-0">

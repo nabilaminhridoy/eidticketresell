@@ -20,7 +20,7 @@ export default function OrderSuccessfulPage() {
         <h1 className={`text-2xl font-bold mb-2 ${fontClass}`}>{isBn ? 'অর্ডার সফল!' : 'Order Successful!'}</h1>
         <p className={`text-muted-foreground mb-6 ${fontClass}`}>{isBn ? 'আপনার পেমেন্ট সফলভাবে সম্পন্ন হয়েছে। টিকেট আপনার ড্যাশবোর্ডে পাওয়া যাবে।' : 'Your payment has been processed successfully. Your ticket will be available in your dashboard.'}</p>
         <div className="flex flex-col gap-3">
-          <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px]" onClick={() => navigate('home')}>{isBn ? 'হোম যান' : 'Go Home'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
+          <Button className="bg-primary min-h-[44px]" onClick={() => navigate('home')}>{isBn ? 'হোম যান' : 'Go Home'}<ArrowRight className="w-4 h-4 ml-1" /></Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('my-tickets')}>{isBn ? 'আমার টিকেট' : 'My Tickets'}</Button>
         </div>
       </CardContent></Card>

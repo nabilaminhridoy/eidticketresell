@@ -608,7 +608,7 @@ export default function SellTicketPage() {
                   : 'You need to login first to sell tickets on our platform.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={() => navigate('login')} className="bg-gradient-to-r from-primary to-primary/90">
+                <Button onClick={() => navigate('login')} className="bg-primary">
                   {t('login', language)}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -664,7 +664,7 @@ export default function SellTicketPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {(kycStatus === 'none' || kycStatus === 'rejected') && (
-                  <Button onClick={() => navigate('kyc')} className="bg-gradient-to-r from-primary to-primary/90">
+                  <Button onClick={() => navigate('kyc')} className="bg-primary">
                     <ShieldCheck className="w-4 h-4 mr-2" />
                     {isBn ? 'KYC যাচাইকরণ শুরু করুন' : 'Start KYC Verification'}
                   </Button>
@@ -723,7 +723,7 @@ export default function SellTicketPage() {
               : 'Your ticket has been listed for sale. Buyers can now see it.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button onClick={() => navigate('my-tickets')} className="bg-gradient-to-r from-primary to-primary/90">
+            <Button onClick={() => navigate('my-tickets')} className="bg-primary">
               <Ticket className="w-4 h-4 mr-2" />
               {t('myTickets', language)}
             </Button>
@@ -748,7 +748,7 @@ export default function SellTicketPage() {
 
     return (
       <Card className="border-primary/20 shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3 flex items-center justify-between">
+        <div className="bg-primary/5 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TransportIcon className="w-5 h-5 text-primary" />
             <span className={`font-semibold text-sm ${fontClass}`}>
@@ -965,7 +965,7 @@ export default function SellTicketPage() {
                           py-3 px-2 rounded-xl border-2 transition-all text-sm font-medium
                           min-h-[56px] sm:min-h-[48px]
                           ${isActive
-                            ? `border-primary bg-gradient-to-br ${item.color} text-white shadow-md`
+                            ? `border-primary ${item.color} text-white shadow-md`
                             : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
                           }
                           ${fontClass}
@@ -1780,7 +1780,7 @@ export default function SellTicketPage() {
             {/* Submit */}
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary to-primary/90 h-12 text-base font-semibold"
+              className="w-full bg-primary h-12 text-base font-semibold"
               disabled={submitting || uploading}
             >
               {submitting ? (

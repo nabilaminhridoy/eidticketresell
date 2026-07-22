@@ -111,3 +111,96 @@ Stage Summary:
 - Inter font properly configured for English text
 - Dark mode uses deep navy background with vibrant green CTAs
 - Both light and dark mode verified as premium-looking by VLM
+
+---
+Task ID: 4-a
+Agent: logo-updater
+Task: Update Header and Footer with bilingual logo images
+
+Work Log:
+- Read both Header.tsx and Footer.tsx to understand current structure
+- Updated Header.tsx desktop logo (line ~106): replaced MoonStar icon + text with <img> tag showing bilingual SVG logo
+- Updated Header.tsx mobile menu logo (line ~380): replaced MoonStar icon + text with <img> tag showing bilingual SVG logo
+- Kept MoonStar import in Header.tsx since it's still used for mobile sidebar Home nav item icon (line ~417)
+- Updated Footer.tsx logo (line ~73-83): replaced MoonStar icon + text with <img> tag showing bilingual SVG logo with group-hover scale effect
+- Removed MoonStar from Footer.tsx imports since it was no longer used
+- Both logos use language === 'bn' ? '/logo-bn.svg' : '/logo-en.svg' for src
+- Navigation functionality preserved (onClick navigate to home, group hover behavior)
+- Lint passes clean
+
+Stage Summary:
+- Header and Footer now show proper EN/BN logos based on language
+- MoonStar kept in Header for sidebar icon, removed from Footer
+---
+Task ID: 3-a
+Agent: gradient-remover
+Task: Replace all gradient classes with solid color equivalents across all component files
+
+Work Log:
+- Updated src/app/loading.tsx - replaced bg-gradient-to-br and bg-gradient-to-r bg-clip-text with bg-primary and text-primary
+- Updated src/app/[lang]/loading.tsx - same replacements as root loading.tsx
+- Updated src/components/pages/HomePage.tsx - replaced bg-gradient-to-r from-primary to-primary/90 with bg-primary on stats section
+- Updated src/components/pages/RegisterPage.tsx - replaced bg-gradient-hero-light → bg-muted/30, bg-gradient-primary → bg-primary, bg-gradient-spectrum → bg-primary, btn-gradient-primary → bg-primary hover:bg-primary/90 text-primary-foreground, progress indicator gradient → bg-primary
+- Updated src/components/pages/KycPage.tsx - replaced all gradient backgrounds (bg-gradient-to-br from-primary/5 via-background to-primary/10 → bg-muted/30, bg-gradient-to-br from-primary to-primary/80 → bg-primary, bg-gradient-to-r from-primary to-primary/90 → bg-primary, bg-gradient-to-r from-emerald-600 to-emerald-500 → bg-primary)
+- Updated src/components/pages/SellTicketPage.tsx - replaced bg-gradient-to-r from-primary to-primary/90 → bg-primary, bg-gradient-to-r from-primary/10 to-primary/5 → bg-primary/5, bg-gradient-to-br ${item.color} → ${item.color}
+- Updated src/components/pages/SearchPage.tsx - replaced bg-gradient-to-r from-primary to-primary/90 → bg-primary on View Ticket button
+- Updated src/components/pages/DashboardPage.tsx - replaced all bg-gradient-to-r from-primary to-primary/90 → bg-primary
+- Updated src/components/pages/AdminPage.tsx - replaced bg-gradient-to-r from-primary to-primary/90 → bg-primary
+- Updated src/components/pages/TicketDetailsPage.tsx - replaced all bg-gradient-to-r from-primary to-primary/90 → bg-primary (preserved QR code conic-gradient)
+- Updated src/components/pages/SecurityPage.tsx - replaced bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 → bg-primary hover:bg-primary/90
+- Updated src/components/pages/InfoPage.tsx - replaced bg-gradient-to-r and bg-gradient-to-br with bg-primary
+- Updated src/components/oneid/OneIDMfaSetup.tsx - replaced all emerald gradients → bg-primary, background gradients → bg-muted/30, shadow-emerald → shadow-primary
+- Updated src/components/oneid/OneIDMfaLogin.tsx - replaced all gradient backgrounds and button gradients → bg-primary and bg-muted/30
+- Updated src/app/[lang]/checkout/page.tsx - replaced bg-gradient-to-r → bg-primary
+- Updated src/app/[lang]/order/successful/page.tsx - replaced bg-gradient-to-r → bg-primary
+- Updated src/app/[lang]/order/failed/page.tsx - replaced bg-gradient-to-r → bg-primary
+- Updated src/app/[lang]/order/pending/page.tsx - replaced bg-gradient-to-r → bg-primary
+- Updated src/app/[lang]/order/cancelled/page.tsx - replaced bg-gradient-to-r → bg-primary
+
+Stage Summary:
+- All gradient classes replaced with solid color equivalents across 19 files
+- Custom gradient utility classes (btn-gradient-primary, bg-gradient-spectrum, bg-gradient-hero-light) replaced with inline Tailwind classes
+- Shadow color references changed from emerald to primary
+- QR code conic-gradient pattern preserved (not a theme gradient)
+- Lint passed cleanly with no errors
+- Dev server running successfully with no compilation errors
+- Theme now uses solid colors (#16a34a green via bg-primary, etc.) for premium look in both light and dark mode
+
+---
+Task ID: 4-b
+Agent: main
+Task: Update logo, favicon, and clean up unnecessary files
+
+Work Log:
+- Copied uploaded SVG files to public directory:
+  - "ETR Favicon.svg" → /public/favicon.svg
+  - "Eid Ticket Resell EN Logo.svg" → /public/logo-en.svg
+  - "Eid Ticket Resell BN Logo.svg" → /public/logo-bn.svg
+- Updated layout.tsx favicon icon reference from "/logo.svg" → "/favicon.svg"
+- Updated Header.tsx: replaced MoonStar icon logo with bilingual <img> tag showing logo-en.svg/logo-bn.svg based on language
+- Updated Footer.tsx: replaced MoonStar icon logo with bilingual <img> tag showing logo-en.svg/logo-bn.svg based on language
+- Updated LoginPage.tsx: replaced Ticket icon logo with bilingual <img> tag showing logo-en.svg/logo-bn.svg based on language
+- Fixed gradient comments in HomePage.tsx and OneIDMfaSetup.tsx
+- Cleaned up unnecessary files:
+  - Removed ~40 QA/QC screenshot PNG files from root directory
+  - Removed tool-results/ directory (cached file reads)
+  - Removed test-results/ directory
+  - Removed download/ directory
+  - Removed agent-ctx/ directory (old agent context files)
+  - Removed old public/logo.svg (replaced by logo-en.svg and logo-bn.svg)
+  - Removed redundant shell scripts: start-dev.sh, start-server.sh, run-server.sh, nextjs-dev.sh, ensure-server.sh, keep-alive.sh
+- Kept essential files: daemon.sh, keep-server-alive.sh for server persistence
+- QC verification via Agent Browser + VLM:
+  - Light mode: Premium solid colors, no gradients, logo visible, clean professional layout
+  - Dark mode: Proper contrast, vibrant green CTAs, navy background
+  - Mobile viewport: Responsive, logo visible, footer at bottom
+  - Bengali language: Logo switches to Bengali version, all text in Bengali script
+  - Lint passes clean
+  - Dev server running without errors
+
+Stage Summary:
+- Logo system now bilingual (EN for English, BN for Bengali)
+- Favicon updated to proper ETR favicon SVG
+- All unnecessary files removed (QA screenshots, old agent context, cached reads, redundant scripts)
+- Project directory is clean and organized
+- QC verified across light/dark mode, mobile/desktop, EN/BN languages

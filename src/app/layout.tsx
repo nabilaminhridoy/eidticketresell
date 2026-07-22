@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   keywords: ["Eid Ticket", "Bus Ticket", "Train Ticket", "Flight Ticket", "Launch Ticket", "Bangladesh", "Ticket Resell"],
   authors: [{ name: "Eid Ticket Resell" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/favicon.svg",
   },
   openGraph: {
     title: "Eid Ticket Resell - Buy & Sell Tickets Safely",
