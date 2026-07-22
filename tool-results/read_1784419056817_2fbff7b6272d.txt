@@ -1,0 +1,889 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useCallback } from 'react';
+     4→import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
+     5→import { t } from '@/lib/i18n';
+     6→import { Button } from '@/components/ui/button';
+     7→import { Input } from '@/components/ui/input';
+     8→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+     9→import { Label } from '@/components/ui/label';
+    10→import { Checkbox } from '@/components/ui/checkbox';
+    11→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    12→import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+    13→import { Badge } from '@/components/ui/badge';
+    14→import { Progress } from '@/components/ui/progress';
+    15→import {
+    16→  Ticket, Eye, EyeOff, Check, X, Loader2, ArrowLeft, ArrowRight,
+    17→  User, Mail, Phone, Shield, Calendar, Lock, AtSign, AlertCircle
+    18→} from 'lucide-react';
+    19→import { motion, AnimatePresence } from 'framer-motion';
+    20→import { toast } from 'sonner';
+    21→
+    22→type Step = 1 | 2 | 3;
+    23→
+    24→export default function RegisterPage() {
+    25→  const { navigate } = useAppStore();
+    26→  const { login } = useAuthStore();
+    27→  const { language } = useLanguageStore();
+    28→  const isBn = language === 'bn';
+    29→  const fontClass = isBn ? 'font-bangla' : '';
+    30→
+    31→  // Step management
+    32→  const [currentStep, setCurrentStep] = useState<Step>(1);
+    33→
+    34→  // Personal Info fields
+    35→  const [fullName, setFullName] = useState('');
+    36→  const [username, setUsername] = useState('');
+    37→  const [email, setEmail] = useState('');
+    38→  const [phone, setPhone] = useState('');
+    39→  const [gender, setGender] = useState('');
+    40→  const [dateOfBirth, setDateOfBirth] = useState('');
+    41→  const [password, setPassword] = useState('');
+    42→  const [confirmPassword, setConfirmPassword] = useState('');
+    43→  const [showPassword, setShowPassword] = useState(false);
+    44→  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    45→
+    46→  // Username availability
+    47→  const [usernameStatus, setUsernameStatus] = useState<'checking' | 'available' | 'taken' | null>(null);
+    48→  const [usernameDebounce, setUsernameDebounce] = useState<NodeJS.Timeout | null>(null);
+    49→
+    50→  // Agreements
+    51→  const [agreeAge, setAgreeAge] = useState(false);
+    52→  const [agreeTerms, setAgreeTerms] = useState(false);
+    53→  const [agreeNotifications, setAgreeNotifications] = useState(false);
+    54→
+    55→  // OTP verification
+    56→  const [emailOtp, setEmailOtp] = useState('');
+    57→  const [phoneOtp, setPhoneOtp] = useState('');
+    58→  const [emailOtpSent, setEmailOtpSent] = useState(false);
+    59→  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+    60→  const [emailOtpVerified, setEmailOtpVerified] = useState(false);
+    61→  const [phoneOtpVerified, setPhoneOtpVerified] = useState(false);
+    62→  const [sendingOtp, setSendingOtp] = useState<'email' | 'phone' | null>(null);
+    63→  const [verifyingOtp, setVerifyingOtp] = useState<'email' | 'phone' | null>(null);
+    64→
+    65→  // General
+    66→  const [loading, setLoading] = useState(false);
+    67→  const [error, setError] = useState('');
+    68→  const [resendTimer, setResendTimer] = useState({ email: 0, phone: 0 });
+    69→
+    70→  // Resend timer countdown
+    71→  useEffect(() => {
+    72→    const interval = setInterval(() => {
+    73→      setResendTimer(prev => ({
+    74→        email: Math.max(0, prev.email - 1),
+    75→        phone: Math.max(0, prev.phone - 1),
+    76→      }));
+    77→    }, 1000);
+    78→    return () => clearInterval(interval);
+    79→  }, []);
+    80→
+    81→  // Password strength calculation
+    82→  const getPasswordStrength = useCallback(() => {
+    83→    if (!password) return { score: 0, label: '', color: '' };
+    84→    let score = 0;
+    85→    if (password.length >= 8) score++;
+    86→    if (/[A-Z]/.test(password)) score++;
+    87→    if (/[a-z]/.test(password)) score++;
+    88→    if (/\d/.test(password)) score++;
+    89→    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+    90→
+    91→    const levels = [
+    92→      { score: 0, label: '', color: '' },
+    93→      { score: 1, label: isBn ? 'দুর্বল' : 'Weak', color: 'bg-red-500' },
+    94→      { score: 2, label: isBn ? 'মাঝারি' : 'Fair', color: 'bg-orange-500' },
+    95→      { score: 3, label: isBn ? 'ভালো' : 'Good', color: 'bg-yellow-500' },
+    96→      { score: 4, label: isBn ? 'শক্তিশালী' : 'Strong', color: 'bg-emerald-500' },
+    97→      { score: 5, label: isBn ? 'শক্তিশালী' : 'Very Strong', color: 'bg-emerald-600' },
+    98→    ];
+    99→    return levels[score] || levels[0];
+   100→  }, [password, isBn]);
+   101→
+   102→  const passwordStrength = getPasswordStrength();
+   103→  const passwordChecks = {
+   104→    length: password.length >= 8,
+   105→    uppercase: /[A-Z]/.test(password),
+   106→    lowercase: /[a-z]/.test(password),
+   107→    number: /\d/.test(password),
+   108→    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+   109→  };
+   110→
+   111→  // Username availability check with debounce
+   112→  useEffect(() => {
+   113→    if (usernameDebounce) clearTimeout(usernameDebounce);
+   114→
+   115→    if (!username || username.length < 3) {
+   116→      setUsernameStatus(null);
+   117→      return;
+   118→    }
+   119→
+   120→    setUsernameStatus('checking');
+   121→    const timeout = setTimeout(async () => {
+   122→      try {
+   123→        const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`);
+   124→        const data = await res.json();
+   125→        setUsernameStatus(data.available ? 'available' : 'taken');
+   126→      } catch {
+   127→        setUsernameStatus(null);
+   128→      }
+   129→    }, 500);
+   130→    setUsernameDebounce(timeout);
+   131→  }, [username]);
+   132→
+   133→  // Phone number formatting
+   134→  const formatPhone = (value: string): string => {
+   135→    const digits = value.replace(/\D/g, '');
+   136→    if (digits.startsWith('880')) {
+   137→      return '+' + digits;
+   138→    }
+   139→    if (digits.startsWith('01') && digits.length <= 11) {
+   140→      return '+88' + digits;
+   141→    }
+   142→    if (value.startsWith('+8801') || value.startsWith('+880')) {
+   143→      return '+' + digits;
+   144→    }
+   145→    return value;
+   146→  };
+   147→
+   148→  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   149→    const formatted = formatPhone(e.target.value);
+   150→    setPhone(formatted);
+   151→  };
+   152→
+   153→  // Send OTP
+   154→  const handleSendOtp = async (type: 'email' | 'phone') => {
+   155→    setSendingOtp(type);
+   156→    try {
+   157→      const body: Record<string, string> = { type: type === 'email' ? 'email_verification' : 'phone_verification' };
+   158→      if (type === 'email') body.email = email;
+   159→      else body.phone = phone;
+   160→
+   161→      const res = await fetch('/api/auth/otp/send', {
+   162→        method: 'POST',
+   163→        headers: { 'Content-Type': 'application/json' },
+   164→        body: JSON.stringify(body),
+   165→      });
+   166→      const data = await res.json();
+   167→      if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+   168→
+   169→      if (type === 'email') {
+   170→        setEmailOtpSent(true);
+   171→        setResendTimer(prev => ({ ...prev, email: 60 }));
+   172→      } else {
+   173→        setPhoneOtpSent(true);
+   174→        setResendTimer(prev => ({ ...prev, phone: 60 }));
+   175→      }
+   176→
+   177→      toast.success(type === 'email' ? t('otpSentToEmail', language) : t('otpSentToPhone', language));
+   178→
+   179→      // In development, show the OTP
+   180→      if (data.otp) {
+   181→        toast.info(`OTP: ${data.otp}`, { duration: 10000 });
+   182→      }
+   183→    } catch (err) {
+   184→      toast.error(err instanceof Error ? err.message : 'Failed to send OTP');
+   185→    } finally {
+   186→      setSendingOtp(null);
+   187→    }
+   188→  };
+   189→
+   190→  // Verify OTP
+   191→  const handleVerifyOtp = async (type: 'email' | 'phone') => {
+   192→    setVerifyingOtp(type);
+   193→    try {
+   194→      const body: Record<string, string> = {
+   195→        otp: type === 'email' ? emailOtp : phoneOtp,
+   196→        type: type === 'email' ? 'email_verification' : 'phone_verification',
+   197→      };
+   198→      if (type === 'email') body.email = email;
+   199→      else body.phone = phone;
+   200→
+   201→      const res = await fetch('/api/auth/otp/verify', {
+   202→        method: 'POST',
+   203→        headers: { 'Content-Type': 'application/json' },
+   204→        body: JSON.stringify(body),
+   205→      });
+   206→      const data = await res.json();
+   207→      if (!res.ok) throw new Error(data.error || 'OTP verification failed');
+   208→
+   209→      if (type === 'email') setEmailOtpVerified(true);
+   210→      else setPhoneOtpVerified(true);
+   211→
+   212→      toast.success(isBn ? 'ওটিপি যাচাই সফল!' : 'OTP verified successfully!');
+   213→    } catch (err) {
+   214→      toast.error(err instanceof Error ? err.message : 'OTP verification failed');
+   215→    } finally {
+   216→      setVerifyingOtp(null);
+   217→    }
+   218→  };
+   219→
+   220→  // Step 1 validation
+   221→  const isStep1Valid = () => {
+   222→    return (
+   223→      fullName.trim().length >= 2 &&
+   224→      username.length >= 3 &&
+   225→      usernameStatus === 'available' &&
+   226→      email.includes('@') &&
+   227→      /^\+8801[3-9]\d{8}$/.test(phone) &&
+   228→      gender &&
+   229→      dateOfBirth &&
+   230→      password.length >= 8 &&
+   231→      /[A-Z]/.test(password) &&
+   232→      /[a-z]/.test(password) &&
+   233→      /\d/.test(password) &&
+   234→      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) &&
+   235→      password === confirmPassword
+   236→    );
+   237→  };
+   238→
+   239→  // Step 2 validation
+   240→  const isStep2Valid = () => {
+   241→    return agreeAge && agreeTerms;
+   242→  };
+   243→
+   244→  // Step 3 validation
+   245→  const isStep3Valid = () => {
+   246→    return emailOtpVerified && phoneOtpVerified;
+   247→  };
+   248→
+   249→  // Handle registration
+   250→  const handleRegister = async () => {
+   251→    if (!isStep3Valid()) {
+   252→      setError(isBn ? 'অনুগ্রহ করে ইমেইল ও ফোন যাচাই করুন' : 'Please verify both email and phone');
+   253→      return;
+   254→    }
+   255→
+   256→    setLoading(true);
+   257→    setError('');
+   258→
+   259→    try {
+   260→      const res = await fetch('/api/auth/register', {
+   261→        method: 'POST',
+   262→        headers: { 'Content-Type': 'application/json' },
+   263→        body: JSON.stringify({
+   264→          name: fullName.trim(),
+   265→          username,
+   266→          email: email.toLowerCase(),
+   267→          phone,
+   268→          gender,
+   269→          dateOfBirth,
+   270→          password,
+   271→          agreeAge,
+   272→          agreeTerms,
+   273→          agreeNotifications,
+   274→        }),
+   275→      });
+   276→
+   277→      const data = await res.json();
+   278→      if (!res.ok) throw new Error(data.error || 'Registration failed');
+   279→
+   280→      login(data.user, data.token);
+   281→      toast.success(t('registrationSuccess', language));
+   282→      navigate('home');
+   283→    } catch (err) {
+   284→      setError(err instanceof Error ? err.message : 'Something went wrong');
+   285→    } finally {
+   286→      setLoading(false);
+   287→    }
+   288→  };
+   289→
+   290→  const steps = [
+   291→    { number: 1, label: t('personalInfo', language), icon: User },
+   292→    { number: 2, label: t('agreement', language), icon: Shield },
+   293→    { number: 3, label: t('securityVerification', language), icon: Lock },
+   294→  ];
+   295→
+   296→  return (
+   297→    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+   298→      {/* Background decoration */}
+   299→      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+   300→        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+   301→        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+   302→      </div>
+   303→
+   304→      <div className="w-full max-w-lg relative">
+   305→        {/* Logo */}
+   306→        <motion.div
+   307→          className="text-center mb-6"
+   308→          initial={{ opacity: 0, y: -20 }}
+   309→          animate={{ opacity: 1, y: 0 }}
+   310→          transition={{ duration: 0.4 }}
+   311→        >
+   312→          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-3 shadow-lg">
+   313→            <Ticket className="w-7 h-7 text-primary-foreground" />
+   314→          </div>
+   315→          <h1 className={`text-2xl font-bold ${fontClass}`}>{t('appName', language)}</h1>
+   316→          <p className={`text-sm text-muted-foreground mt-1 ${fontClass}`}>{t('appSlogan', language)}</p>
+   317→        </motion.div>
+   318→
+   319→        {/* Step indicator */}
+   320→        <div className="flex items-center justify-center gap-2 mb-6">
+   321→          {steps.map((step, index) => (
+   322→            <div key={step.number} className="flex items-center">
+   323→              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+   324→                currentStep >= step.number
+   325→                  ? 'bg-primary text-primary-foreground shadow-md'
+   326→                  : 'bg-muted text-muted-foreground'
+   327→              } ${fontClass}`}>
+   328→                <step.icon className="w-3.5 h-3.5" />
+   329→                <span className="hidden sm:inline">{step.label}</span>
+   330→                <span className="sm:hidden">{step.number}</span>
+   331→              </div>
+   332→              {index < steps.length - 1 && (
+   333→                <div className={`w-8 h-0.5 mx-1 rounded transition-all ${
+   334→                  currentStep > step.number ? 'bg-primary' : 'bg-muted'
+   335→                }`} />
+   336→              )}
+   337→            </div>
+   338→          ))}
+   339→        </div>
+   340→
+   341→        <Card className="shadow-xl border-primary/10">
+   342→          <CardHeader className="pb-4">
+   343→            <CardTitle className={`text-xl text-center ${fontClass}`}>
+   344→              {currentStep === 1 && t('personalInfo', language)}
+   345→              {currentStep === 2 && t('agreement', language)}
+   346→              {currentStep === 3 && t('securityVerification', language)}
+   347→            </CardTitle>
+   348→            <CardDescription className={`text-center ${fontClass}`}>
+   349→              {t('step', language)} {currentStep} {t('of', language)} 3
+   350→            </CardDescription>
+   351→          </CardHeader>
+   352→          <CardContent>
+   353→            <AnimatePresence mode="wait">
+   354→              {/* STEP 1: Personal Information */}
+   355→              {currentStep === 1 && (
+   356→                <motion.div
+   357→                  key="step1"
+   358→                  initial={{ opacity: 0, x: 20 }}
+   359→                  animate={{ opacity: 1, x: 0 }}
+   360→                  exit={{ opacity: 0, x: -20 }}
+   361→                  transition={{ duration: 0.2 }}
+   362→                  className="space-y-4"
+   363→                >
+   364→                  {/* Full Name */}
+   365→                  <div className="space-y-1.5">
+   366→                    <Label className={`text-sm font-medium ${fontClass}`}>
+   367→                      {t('fullName', language)} <span className="text-destructive">*</span>
+   368→                    </Label>
+   369→                    <div className="relative">
+   370→                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   371→                      <Input
+   372→                        value={fullName}
+   373→                        onChange={(e) => setFullName(e.target.value)}
+   374→                        placeholder={isBn ? 'আপনার পূর্ণ নাম' : 'Your full name'}
+   375→                        className="pl-10"
+   376→                      />
+   377→                    </div>
+   378→                  </div>
+   379→
+   380→                  {/* Username */}
+   381→                  <div className="space-y-1.5">
+   382→                    <Label className={`text-sm font-medium ${fontClass}`}>
+   383→                      {t('username', language)} <span className="text-destructive">*</span>
+   384→                    </Label>
+   385→                    <div className="relative">
+   386→                      <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   387→                      <Input
+   388→                        value={username}
+   389→                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+   390→                        placeholder={isBn ? 'ইউজারনেম' : 'username'}
+   391→                        className="pl-10"
+   392→                      />
+   393→                      {usernameStatus === 'checking' && (
+   394→                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+   395→                      )}
+   396→                      {usernameStatus === 'available' && (
+   397→                        <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+   398→                      )}
+   399→                      {usernameStatus === 'taken' && (
+   400→                        <X className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500" />
+   401→                      )}
+   402→                    </div>
+   403→                    {usernameStatus === 'available' && (
+   404→                      <p className="text-xs text-emerald-600 flex items-center gap-1"><Check className="w-3 h-3" />{t('usernameAvailable', language)}</p>
+   405→                    )}
+   406→                    {usernameStatus === 'taken' && (
+   407→                      <p className="text-xs text-red-600 flex items-center gap-1"><X className="w-3 h-3" />{t('usernameTaken', language)}</p>
+   408→                    )}
+   409→                    <p className={`text-xs text-muted-foreground ${fontClass}`}>
+   410→                      {isBn ? 'ছোট হাতের ইংরেজি অক্ষর, সংখ্যা ও আন্ডারস্কোর। ৩-২০ অক্ষর।' : 'Lowercase letters, numbers, underscores. 3-20 characters. Can be changed later if available.'}
+   411→                    </p>
+   412→                  </div>
+   413→
+   414→                  {/* Email */}
+   415→                  <div className="space-y-1.5">
+   416→                    <Label className={`text-sm font-medium ${fontClass}`}>
+   417→                      {t('email', language)} <span className="text-destructive">*</span>
+   418→                    </Label>
+   419→                    <div className="relative">
+   420→                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   421→                      <Input
+   422→                        type="email"
+   423→                        value={email}
+   424→                        onChange={(e) => setEmail(e.target.value)}
+   425→                        placeholder="you@gmail.com"
+   426→                        className="pl-10"
+   427→                      />
+   428→                    </div>
+   429→                    <p className={`text-xs text-muted-foreground ${fontClass}`}>
+   430→                      {isBn ? '@gmail.com, @outlook.com, @yahoo.com ইত্যাদি' : 'Supported: @gmail.com, @outlook.com, @yahoo.com, etc.'}
+   431→                    </p>
+   432→                  </div>
+   433→
+   434→                  {/* Phone */}
+   435→                  <div className="space-y-1.5">
+   436→                    <Label className={`text-sm font-medium ${fontClass}`}>
+   437→                      {t('phone', language)} <span className="text-destructive">*</span>
+   438→                    </Label>
+   439→                    <div className="relative">
+   440→                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   441→                      <Input
+   442→                        type="tel"
+   443→                        value={phone}
+   444→                        onChange={handlePhoneChange}
+   445→                        placeholder="+8801712345678"
+   446→                        className="pl-10"
+   447→                      />
+   448→                    </div>
+   449→                    <p className={`text-xs text-muted-foreground ${fontClass}`}>
+   450→                      {isBn ? '+88 দিয়ে শুরু, তারপর ১১ সংখ্যার বাংলাদেশ নম্বর' : '+88 country code followed by 11-digit BD number'}
+   451→                    </p>
+   452→                  </div>
+   453→
+   454→                  {/* Gender & DOB row */}
+   455→                  <div className="grid grid-cols-2 gap-3">
+   456→                    <div className="space-y-1.5">
+   457→                      <Label className={`text-sm font-medium ${fontClass}`}>
+   458→                        {t('gender', language)} <span className="text-destructive">*</span>
+   459→                      </Label>
+   460→                      <Select value={gender} onValueChange={setGender}>
+   461→                        <SelectTrigger>
+   462→                          <SelectValue placeholder={isBn ? 'নির্বাচন' : 'Select'} />
+   463→                        </SelectTrigger>
+   464→                        <SelectContent>
+   465→                          <SelectItem value="male">{t('male', language)}</SelectItem>
+   466→                          <SelectItem value="female">{t('female', language)}</SelectItem>
+   467→                          <SelectItem value="other">{t('other', language)}</SelectItem>
+   468→                        </SelectContent>
+   469→                      </Select>
+   470→                    </div>
+   471→                    <div className="space-y-1.5">
+   472→                      <Label className={`text-sm font-medium ${fontClass}`}>
+   473→                        {t('dateOfBirth', language)} <span className="text-destructive">*</span>
+   474→                      </Label>
+   475→                      <div className="relative">
+   476→                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   477→                        <Input
+   478→                          type="date"
+   479→                          value={dateOfBirth}
+   480→                          onChange={(e) => setDateOfBirth(e.target.value)}
+   481→                          className="pl-10"
+   482→                          max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+   483→                        />
+   484→                      </div>
+   485→                    </div>
+   486→                  </div>
+   487→
+   488→                  {/* Password */}
+   489→                  <div className="space-y-1.5">
+   490→                    <Label className={`text-sm font-medium ${fontClass}`}>
+   491→                      {t('password', language)} <span className="text-destructive">*</span>
+   492→                    </Label>
+   493→                    <div className="relative">
+   494→                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   495→                      <Input
+   496→                        type={showPassword ? 'text' : 'password'}
+   497→                        value={password}
+   498→                        onChange={(e) => setPassword(e.target.value)}
+   499→                        className="pl-10 pr-10"
+   500→                      />
+   501→                      <button
+   502→                        type="button"
+   503→                        onClick={() => setShowPassword(!showPassword)}
+   504→                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+   505→                      >
+   506→                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+   507→                      </button>
+   508→                    </div>
+   509→
+   510→                    {/* Password strength indicator */}
+   511→                    {password && (
+   512→                      <div className="space-y-2 mt-2">
+   513→                        <div className="flex items-center gap-2">
+   514→                          <Progress value={passwordStrength.score * 20} className="h-1.5 flex-1" />
+   515→                          <span className={`text-xs font-medium ${fontClass}`} style={{
+   516→                            color: passwordStrength.score <= 1 ? '#ef4444' :
+   517→                              passwordStrength.score === 2 ? '#f97316' :
+   518→                              passwordStrength.score === 3 ? '#eab308' :
+   519→                              '#10b981'
+   520→                          }}>
+   521→                            {passwordStrength.label}
+   522→                          </span>
+   523→                        </div>
+   524→                        <div className="grid grid-cols-2 gap-1">
+   525→                          {[
+   526→                            { check: passwordChecks.length, label: t('passwordMinLength', language) },
+   527→                            { check: passwordChecks.uppercase, label: t('passwordUppercase', language) },
+   528→                            { check: passwordChecks.lowercase, label: t('passwordLowercase', language) },
+   529→                            { check: passwordChecks.number, label: t('passwordNumber', language) },
+   530→                            { check: passwordChecks.special, label: t('passwordSpecial', language) },
+   531→                          ].map((item) => (
+   532→                            <div key={item.label} className="flex items-center gap-1">
+   533→                              {item.check ? (
+   534→                                <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+   535→                              ) : (
+   536→                                <X className="w-3 h-3 text-muted-foreground shrink-0" />
+   537→                              )}
+   538→                              <span className={`text-xs ${item.check ? 'text-emerald-600' : 'text-muted-foreground'} ${fontClass}`}>
+   539→                                {item.label}
+   540→                              </span>
+   541→                            </div>
+   542→                          ))}
+   543→                        </div>
+   544→                      </div>
+   545→                    )}
+   546→                  </div>
+   547→
+   548→                  {/* Confirm Password */}
+   549→                  <div className="space-y-1.5">
+   550→                    <Label className={`text-sm font-medium ${fontClass}`}>
+   551→                      {t('confirmPassword', language)} <span className="text-destructive">*</span>
+   552→                    </Label>
+   553→                    <div className="relative">
+   554→                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   555→                      <Input
+   556→                        type={showConfirmPassword ? 'text' : 'password'}
+   557→                        value={confirmPassword}
+   558→                        onChange={(e) => setConfirmPassword(e.target.value)}
+   559→                        className="pl-10 pr-10"
+   560→                      />
+   561→                      <button
+   562→                        type="button"
+   563→                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+   564→                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+   565→                      >
+   566→                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+   567→                      </button>
+   568→                    </div>
+   569→                    {confirmPassword && password !== confirmPassword && (
+   570→                      <p className="text-xs text-red-600 flex items-center gap-1">
+   571→                        <AlertCircle className="w-3 h-3" />{t('passwordMismatch', language)}
+   572→                      </p>
+   573→                    )}
+   574→                    {confirmPassword && password === confirmPassword && (
+   575→                      <p className="text-xs text-emerald-600 flex items-center gap-1">
+   576→                        <Check className="w-3 h-3" />{isBn ? 'পাসওয়ার্ড মিলেছে' : 'Passwords match'}
+   577→                      </p>
+   578→                    )}
+   579→                  </div>
+   580→                </motion.div>
+   581→              )}
+   582→
+   583→              {/* STEP 2: Agreement */}
+   584→              {currentStep === 2 && (
+   585→                <motion.div
+   586→                  key="step2"
+   587→                  initial={{ opacity: 0, x: 20 }}
+   588→                  animate={{ opacity: 1, x: 0 }}
+   589→                  exit={{ opacity: 0, x: -20 }}
+   590→                  transition={{ duration: 0.2 }}
+   591→                  className="space-y-5"
+   592→                >
+   593→                  {/* Summary of entered info */}
+   594→                  <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+   595→                    <h4 className={`font-semibold text-sm ${fontClass}`}>{isBn ? 'আপনার তথ্য সারসংক্ষেপ' : 'Your Information Summary'}</h4>
+   596→                    <div className="grid grid-cols-2 gap-2 text-xs">
+   597→                      <div><span className="text-muted-foreground">{t('name', language)}:</span> <span className="font-medium">{fullName}</span></div>
+   598→                      <div><span className="text-muted-foreground">{t('username', language)}:</span> <span className="font-medium">@{username}</span></div>
+   599→                      <div><span className="text-muted-foreground">{t('email', language)}:</span> <span className="font-medium">{email}</span></div>
+   600→                      <div><span className="text-muted-foreground">{t('phone', language)}:</span> <span className="font-medium">{phone}</span></div>
+   601→                      <div><span className="text-muted-foreground">{t('gender', language)}:</span> <span className="font-medium">{gender}</span></div>
+   602→                      <div><span className="text-muted-foreground">{t('dateOfBirth', language)}:</span> <span className="font-medium">{dateOfBirth}</span></div>
+   603→                    </div>
+   604→                  </div>
+   605→
+   606→                  <div className="space-y-4">
+   607→                    {/* Age Agreement */}
+   608→                    <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+   609→                      <Checkbox
+   610→                        id="agree-age"
+   611→                        checked={agreeAge}
+   612→                        onCheckedChange={(checked) => setAgreeAge(checked === true)}
+   613→                        className="mt-0.5"
+   614→                      />
+   615→                      <Label htmlFor="agree-age" className={`text-sm cursor-pointer leading-relaxed ${fontClass}`}>
+   616→                        {t('ageAgreement', language)}
+   617→                      </Label>
+   618→                    </div>
+   619→
+   620→                    {/* Terms Agreement */}
+   621→                    <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+   622→                      <Checkbox
+   623→                        id="agree-terms"
+   624→                        checked={agreeTerms}
+   625→                        onCheckedChange={(checked) => setAgreeTerms(checked === true)}
+   626→                        className="mt-0.5"
+   627→                      />
+   628→                      <Label htmlFor="agree-terms" className={`text-sm cursor-pointer leading-relaxed ${fontClass}`}>
+   629→                        {t('termsAgreement', language)}
+   630→                      </Label>
+   631→                    </div>
+   632→
+   633→                    {/* Notifications Agreement */}
+   634→                    <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+   635→                      <Checkbox
+   636→                        id="agree-notifications"
+   637→                        checked={agreeNotifications}
+   638→                        onCheckedChange={(checked) => setAgreeNotifications(checked === true)}
+   639→                        className="mt-0.5"
+   640→                      />
+   641→                      <Label htmlFor="agree-notifications" className={`text-sm cursor-pointer leading-relaxed ${fontClass}`}>
+   642→                        {t('notificationsAgreement', language)}
+   643→                      </Label>
+   644→                    </div>
+   645→                  </div>
+   646→
+   647→                  {!agreeAge && !agreeTerms && (
+   648→                    <p className={`text-xs text-muted-foreground text-center ${fontClass}`}>
+   649→                      {isBn ? 'চালিয়ে যেতে প্রথম দুটি চেকবক্সে সম্মতি দিন' : 'Please check the first two boxes to continue'}
+   650→                    </p>
+   651→                  )}
+   652→                </motion.div>
+   653→              )}
+   654→
+   655→              {/* STEP 3: OTP Verification */}
+   656→              {currentStep === 3 && (
+   657→                <motion.div
+   658→                  key="step3"
+   659→                  initial={{ opacity: 0, x: 20 }}
+   660→                  animate={{ opacity: 1, x: 0 }}
+   661→                  exit={{ opacity: 0, x: -20 }}
+   662→                  transition={{ duration: 0.2 }}
+   663→                  className="space-y-5"
+   664→                >
+   665→                  {/* Email OTP */}
+   666→                  <div className="space-y-3 p-4 rounded-xl border bg-card">
+   667→                    <div className="flex items-center justify-between">
+   668→                      <div className="flex items-center gap-2">
+   669→                        <Mail className="w-4 h-4 text-primary" />
+   670→                        <Label className={`text-sm font-medium ${fontClass}`}>{t('emailOtp', language)}</Label>
+   671→                      </div>
+   672→                      {emailOtpVerified ? (
+   673→                        <Badge variant="default" className="bg-emerald-600"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
+   674→                      ) : (
+   675→                        <Badge variant="secondary">{email}</Badge>
+   676→                      )}
+   677→                    </div>
+   678→
+   679→                    {!emailOtpVerified && (
+   680→                      <>
+   681→                        {!emailOtpSent ? (
+   682→                          <Button
+   683→                            variant="outline"
+   684→                            size="sm"
+   685→                            onClick={() => handleSendOtp('email')}
+   686→                            disabled={sendingOtp === 'email'}
+   687→                            className="w-full"
+   688→                          >
+   689→                            {sendingOtp === 'email' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
+   690→                            {t('sendOtp', language)}
+   691→                          </Button>
+   692→                        ) : (
+   693→                          <div className="space-y-3">
+   694→                            <div className="flex justify-center">
+   695→                              <InputOTP maxLength={6} value={emailOtp} onChange={setEmailOtp}>
+   696→                                <InputOTPGroup>
+   697→                                  <InputOTPSlot index={0} />
+   698→                                  <InputOTPSlot index={1} />
+   699→                                  <InputOTPSlot index={2} />
+   700→                                  <InputOTPSlot index={3} />
+   701→                                  <InputOTPSlot index={4} />
+   702→                                  <InputOTPSlot index={5} />
+   703→                                </InputOTPGroup>
+   704→                              </InputOTP>
+   705→                            </div>
+   706→                            <div className="flex items-center gap-2">
+   707→                              <Button
+   708→                                size="sm"
+   709→                                onClick={() => handleVerifyOtp('email')}
+   710→                                disabled={emailOtp.length !== 6 || verifyingOtp === 'email'}
+   711→                                className="flex-1"
+   712→                              >
+   713→                                {verifyingOtp === 'email' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+   714→                                {t('verifyOtp', language)}
+   715→                              </Button>
+   716→                              <Button
+   717→                                variant="ghost"
+   718→                                size="sm"
+   719→                                onClick={() => handleSendOtp('email')}
+   720→                                disabled={resendTimer.email > 0 || sendingOtp === 'email'}
+   721→                              >
+   722→                                {resendTimer.email > 0
+   723→                                  ? `${resendTimer.email}s`
+   724→                                  : t('resendOtp', language)}
+   725→                              </Button>
+   726→                            </div>
+   727→                          </div>
+   728→                        )}
+   729→                      </>
+   730→                    )}
+   731→                  </div>
+   732→
+   733→                  {/* Phone OTP */}
+   734→                  <div className="space-y-3 p-4 rounded-xl border bg-card">
+   735→                    <div className="flex items-center justify-between">
+   736→                      <div className="flex items-center gap-2">
+   737→                        <Phone className="w-4 h-4 text-primary" />
+   738→                        <Label className={`text-sm font-medium ${fontClass}`}>{t('mobileOtp', language)}</Label>
+   739→                      </div>
+   740→                      {phoneOtpVerified ? (
+   741→                        <Badge variant="default" className="bg-emerald-600"><Check className="w-3 h-3 mr-1" />{t('verified', language)}</Badge>
+   742→                      ) : (
+   743→                        <Badge variant="secondary">{phone}</Badge>
+   744→                      )}
+   745→                    </div>
+   746→
+   747→                    {!phoneOtpVerified && (
+   748→                      <>
+   749→                        {!phoneOtpSent ? (
+   750→                          <Button
+   751→                            variant="outline"
+   752→                            size="sm"
+   753→                            onClick={() => handleSendOtp('phone')}
+   754→                            disabled={sendingOtp === 'phone'}
+   755→                            className="w-full"
+   756→                          >
+   757→                            {sendingOtp === 'phone' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Phone className="w-4 h-4 mr-2" />}
+   758→                            {t('sendOtp', language)}
+   759→                          </Button>
+   760→                        ) : (
+   761→                          <div className="space-y-3">
+   762→                            <div className="flex justify-center">
+   763→                              <InputOTP maxLength={6} value={phoneOtp} onChange={setPhoneOtp}>
+   764→                                <InputOTPGroup>
+   765→                                  <InputOTPSlot index={0} />
+   766→                                  <InputOTPSlot index={1} />
+   767→                                  <InputOTPSlot index={2} />
+   768→                                  <InputOTPSlot index={3} />
+   769→                                  <InputOTPSlot index={4} />
+   770→                                  <InputOTPSlot index={5} />
+   771→                                </InputOTPGroup>
+   772→                              </InputOTP>
+   773→                            </div>
+   774→                            <div className="flex items-center gap-2">
+   775→                              <Button
+   776→                                size="sm"
+   777→                                onClick={() => handleVerifyOtp('phone')}
+   778→                                disabled={phoneOtp.length !== 6 || verifyingOtp === 'phone'}
+   779→                                className="flex-1"
+   780→                              >
+   781→                                {verifyingOtp === 'phone' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+   782→                                {t('verifyOtp', language)}
+   783→                              </Button>
+   784→                              <Button
+   785→                                variant="ghost"
+   786→                                size="sm"
+   787→                                onClick={() => handleSendOtp('phone')}
+   788→                                disabled={resendTimer.phone > 0 || sendingOtp === 'phone'}
+   789→                              >
+   790→                                {resendTimer.phone > 0
+   791→                                  ? `${resendTimer.phone}s`
+   792→                                  : t('resendOtp', language)}
+   793→                              </Button>
+   794→                            </div>
+   795→                          </div>
+   796→                        )}
+   797→                      </>
+   798→                    )}
+   799→                  </div>
+   800→
+   801→                  {/* Verification status */}
+   802→                  <div className="flex items-center justify-center gap-4 text-xs">
+   803→                    <span className={`flex items-center gap-1 ${emailOtpVerified ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+   804→                      <Mail className="w-3 h-3" />
+   805→                      {isBn ? 'ইমেইল' : 'Email'}: {emailOtpVerified ? '✓' : '...'}
+   806→                    </span>
+   807→                    <span className={`flex items-center gap-1 ${phoneOtpVerified ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+   808→                      <Phone className="w-3 h-3" />
+   809→                      {isBn ? 'ফোন' : 'Phone'}: {phoneOtpVerified ? '✓' : '...'}
+   810→                    </span>
+   811→                  </div>
+   812→                </motion.div>
+   813→              )}
+   814→            </AnimatePresence>
+   815→
+   816→            {/* Error message */}
+   817→            {error && (
+   818→              <div className="mt-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+   819→                <AlertCircle className="w-4 h-4 shrink-0" />
+   820→                <span className={fontClass}>{error}</span>
+   821→              </div>
+   822→            )}
+   823→
+   824→            {/* Action buttons */}
+   825→            <div className="flex items-center gap-3 mt-6">
+   826→              {currentStep > 1 && (
+   827→                <Button
+   828→                  variant="outline"
+   829→                  onClick={() => setCurrentStep((prev) => (prev - 1) as Step)}
+   830→                  className={fontClass}
+   831→                >
+   832→                  <ArrowLeft className="w-4 h-4 mr-2" />
+   833→                  {t('back', language)}
+   834→                </Button>
+   835→              )}
+   836→
+   837→              {currentStep < 3 ? (
+   838→                <Button
+   839→                  onClick={() => {
+   840→                    setError('');
+   841→                    if (currentStep === 1 && !isStep1Valid()) {
+   842→                      setError(isBn ? 'অনুগ্রহ করে সকল তথ্য সঠিকভাবে পূরণ করুন' : 'Please fill in all fields correctly');
+   843→                      return;
+   844→                    }
+   845→                    if (currentStep === 2 && !isStep2Valid()) {
+   846→                      setError(isBn ? 'প্রথম দুটি চেকবক্সে সম্মতি দিন' : 'Please agree to the required terms');
+   847→                      return;
+   848→                    }
+   849→                    setCurrentStep((prev) => (prev + 1) as Step);
+   850→                  }}
+   851→                  className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+   852→                  disabled={currentStep === 1 && !isStep1Valid()}
+   853→                >
+   854→                  {t('continueBtn', language)}
+   855→                  <ArrowRight className="w-4 h-4 ml-2" />
+   856→                </Button>
+   857→              ) : (
+   858→                <Button
+   859→                  onClick={handleRegister}
+   860→                  disabled={!isStep3Valid() || loading}
+   861→                  className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+   862→                >
+   863→                  {loading ? (
+   864→                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+   865→                  ) : (
+   866→                    <Ticket className="w-4 h-4 mr-2" />
+   867→                  )}
+   868→                  {t('createAccount', language)}
+   869→                </Button>
+   870→              )}
+   871→            </div>
+   872→
+   873→            {/* Login link */}
+   874→            <p className={`text-center text-sm text-muted-foreground mt-4 ${fontClass}`}>
+   875→              {t('alreadyHaveAccount', language)}{' '}
+   876→              <button
+   877→                onClick={() => navigate('login')}
+   878→                className="text-primary font-medium hover:underline"
+   879→              >
+   880→                {t('login', language)}
+   881→              </button>
+   882→            </p>
+   883→          </CardContent>
+   884→        </Card>
+   885→      </div>
+   886→    </div>
+   887→  );
+   888→}
+   889→

@@ -1,0 +1,433 @@
+   401→          ].map((step, idx) => (
+   402→            <div key={step.num} className="flex items-center">
+   403→              <div className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium transition-all ${
+   404→                currentStep >= step.num
+   405→                  ? 'bg-primary text-primary-foreground shadow-md'
+   406→                  : 'bg-muted text-muted-foreground'
+   407→              } ${fontClass}`}>
+   408→                <step.icon className="w-3.5 h-3.5 shrink-0" />
+   409→                <span className="hidden sm:inline">{step.label}</span>
+   410→                <span className="sm:hidden">{step.shortLabel}</span>
+   411→              </div>
+   412→              {idx < 1 && (
+   413→                <div className={`w-4 sm:w-8 h-0.5 mx-0.5 sm:mx-1 rounded transition-all ${
+   414→                  currentStep > step.num ? 'bg-primary' : 'bg-muted'
+   415→                }`} />
+   416→              )}
+   417→            </div>
+   418→          ))}
+   419→        </div>
+   420→
+   421→        <Card className="shadow-xl border-primary/10">
+   422→          <CardContent className="p-3 sm:p-6">
+   423→            <AnimatePresence mode="wait">
+   424→              {/* STEP 1: Personal Info + Document + Address */}
+   425→              {currentStep === 1 && (
+   426→                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 sm:space-y-6">
+   427→                  {/* Personal Information */}
+   428→                  <div>
+   429→                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
+   430→                      <User className="w-4 h-4 text-primary" />
+   431→                      {t('kycPersonalInfo', language)}
+   432→                    </h3>
+   433→                    <div className="space-y-3">
+   434→                      {/* Full Name */}
+   435→                      <div className="space-y-1.5">
+   436→                        <Label className={`text-sm ${fontClass}`}>
+   437→                          {t('fullName', language)} <span className="text-destructive">*</span>
+   438→                        </Label>
+   439→                        <div className="relative">
+   440→                          <Input value={kycName} onChange={(e) => !nameLocked && setKycName(e.target.value)} disabled={nameLocked} className={`h-11 ${nameLocked ? 'opacity-70' : ''}`} />
+   441→                          {nameLocked && <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />}
+   442→                        </div>
+   443→                        {nameLocked ? (
+   444→                          <p className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" />{t('kycChangedOnce', language)}</p>
+   445→                        ) : (
+   446→                          <p className="text-xs text-amber-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{t('kycNameChangeWarning', language)}</p>
+   447→                        )}
+   448→                      </div>
+   449→
+   450→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   451→                        {/* DOB */}
+   452→                        <div className="space-y-1.5">
+   453→                          <Label className={`text-sm ${fontClass}`}>
+   454→                            {t('dateOfBirth', language)} <span className="text-destructive">*</span>
+   455→                          </Label>
+   456→                          <Input type="date" value={kycDob} onChange={(e) => !dobLocked && setKycDob(e.target.value)} disabled={dobLocked} className={`h-11 ${dobLocked ? 'opacity-70' : ''}`} />
+   457→                          {dobLocked && <p className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" />{t('kycChangedOnce', language)}</p>}
+   458→                          {!dobLocked && <p className="text-xs text-amber-600">{t('kycDobChangeWarning', language)}</p>}
+   459→                        </div>
+   460→
+   461→                        {/* Gender */}
+   462→                        <div className="space-y-1.5">
+   463→                          <Label className={`text-sm ${fontClass}`}>
+   464→                            {t('gender', language)} <span className="text-destructive">*</span>
+   465→                          </Label>
+   466→                          <Select value={kycGender} onValueChange={genderLocked ? undefined : setKycGender} disabled={genderLocked}>
+   467→                            <SelectTrigger className={`h-11 ${genderLocked ? 'opacity-70' : ''}`}><SelectValue /></SelectTrigger>
+   468→                            <SelectContent>
+   469→                              <SelectItem value="male">{t('male', language)}</SelectItem>
+   470→                              <SelectItem value="female">{t('female', language)}</SelectItem>
+   471→                              <SelectItem value="other">{t('other', language)}</SelectItem>
+   472→                            </SelectContent>
+   473→                          </Select>
+   474→                          {genderLocked && <p className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" />{t('kycChangedOnce', language)}</p>}
+   475→                        </div>
+   476→                      </div>
+   477→                    </div>
+   478→                  </div>
+   479→
+   480→                  <Separator />
+   481→
+   482→                  {/* Document Upload */}
+   483→                  <div>
+   484→                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
+   485→                      <FileText className="w-4 h-4 text-primary" />
+   486→                      {t('uploadDocument', language)}
+   487→                    </h3>
+   488→                    <div className="space-y-3">
+   489→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   490→                        {/* Document Type */}
+   491→                        <div className="space-y-1.5">
+   492→                          <Label className={`text-sm ${fontClass}`}>
+   493→                            {t('documentType', language)} <span className="text-destructive">*</span>
+   494→                          </Label>
+   495→                          <Select value={documentType} onValueChange={(v) => { setDocumentType(v); setDocumentNumber(''); }}>
+   496→                            <SelectTrigger className="h-11"><SelectValue placeholder={isBn ? 'নির্বাচন' : 'Select'} /></SelectTrigger>
+   497→                            <SelectContent>
+   498→                              <SelectItem value="nid">{t('nid', language)}</SelectItem>
+   499→                              <SelectItem value="driving_licence">{t('drivingLicence', language)}</SelectItem>
+   500→                              <SelectItem value="passport">{t('passport', language)}</SelectItem>
+   501→                            </SelectContent>
+   502→                          </Select>
+   503→                        </div>
+   504→
+   505→                        {/* Document Number */}
+   506→                        <div className="space-y-1.5">
+   507→                          <Label className={`text-sm ${fontClass}`}>
+   508→                            {getDocNumberLabel()} <span className="text-destructive">*</span>
+   509→                          </Label>
+   510→                          <Input value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} className="h-11" placeholder={
+   511→                            documentType === 'nid' ? '1990123456' :
+   512→                            documentType === 'driving_licence' ? 'DL-12345' :
+   513→                            documentType === 'passport' ? 'AB1234567' : ''
+   514→                          } />
+   515→                          {documentType === 'nid' && documentNumber && !isValidNid(documentNumber) && (
+   516→                            <p className="text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{t('nidDigitsWarning', language)}</p>
+   517→                          )}
+   518→                        </div>
+   519→                      </div>
+   520→
+   521→                      {/* File uploads */}
+   522→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   523→                        {/* Front */}
+   524→                        <div className="space-y-1.5">
+   525→                          <Label className={`text-sm ${fontClass}`}>
+   526→                            {documentType === 'passport' ? t('uploadFrontOnly', language) : t('uploadFront', language)} <span className="text-destructive">*</span>
+   527→                          </Label>
+   528→                          <div className="relative">
+   529→                            {documentFront ? (
+   530→                              <div className="relative rounded-lg overflow-hidden border">
+   531→                                <img src={documentFront} alt="Front" className="w-full h-28 sm:h-32 object-cover" />
+   532→                                <button onClick={() => setDocumentFront('')} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center touch-manipulation">
+   533→                                  <RotateCcw className="w-3.5 h-3.5" />
+   534→                                </button>
+   535→                              </div>
+   536→                            ) : (
+   537→                              <label className="flex flex-col items-center justify-center h-28 sm:h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors min-h-[44px]">
+   538→                                {uploadingFront ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
+   539→                                <span className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>{t('uploadFront', language)}</span>
+   540→                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'front')} />
+   541→                              </label>
+   542→                            )}
+   543→                          </div>
+   544→                        </div>
+   545→
+   546→                        {/* Back (not for passport) */}
+   547→                        {documentType !== 'passport' && (
+   548→                          <div className="space-y-1.5">
+   549→                            <Label className={`text-sm ${fontClass}`}>
+   550→                              {t('uploadBack', language)} <span className="text-destructive">*</span>
+   551→                            </Label>
+   552→                            <div className="relative">
+   553→                              {documentBack ? (
+   554→                                <div className="relative rounded-lg overflow-hidden border">
+   555→                                  <img src={documentBack} alt="Back" className="w-full h-28 sm:h-32 object-cover" />
+   556→                                  <button onClick={() => setDocumentBack('')} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center touch-manipulation">
+   557→                                    <RotateCcw className="w-3.5 h-3.5" />
+   558→                                  </button>
+   559→                                </div>
+   560→                              ) : (
+   561→                                <label className="flex flex-col items-center justify-center h-28 sm:h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors min-h-[44px]">
+   562→                                  {uploadingBack ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
+   563→                                  <span className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>{t('uploadBack', language)}</span>
+   564→                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'back')} />
+   565→                                </label>
+   566→                              )}
+   567→                            </div>
+   568→                          </div>
+   569→                        )}
+   570→
+   571→                        {documentType === 'passport' && (
+   572→                          <div className="flex items-center justify-center h-28 sm:h-32 rounded-lg border bg-muted/30">
+   573→                            <p className={`text-xs text-muted-foreground text-center px-4 ${fontClass}`}>
+   574→                              {isBn ? 'পাসপোর্টের শুধু সামনের দিক প্রয়োজন' : 'Passport requires front side only'}
+   575→                            </p>
+   576→                          </div>
+   577→                        )}
+   578→                      </div>
+   579→                    </div>
+   580→                  </div>
+   581→
+   582→                  <Separator />
+   583→
+   584→                  {/* Present Address */}
+   585→                  <div>
+   586→                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
+   587→                      <MapPin className="w-4 h-4 text-primary" />
+   588→                      {t('presentAddress', language)}
+   589→                    </h3>
+   590→                    <div className="space-y-3">
+   591→                      <div className="space-y-1.5">
+   592→                        <Label className={`text-sm ${fontClass}`}>{t('houseRoadVillage', language)} <span className="text-destructive">*</span></Label>
+   593→                        <Input value={houseRoadVillage} onChange={(e) => setHouseRoadVillage(e.target.value)} className="h-11" placeholder={isBn ? 'বাড়ি/রাস্তা/গ্রাম' : 'House/Road/Village'} />
+   594→                      </div>
+   595→                      <div className="space-y-1.5">
+   596→                        <Label className={`text-sm ${fontClass}`}>{t('upazilaThana', language)} <span className="text-destructive">*</span></Label>
+   597→                        <Input value={upazilaThana} onChange={(e) => setUpazilaThana(e.target.value)} className="h-11" placeholder={isBn ? 'উপজেলা/থানা' : 'Upazila/Thana'} />
+   598→                      </div>
+   599→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   600→                        <div className="space-y-1.5">
+   601→                          <Label className={`text-sm ${fontClass}`}>{t('division', language)} <span className="text-destructive">*</span></Label>
+   602→                          <Select value={division} onValueChange={(v) => { setDivision(v); setDistrict(''); }}>
+   603→                            <SelectTrigger className="h-11"><SelectValue placeholder={t('selectDivision', language)} /></SelectTrigger>
+   604→                            <SelectContent>
+   605→                              {BD_DIVISIONS.map(d => <SelectItem key={d.id} value={d.id}>{isBn ? d.labelBn : d.label}</SelectItem>)}
+   606→                            </SelectContent>
+   607→                          </Select>
+   608→                        </div>
+   609→                        <div className="space-y-1.5">
+   610→                          <Label className={`text-sm ${fontClass}`}>{t('district', language)} <span className="text-destructive">*</span></Label>
+   611→                          <Select value={district} onValueChange={setDistrict} disabled={!division}>
+   612→                            <SelectTrigger className="h-11"><SelectValue placeholder={t('selectDistrict', language)} /></SelectTrigger>
+   613→                            <SelectContent>
+   614→                              {districts.map(d => <SelectItem key={d.label} value={d.label}>{isBn ? d.labelBn : d.label}</SelectItem>)}
+   615→                            </SelectContent>
+   616→                          </Select>
+   617→                        </div>
+   618→                      </div>
+   619→                      <div className="space-y-1.5">
+   620→                        <Label className={`text-sm ${fontClass}`}>{t('postalCode', language)}</Label>
+   621→                        <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="h-11" placeholder="1200" />
+   622→                      </div>
+   623→                    </div>
+   624→                  </div>
+   625→                </motion.div>
+   626→              )}
+   627→
+   628→              {/* STEP 2: Selfie + GPS */}
+   629→              {currentStep === 2 && (
+   630→                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 sm:space-y-5">
+   631→                  {/* GPS Status */}
+   632→                  <div className={`flex items-start gap-2 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm ${fontClass} ${
+   633→                    gpsStatus === 'granted' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' :
+   634→                    gpsStatus === 'denied' ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
+   635→                    'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+   636→                  }`}>
+   637→                    <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+   638→                    <div className="min-w-0">
+   639→                      {gpsStatus === 'granted' && (isBn ? `জিপিএস সক্রিয়: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}` : `GPS active: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}`)}
+   640→                      {gpsStatus === 'denied' && (isBn ? 'জিপিএস অ্যাক্সেস অস্বীকৃত। অনুগ্রহ করে ব্রাউজার সেটিংসে অনুমতি দিন।' : 'GPS access denied. Please enable in browser settings.')}
+   641→                      {gpsStatus === 'pending' && (isBn ? 'জিপিএস অনুমতির অপেক্ষায়...' : 'Waiting for GPS permission...')}
+   642→                    </div>
+   643→                  </div>
+   644→
+   645→                  {/* Instructions */}
+   646→                  <div className="bg-primary/5 rounded-lg sm:rounded-xl p-3 sm:p-4">
+   647→                    <h4 className={`text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2 flex items-center gap-2 ${fontClass}`}>
+   648→                      <Sun className="w-4 h-4 text-primary" />
+   649→                      {t('selfieInstructions', language)}
+   650→                    </h4>
+   651→                    <ul className={`space-y-1 text-xs text-muted-foreground ${fontClass}`}>
+   652→                      <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" />{t('mustBeInLight', language)}</li>
+   653→                      <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" />{t('gpsLocationOn', language)}</li>
+   654→                    </ul>
+   655→                  </div>
+   656→
+   657→                  {/* Pose selector */}
+   658→                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+   659→                    {[
+   660→                      { key: 'front' as const, label: isBn ? 'সামনে' : 'Front', captured: !!selfiePhoto, icon: User },
+   661→                      { key: 'right' as const, label: t('faceRight', language), captured: !!selfieRight, icon: Eye },
+   662→                      { key: 'left' as const, label: t('faceLeft', language), captured: !!selfieLeft, icon: EyeOff },
+   663→                      { key: 'smile' as const, label: t('faceSmile', language), captured: !!selfieSmile, icon: Camera },
+   664→                      { key: 'blink' as const, label: t('eyeBlink', language), captured: !!selfieBlink, icon: Camera },
+   665→                    ].map(pose => (
+   666→                      <button
+   667→                        key={pose.key}
+   668→                        onClick={() => setCurrentPose(pose.key)}
+   669→                        className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] sm:min-h-0 touch-manipulation ${
+   670→                          currentPose === pose.key
+   671→                            ? 'bg-primary text-primary-foreground shadow-md'
+   672→                            : pose.captured
+   673→                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+   674→                            : 'bg-muted text-muted-foreground'
+   675→                        } ${fontClass}`}
+   676→                      >
+   677→                        {pose.captured && <Check className="w-3 h-3" />}
+   678→                        {pose.label}
+   679→                      </button>
+   680→                    ))}
+   681→                  </div>
+   682→
+   683→                  {/* Camera area */}
+   684→                  <div className="relative rounded-lg sm:rounded-xl overflow-hidden border bg-black aspect-[4/3]">
+   685→                    {/* Show captured photo preview or live camera */}
+   686→                    {(() => {
+   687→                      const currentPhoto = currentPose === 'front' ? selfiePhoto :
+   688→                        currentPose === 'right' ? selfieRight :
+   689→                        currentPose === 'left' ? selfieLeft :
+   690→                        currentPose === 'smile' ? selfieSmile : selfieBlink;
+   691→
+   692→                      if (currentPhoto && !cameraActive) {
+   693→                        return (
+   694→                          <div className="relative w-full h-full">
+   695→                            <img src={currentPhoto} alt="Captured" className="w-full h-full object-cover" />
+   696→                            <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+   697→                              <Button size="sm" variant="secondary" onClick={startCamera} className="min-h-[36px]">
+   698→                                <RotateCcw className="w-3 h-3 mr-1" />{t('retake', language)}
+   699→                              </Button>
+   700→                            </div>
+   701→                          </div>
+   702→                        );
+   703→                      }
+   704→
+   705→                      return (
+   706→                        <>
+   707→                          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+   708→                          <canvas ref={canvasRef} className="hidden" />
+   709→
+   710→                          {/* Pose instruction overlay */}
+   711→                          {cameraActive && (
+   712→                            <div className="absolute inset-0 pointer-events-none">
+   713→                              {/* Face guide oval */}
+   714→                              <div className="absolute inset-0 flex items-center justify-center">
+   715→                                <div className="w-36 h-48 sm:w-48 sm:h-64 border-2 border-white/40 rounded-full" />
+   716→                              </div>
+   717→                              {/* Pose label */}
+   718→                              <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 bg-black/60 text-white px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs">
+   719→                                {currentPose === 'front' && (isBn ? 'সোজা তাকান' : 'Look straight')}
+   720→                                {currentPose === 'right' && t('faceRight', language)}
+   721→                                {currentPose === 'left' && t('faceLeft', language)}
+   722→                                {currentPose === 'smile' && t('faceSmile', language)}
+   723→                                {currentPose === 'blink' && t('eyeBlink', language)}
+   724→                              </div>
+   725→                            </div>
+   726→                          )}
+   727→
+   728→                          {!cameraActive && !currentPhoto && (
+   729→                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+   730→                              <Camera className="w-12 h-12 text-white/50" />
+   731→                              <Button size="sm" onClick={startCamera}>
+   732→                                <Camera className="w-4 h-4 mr-2" />
+   733→                                {isBn ? 'ক্যামেরা চালু করুন' : 'Start Camera'}
+   734→                              </Button>
+   735→                            </div>
+   736→                          )}
+   737→
+   738→                          {/* Capture button */}
+   739→                          {cameraActive && (
+   740→                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+   741→                              <Button
+   742→                                size="lg"
+   743→                                onClick={handleCapture}
+   744→                                disabled={capturing}
+   745→                                className="rounded-full w-14 h-14 bg-white text-black hover:bg-white/90 shadow-lg"
+   746→                              >
+   747→                                {capturing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
+   748→                              </Button>
+   749→                            </div>
+   750→                          )}
+   751→                        </>
+   752→                      );
+   753→                    })()}
+   754→                  </div>
+   755→
+   756→                  {/* Captured photos grid */}
+   757→                  <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2">
+   758→                    {[
+   759→                      { src: selfiePhoto, label: isBn ? 'সামনে' : 'Front', required: true },
+   760→                      { src: selfieRight, label: t('faceRight', language), required: false },
+   761→                      { src: selfieLeft, label: t('faceLeft', language), required: false },
+   762→                      { src: selfieSmile, label: t('faceSmile', language), required: false },
+   763→                      { src: selfieBlink, label: t('eyeBlink', language), required: false },
+   764→                    ].map((item, idx) => (
+   765→                      <div key={idx} className={`shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 ${
+   766→                        item.src ? 'border-emerald-500' : 'border-muted'
+   767→                      } relative`}>
+   768→                        {item.src ? (
+   769→                          <img src={item.src} alt={item.label} className="w-full h-full object-cover" />
+   770→                        ) : (
+   771→                          <div className="w-full h-full bg-muted flex items-center justify-center">
+   772→                            <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+   773→                          </div>
+   774→                        )}
+   775→                        {item.required && !item.src && (
+   776→                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+   777→                        )}
+   778→                      </div>
+   779→                    ))}
+   780→                  </div>
+   781→                </motion.div>
+   782→              )}
+   783→            </AnimatePresence>
+   784→
+   785→            {/* Error */}
+   786→            {error && (
+   787→              <div className="mt-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+   788→                <AlertCircle className="w-4 h-4 shrink-0" />
+   789→                <span className={fontClass}>{error}</span>
+   790→              </div>
+   791→            )}
+   792→
+   793→            {/* Action buttons */}
+   794→            <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+   795→              {currentStep > 1 && (
+   796→                <Button variant="outline" onClick={() => setCurrentStep((prev) => (prev - 1) as Step)} className={`min-h-[44px] ${fontClass}`}>
+   797→                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />{t('back', language)}
+   798→                </Button>
+   799→              )}
+   800→
+   801→              {currentStep < 2 ? (
+   802→                <Button
+   803→                  onClick={() => {
+   804→                    setError('');
+   805→                    if (!isStep1Valid()) {
+   806→                      setError(isBn ? 'সকল প্রয়োজনীয় তথ্য পূরণ করুন' : 'Please fill in all required fields');
+   807→                      return;
+   808→                    }
+   809→                    setCurrentStep(2);
+   810→                  }}
+   811→                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+   812→                  disabled={!isStep1Valid()}
+   813→                >
+   814→                  {t('next', language)}<ArrowRight className="w-4 h-4 ml-1 sm:ml-2" />
+   815→                </Button>
+   816→              ) : (
+   817→                <Button
+   818→                  onClick={handleSubmit}
+   819→                  disabled={!isStep2Valid() || loading}
+   820→                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+   821→                >
+   822→                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+   823→                  {t('submit', language)}
+   824→                </Button>
+   825→              )}
+   826→            </div>
+   827→          </CardContent>
+   828→        </Card>
+   829→      </div>
+   830→    </div>
+   831→  );
+   832→}
+   833→

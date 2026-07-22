@@ -1,0 +1,1676 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+     4→import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
+     5→import { t } from '@/lib/i18n';
+     6→import {
+     7→  ALL_BD_DISTRICTS,
+     8→  BUS_CLASSES,
+     9→  DECK_TYPES,
+    10→  COURIER_COMPANIES,
+    11→  DELIVERY_SPEEDS,
+    12→  DECK_REQUIRED_CLASSES,
+    13→  TRANSPORT_TYPES,
+    14→  PLATFORM_FEE_PERCENTAGE,
+    15→  PLATFORM_FEE_MINIMUM,
+    16→} from '@/lib/constants';
+    17→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    18→import { Input } from '@/components/ui/input';
+    19→import { Label } from '@/components/ui/label';
+    20→import { Button } from '@/components/ui/button';
+    21→import { Checkbox } from '@/components/ui/checkbox';
+    22→import { Textarea } from '@/components/ui/textarea';
+    23→import { Badge } from '@/components/ui/badge';
+    24→import { Separator } from '@/components/ui/separator';
+    25→import {
+    26→  Select,
+    27→  SelectContent,
+    28→  SelectItem,
+    29→  SelectTrigger,
+    30→  SelectValue,
+    31→} from '@/components/ui/select';
+    32→import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+    33→import {
+    34→  Ticket,
+    35→  ArrowLeft,
+    36→  Upload,
+    37→  MapPin,
+    38→  Bus,
+    39→  Train,
+    40→  Plane,
+    41→  Ship,
+    42→  FileText,
+    43→  Image as ImageIcon,
+    44→  CheckCircle2,
+    45→  AlertTriangle,
+    46→  Truck,
+    47→  User,
+    48→  Package,
+    49→  DollarSign,
+    50→  Info,
+    51→  Loader2,
+    52→  Eye,
+    53→  X,
+    54→  ShieldCheck,
+    55→  Lock,
+    56→  ArrowRight,
+    57→  ArrowLeftRight,
+    58→  CloudUpload,
+    59→} from 'lucide-react';
+    60→import { motion, AnimatePresence } from 'framer-motion';
+    61→import { toast } from 'sonner';
+    62→
+    63→/* ------------------------------------------------------------------ */
+    64→/*  Types                                                              */
+    65→/* ------------------------------------------------------------------ */
+    66→
+    67→interface FormState {
+    68→  transportType: string;
+    69→  transportCompany: string;
+    70→  ticketType: string;
+    71→  pnrNumber: string;
+    72→  ticketDocument: string;
+    73→  from: string;
+    74→  to: string;
+    75→  departureDate: string;
+    76→  departureTime: string;
+    77→  boardingPoint: string;
+    78→  droppingPoint: string;
+    79→  seatClass: string;
+    80→  deckType: string;
+    81→  seatNumber: string;
+    82→  coachNumber: string;
+    83→  originalPrice: string;
+    84→  sellingPrice: string;
+    85→  deliveryType: string;
+    86→  meetingPlace: string;
+    87→  courierName: string;
+    88→  deliverySpeed: string;
+    89→  deliveryChargePaidBy: string;
+    90→  deliveryCharge: string;
+    91→  description: string;
+    92→  sellerNotes: string;
+    93→  confirmCorrect: boolean;
+    94→  confirmLegalRight: boolean;
+    95→  confirmFakeWarning: boolean;
+    96→}
+    97→
+    98→const initialForm: FormState = {
+    99→  transportType: 'bus',
+   100→  transportCompany: '',
+   101→  ticketType: 'online_copy',
+   102→  pnrNumber: '',
+   103→  ticketDocument: '',
+   104→  from: '',
+   105→  to: '',
+   106→  departureDate: '',
+   107→  departureTime: '',
+   108→  boardingPoint: '',
+   109→  droppingPoint: '',
+   110→  seatClass: '',
+   111→  deckType: '',
+   112→  seatNumber: '',
+   113→  coachNumber: '',
+   114→  originalPrice: '',
+   115→  sellingPrice: '',
+   116→  deliveryType: '',
+   117→  meetingPlace: '',
+   118→  courierName: '',
+   119→  deliverySpeed: '',
+   120→  deliveryChargePaidBy: 'seller',
+   121→  deliveryCharge: '',
+   122→  description: '',
+   123→  sellerNotes: '',
+   124→  confirmCorrect: false,
+   125→  confirmLegalRight: false,
+   126→  confirmFakeWarning: false,
+   127→};
+   128→
+   129→/* ------------------------------------------------------------------ */
+   130→/*  Transport tab config                                               */
+   131→/* ------------------------------------------------------------------ */
+   132→
+   133→const transportTabItems = [
+   134→  { id: 'bus', icon: Bus, labelEn: 'Bus', labelBn: 'বাস', color: 'from-emerald-500 to-green-600' },
+   135→  { id: 'train', icon: Train, labelEn: 'Train', labelBn: 'ট্রেন', color: 'from-teal-500 to-cyan-600' },
+   136→  { id: 'flight', icon: Plane, labelEn: 'Flight', labelBn: 'ফ্লাইট', color: 'from-sky-500 to-blue-600' },
+   137→  { id: 'launch', icon: Ship, labelEn: 'Launch', labelBn: 'লঞ্চ', color: 'from-violet-500 to-purple-600' },
+   138→];
+   139→
+   140→/* ------------------------------------------------------------------ */
+   141→/*  Section wrapper                                                    */
+   142→/* ------------------------------------------------------------------ */
+   143→
+   144→function FormSection({
+   145→  title,
+   146→  icon,
+   147→  children,
+   148→  language,
+   149→}: {
+   150→  title: string;
+   151→  icon: React.ReactNode;
+   152→  children: React.ReactNode;
+   153→  language: string;
+   154→}) {
+   155→  return (
+   156→    <motion.div
+   157→      initial={{ opacity: 0, y: 12 }}
+   158→      animate={{ opacity: 1, y: 0 }}
+   159→      transition={{ duration: 0.3 }}
+   160→    >
+   161→      <Card className="border-border/50 shadow-sm">
+   162→        <CardHeader className="pb-3 pt-4 px-4 sm:px-6">
+   163→          <CardTitle
+   164→            className={`flex items-center gap-2 text-base font-semibold ${language === 'bn' ? 'font-bangla' : ''}`}
+   165→          >
+   166→            {icon}
+   167→            {title}
+   168→          </CardTitle>
+   169→        </CardHeader>
+   170→        <CardContent className="px-4 sm:px-6 pb-5">{children}</CardContent>
+   171→      </Card>
+   172→    </motion.div>
+   173→  );
+   174→}
+   175→
+   176→/* ------------------------------------------------------------------ */
+   177→/*  Field helper                                                       */
+   178→/* ------------------------------------------------------------------ */
+   179→
+   180→function FieldLabel({
+   181→  children,
+   182→  required,
+   183→  language,
+   184→}: {
+   185→  children: React.ReactNode;
+   186→  required?: boolean;
+   187→  language: string;
+   188→}) {
+   189→  return (
+   190→    <Label className={`text-sm font-medium mb-1.5 block ${language === 'bn' ? 'font-bangla' : ''}`}>
+   191→      {children}
+   192→      {required && <span className="text-destructive ml-0.5">*</span>}
+   193→    </Label>
+   194→  );
+   195→}
+   196→
+   197→/* ================================================================== */
+   198→/*  Main Component                                                     */
+   199→/* ================================================================== */
+   200→
+   201→export default function SellTicketPage() {
+   202→  const { navigate } = useAppStore();
+   203→  const { user, token, isAuthenticated, updateUser } = useAuthStore();
+   204→  const { language } = useLanguageStore();
+   205→  const isBn = language === 'bn';
+   206→  const fontClass = isBn ? 'font-bangla' : '';
+   207→
+   208→  const [form, setForm] = useState<FormState>(initialForm);
+   209→  const [uploading, setUploading] = useState(false);
+   210→  const [uploadFileName, setUploadFileName] = useState('');
+   211→  const [submitting, setSubmitting] = useState(false);
+   212→  const [error, setError] = useState('');
+   213→  const [success, setSuccess] = useState(false);
+   214→  const [showPreview, setShowPreview] = useState(false);
+   215→  const [checkingAuth, setCheckingAuth] = useState(true);
+   216→  const [kycStatus, setKycStatus] = useState<'unknown' | 'none' | 'pending' | 'approved' | 'rejected'>('unknown');
+   217→  const [dragOver, setDragOver] = useState(false);
+   218→  const fileInputRef = useRef<HTMLInputElement>(null);
+   219→
+   220→  // Fetch user profile & KYC status on mount
+   221→  useEffect(() => {
+   222→    if (!isAuthenticated || !token) {
+   223→      setCheckingAuth(false);
+   224→      return;
+   225→    }
+   226→    (async () => {
+   227→      try {
+   228→        const res = await fetch('/api/auth/me', {
+   229→          headers: { Authorization: `Bearer ${token}` },
+   230→        });
+   231→        if (res.ok) {
+   232→          const data = await res.json();
+   233→          if (data.user) updateUser(data.user);
+   234→          if (data.user?.isKycVerified) {
+   235→            setKycStatus('approved');
+   236→          } else {
+   237→            const kycRes = await fetch('/api/kyc', {
+   238→              headers: { Authorization: `Bearer ${token}` },
+   239→            });
+   240→            if (kycRes.ok) {
+   241→              const kycData = await kycRes.json();
+   242→              if (kycData.application) {
+   243→                setKycStatus(kycData.application.status === 'pending' ? 'pending' : kycData.application.status === 'approved' ? 'approved' : kycData.application.status === 'rejected' ? 'rejected' : 'none');
+   244→              } else {
+   245→                setKycStatus('none');
+   246→              }
+   247→            } else {
+   248→              setKycStatus('none');
+   249→            }
+   250→          }
+   251→        }
+   252→      } catch {
+   253→        setKycStatus('none');
+   254→      } finally {
+   255→        setCheckingAuth(false);
+   256→      }
+   257→    })();
+   258→  }, [isAuthenticated, token, updateUser]);
+   259→
+   260→  /* ---- derived ---- */
+   261→  const platformFee = useMemo(() => {
+   262→    const sp = parseFloat(form.sellingPrice);
+   263→    if (!sp || sp <= 0) return 0;
+   264→    return Math.max(PLATFORM_FEE_MINIMUM, Math.round(sp * (PLATFORM_FEE_PERCENTAGE / 100)));
+   265→  }, [form.sellingPrice]);
+   266→
+   267→  const sellerReceives = useMemo(() => {
+   268→    const sp = parseFloat(form.sellingPrice);
+   269→    if (!sp || sp <= 0) return 0;
+   270→    return sp - platformFee;
+   271→  }, [form.sellingPrice, platformFee]);
+   272→
+   273→  const showSeatClass = form.transportType === 'bus';
+   274→  const showDeckType = showSeatClass && DECK_REQUIRED_CLASSES.includes(form.seatClass);
+   275→  const isCounterCopy = form.ticketType === 'counter_copy';
+   276→
+   277→  /* ---- setters ---- */
+   278→  const set = useCallback(
+   279→    <K extends keyof FormState>(key: K, value: FormState[K]) => {
+   280→      setForm((prev) => {
+   281→        const next = { ...prev, [key]: value };
+   282→        if (key === 'seatClass' && !DECK_REQUIRED_CLASSES.includes(value as string)) {
+   283→          next.deckType = '';
+   284→        }
+   285→        if (key === 'ticketType') {
+   286→          next.deliveryType = '';
+   287→          next.meetingPlace = '';
+   288→          next.courierName = '';
+   289→          next.deliverySpeed = '';
+   290→          next.deliveryChargePaidBy = 'seller';
+   291→          next.deliveryCharge = '';
+   292→          next.ticketDocument = '';
+   293→          setUploadFileName('');
+   294→        }
+   295→        if (key === 'transportType') {
+   296→          next.seatClass = '';
+   297→          next.deckType = '';
+   298→        }
+   299→        if (key === 'deliveryType') {
+   300→          next.meetingPlace = '';
+   301→          next.courierName = '';
+   302→          next.deliverySpeed = '';
+   303→          next.deliveryCharge = '';
+   304→          next.deliveryChargePaidBy = 'seller';
+   305→        }
+   306→        return next;
+   307→      });
+   308→    },
+   309→    [],
+   310→  );
+   311→
+   312→  /* ---- file upload ---- */
+   313→  const handleFileUpload = async (file: File) => {
+   314→    if (form.ticketType === 'online_copy') {
+   315→      if (file.type !== 'application/pdf') {
+   316→        toast.error(isBn ? 'শুধুমাত্র PDF ফাইল আপলোড করুন' : 'Only PDF files can be uploaded for Online Copy');
+   317→        return;
+   318→      }
+   319→    } else {
+   320→      const validImageTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+   321→      if (!validImageTypes.includes(file.type)) {
+   322→        toast.error(isBn ? 'শুধুমাত্র PNG/JPG/JPEG ফাইল আপলোড করুন' : 'Only PNG/JPG/JPEG files can be uploaded for Counter Copy');
+   323→        return;
+   324→      }
+   325→    }
+   326→
+   327→    const maxSize = form.ticketType === 'online_copy' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+   328→    if (file.size > maxSize) {
+   329→      toast.error(
+   330→        isBn
+   331→          ? `ফাইলের আকার ${form.ticketType === 'online_copy' ? '10MB' : '5MB'} এর কম হতে হবে`
+   332→          : `File size must be under ${form.ticketType === 'online_copy' ? '10MB' : '5MB'}`,
+   333→      );
+   334→      return;
+   335→    }
+   336→
+   337→    if (!token) {
+   338→      navigate('login');
+   339→      return;
+   340→    }
+   341→
+   342→    setUploading(true);
+   343→    try {
+   344→      const formData = new FormData();
+   345→      formData.append('file', file);
+   346→
+   347→      const res = await fetch('/api/upload', {
+   348→        method: 'POST',
+   349→        headers: { Authorization: `Bearer ${token}` },
+   350→        body: formData,
+   351→      });
+   352→
+   353→      if (!res.ok) {
+   354→        const data = await res.json();
+   355→        throw new Error(data.error || 'Upload failed');
+   356→      }
+   357→
+   358→      const data = await res.json();
+   359→      set('ticketDocument', data.url);
+   360→      setUploadFileName(file.name);
+   361→      toast.success(isBn ? 'ফাইল আপলোড সফল!' : 'File uploaded successfully!');
+   362→    } catch (err: unknown) {
+   363→      toast.error(err instanceof Error ? err.message : isBn ? 'আপলোড ব্যর্থ' : 'Upload failed');
+   364→    } finally {
+   365→      setUploading(false);
+   366→    }
+   367→  };
+   368→
+   369→  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   370→    const file = e.target.files?.[0];
+   371→    if (file) handleFileUpload(file);
+   372→  };
+   373→
+   374→  const handleDrop = (e: React.DragEvent) => {
+   375→    e.preventDefault();
+   376→    setDragOver(false);
+   377→    const file = e.dataTransfer.files?.[0];
+   378→    if (file) handleFileUpload(file);
+   379→  };
+   380→
+   381→  const handleDragOver = (e: React.DragEvent) => {
+   382→    e.preventDefault();
+   383→    setDragOver(true);
+   384→  };
+   385→
+   386→  const handleDragLeave = () => {
+   387→    setDragOver(false);
+   388→  };
+   389→
+   390→  /* ---- validation ---- */
+   391→  const validate = (): string | null => {
+   392→    if (!form.transportCompany.trim()) return isBn ? 'পরিবহন কোম্পানির নাম দিন' : 'Transport company name is required';
+   393→    if (!form.pnrNumber.trim()) return isBn ? 'টিকেট/PNR নম্বর দিন' : 'Ticket/PNR number is required';
+   394→    if (!form.ticketDocument) return isBn ? 'টিকেট নথি আপলোড করুন' : 'Ticket document upload is required';
+   395→    if (!form.from) return isBn ? 'যাত্রা শুরুর স্থান নির্বাচন করুন' : 'From location is required';
+   396→    if (!form.to) return isBn ? 'গন্তব্য নির্বাচন করুন' : 'To location is required';
+   397→    if (form.from === form.to) return isBn ? 'শুরু ও গন্তব্য এক হতে পারে না' : 'From and To cannot be the same';
+   398→    if (!form.departureDate) return isBn ? 'যাত্রার তারিখ দিন' : 'Travel date is required';
+   399→    if (!form.departureTime) return isBn ? 'যাত্রার সময় দিন' : 'Departure time is required';
+   400→
+   401→    if (showSeatClass && !form.seatClass) return isBn ? 'ক্লাস নির্বাচন করুন' : 'Seat class is required for bus tickets';
+   402→    if (showDeckType && !form.deckType) return isBn ? 'ডেক টাইপ নির্বাচন করুন' : 'Deck type is required';
+   403→
+   404→    if (!form.originalPrice || parseFloat(form.originalPrice) <= 0)
+   405→      return isBn ? 'মূল টিকেটের মূল্য দিন' : 'Original ticket price is required';
+   406→    if (!form.sellingPrice || parseFloat(form.sellingPrice) <= 0)
+   407→      return isBn ? 'বিক্রয় মূল্য দিন' : 'Selling price is required';
+   408→
+   409→    if (isCounterCopy) {
+   410→      if (!form.deliveryType) return isBn ? 'ডেলিভারি টাইপ নির্বাচন করুন' : 'Delivery type is required for counter copy';
+   411→      if (form.deliveryType === 'in_person' && !form.meetingPlace.trim())
+   412→        return isBn ? 'মিটিং প্লেস দিন' : 'Meeting place is required';
+   413→      if (form.deliveryType === 'courier') {
+   414→        if (!form.courierName) return isBn ? 'কুরিয়ার নির্বাচন করুন' : 'Courier name is required';
+   415→        if (!form.deliverySpeed) return isBn ? 'ডেলিভারি ধরন নির্বাচন করুন' : 'Delivery speed is required';
+   416→        if (form.deliveryChargePaidBy === 'buyer' && (!form.deliveryCharge || parseFloat(form.deliveryCharge) <= 0))
+   417→          return isBn ? 'ডেলিভারি চার্জ দিন' : 'Delivery charge is required';
+   418→      }
+   419→    }
+   420→
+   421→    if (!form.confirmCorrect) return isBn ? 'টিকেট তথ্য নিশ্চিত করুন' : 'Please confirm ticket information is correct';
+   422→    if (!form.confirmLegalRight) return isBn ? 'আইনি অধিকার নিশ্চিত করুন' : 'Please confirm you have the legal right to transfer';
+   423→    if (!form.confirmFakeWarning) return isBn ? 'সতর্কতা স্বীকার করুন' : 'Please acknowledge the fake ticket warning';
+   424→
+   425→    return null;
+   426→  };
+   427→
+   428→  /* ---- submit ---- */
+   429→  const handleSubmit = async (e: React.FormEvent) => {
+   430→    e.preventDefault();
+   431→    setError('');
+   432→
+   433→    if (!isAuthenticated || !token) {
+   434→      navigate('login');
+   435→      return;
+   436→    }
+   437→
+   438→    const validationError = validate();
+   439→    if (validationError) {
+   440→      setError(validationError);
+   441→      toast.error(validationError);
+   442→      return;
+   443→    }
+   444→
+   445→    setSubmitting(true);
+   446→    try {
+   447→      const body = {
+   448→        transportType: form.transportType,
+   449→        transportCompany: form.transportCompany.trim(),
+   450→        ticketType: form.ticketType,
+   451→        pnrNumber: form.pnrNumber.trim(),
+   452→        ticketDocument: form.ticketDocument,
+   453→        routeFrom: form.from,
+   454→        routeTo: form.to,
+   455→        departureDate: form.departureDate,
+   456→        departureTime: form.departureTime,
+   457→        boardingPoint: form.boardingPoint.trim() || undefined,
+   458→        droppingPoint: form.droppingPoint.trim() || undefined,
+   459→        seatClass: form.seatClass || undefined,
+   460→        deckType: form.deckType || undefined,
+   461→        seatNumber: form.seatNumber.trim() || undefined,
+   462→        coachNumber: form.coachNumber.trim() || undefined,
+   463→        originalPrice: parseFloat(form.originalPrice),
+   464→        price: parseFloat(form.sellingPrice),
+   465→        description: form.description.trim() || undefined,
+   466→        sellerNotes: form.sellerNotes.trim() || undefined,
+   467→        deliveryType: isCounterCopy ? form.deliveryType : undefined,
+   468→        meetingPlace: isCounterCopy && form.deliveryType === 'in_person' ? form.meetingPlace.trim() : undefined,
+   469→        courierName: isCounterCopy && form.deliveryType === 'courier' ? form.courierName : undefined,
+   470→        deliverySpeed: isCounterCopy && form.deliveryType === 'courier' ? form.deliverySpeed : undefined,
+   471→        deliveryChargePaidBy: isCounterCopy && form.deliveryType === 'courier' ? form.deliveryChargePaidBy : undefined,
+   472→        deliveryCharge:
+   473→          isCounterCopy && form.deliveryType === 'courier' && form.deliveryChargePaidBy === 'buyer'
+   474→            ? parseFloat(form.deliveryCharge)
+   475→            : 0,
+   476→        isConfirmed: true,
+   477→      };
+   478→
+   479→      const res = await fetch('/api/tickets', {
+   480→        method: 'POST',
+   481→        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   482→        body: JSON.stringify(body),
+   483→      });
+   484→
+   485→      if (!res.ok) {
+   486→        const data = await res.json();
+   487→        throw new Error(data.error || (isBn ? 'টিকেট তৈরি ব্যর্থ' : 'Failed to create ticket'));
+   488→      }
+   489→
+   490→      setSuccess(true);
+   491→      toast.success(isBn ? 'টিকেট সফলভাবে তালিকাভুক্ত হয়েছে!' : 'Ticket listed successfully!');
+   492→    } catch (err: unknown) {
+   493→      const msg = err instanceof Error ? err.message : isBn ? 'একটি ত্রুটি ঘটেছে' : 'An error occurred';
+   494→      setError(msg);
+   495→      toast.error(msg);
+   496→    } finally {
+   497→      setSubmitting(false);
+   498→    }
+   499→  };
+   500→
+   501→  /* ---- helpers ---- */
+   502→  const getDistrictLabel = (dist: (typeof ALL_BD_DISTRICTS)[number]) =>
+   503→    isBn ? dist.labelBn : dist.label;
+   504→
+   505→  const getClassLabel = (id: string) => {
+   506→    const cls = BUS_CLASSES.find((c) => c.id === id);
+   507→    return cls ? (isBn ? cls.labelBn : cls.label) : id;
+   508→  };
+   509→
+   510→  const getDeckLabel = (id: string) => {
+   511→    const dk = DECK_TYPES.find((d) => d.id === id);
+   512→    return dk ? (isBn ? dk.labelBn : dk.label) : id;
+   513→  };
+   514→
+   515→  const getCourierLabel = (id: string) => {
+   516→    const cr = COURIER_COMPANIES.find((c) => c.id === id);
+   517→    return cr ? (isBn ? cr.labelBn : cr.label) : id;
+   518→  };
+   519→
+   520→  const getDeliverySpeedLabel = (id: string) => {
+   521→    const ds = DELIVERY_SPEEDS.find((d) => d.id === id);
+   522→    return ds ? (isBn ? ds.labelBn : ds.label) : id;
+   523→  };
+   524→
+   525→  /* ================================================================ */
+   526→  /*  AUTH GATE                                                        */
+   527→  /* ================================================================ */
+   528→
+   529→  if (checkingAuth) {
+   530→    return (
+   531→      <div className="container mx-auto px-4 py-16 max-w-md text-center">
+   532→        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary mb-4" />
+   533→        <p className={`text-muted-foreground ${fontClass}`}>
+   534→          {isBn ? 'যাচাই করা হচ্ছে...' : 'Verifying...'}
+   535→        </p>
+   536→      </div>
+   537→    );
+   538→  }
+   539→
+   540→  if (!isAuthenticated || !token) {
+   541→    return (
+   542→      <div className="container mx-auto px-4 py-12 max-w-lg">
+   543→        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+   544→          <Card className="border-primary/20 shadow-md">
+   545→            <CardContent className="p-6 sm:p-8 text-center">
+   546→              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-5">
+   547→                <Lock className="w-8 h-8 text-primary" />
+   548→              </div>
+   549→              <h2 className={`text-xl font-bold mb-2 ${fontClass}`}>
+   550→                {isBn ? 'লগইন প্রয়োজন' : 'Login Required'}
+   551→              </h2>
+   552→              <p className={`text-muted-foreground mb-6 text-sm ${fontClass}`}>
+   553→                {isBn
+   554→                  ? 'টিকেট বিক্রি করতে আপনাকে প্রথমে লগইন করতে হবে।'
+   555→                  : 'You need to login first to sell tickets on our platform.'}
+   556→              </p>
+   557→              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+   558→                <Button onClick={() => navigate('login')} className="bg-gradient-to-r from-primary to-primary/90">
+   559→                  {t('login', language)}
+   560→                  <ArrowRight className="w-4 h-4 ml-2" />
+   561→                </Button>
+   562→                <Button variant="outline" onClick={() => navigate('register')}>
+   563→                  {t('register', language)}
+   564→                </Button>
+   565→              </div>
+   566→            </CardContent>
+   567→          </Card>
+   568→        </motion.div>
+   569→      </div>
+   570→    );
+   571→  }
+   572→
+   573→  /* ================================================================ */
+   574→  /*  KYC GATE                                                        */
+   575→  /* ================================================================ */
+   576→
+   577→  if (kycStatus !== 'approved') {
+   578→    return (
+   579→      <div className="container mx-auto px-4 py-12 max-w-lg">
+   580→        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+   581→          <Card className="border-amber-200 dark:border-amber-800/50 shadow-md">
+   582→            <CardContent className="p-6 sm:p-8 text-center">
+   583→              <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-5">
+   584→                <ShieldCheck className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+   585→              </div>
+   586→              <h2 className={`text-xl font-bold mb-2 ${fontClass}`}>
+   587→                {isBn ? 'KYC যাচাইকরণ প্রয়োজন' : 'KYC Verification Required'}
+   588→              </h2>
+   589→              <p className={`text-muted-foreground mb-6 text-sm ${fontClass}`}>
+   590→                {kycStatus === 'pending'
+   591→                  ? isBn
+   592→                    ? 'আপনার KYC আবেদন পর্যালোচনাধীন আছে। অনুমোদিত হলে আপনি টিকেট বিক্রি করতে পারবেন।'
+   593→                    : 'Your KYC application is under review. You can sell tickets once it\'s approved.'
+   594→                  : kycStatus === 'rejected'
+   595→                    ? isBn
+   596→                      ? 'আপনার KYC আবেদন প্রত্যাখ্যাত হয়েছে। অনুগ্রহ করে পুনরায় আবেদন করুন।'
+   597→                      : 'Your KYC application was rejected. Please resubmit with correct information.'
+   598→                    : isBn
+   599→                      ? 'টিকেট বিক্রি করতে আপনাকে প্রথমে KYC যাচাইকরণ সম্পন্ন করতে হবে। এটি ক্রেতাদের নিরাপত্তা নিশ্চিত করে।'
+   600→                      : 'You need to complete KYC verification before selling tickets. This ensures buyer safety and trust.'}
+   601→              </p>
+   602→
+   603→              {kycStatus === 'pending' && (
+   604→                <div className="flex items-center justify-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg mb-6">
+   605→                  <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+   606→                  <span className={`text-sm text-amber-700 dark:text-amber-400 ${fontClass}`}>
+   607→                    {isBn ? 'পর্যালোচনাধীন — সাধারণত ২৪ ঘন্টার মধ্যে অনুমোদিত হয়' : 'Under review — usually approved within 24 hours'}
+   608→                  </span>
+   609→                </div>
+   610→              )}
+   611→
+   612→              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+   613→                {(kycStatus === 'none' || kycStatus === 'rejected') && (
+   614→                  <Button onClick={() => navigate('kyc')} className="bg-gradient-to-r from-primary to-primary/90">
+   615→                    <ShieldCheck className="w-4 h-4 mr-2" />
+   616→                    {isBn ? 'KYC যাচাইকরণ শুরু করুন' : 'Start KYC Verification'}
+   617→                  </Button>
+   618→                )}
+   619→                <Button variant="outline" onClick={() => navigate('home')}>
+   620→                  {t('back', language)}
+   621→                </Button>
+   622→              </div>
+   623→
+   624→              <div className="mt-6 pt-6 border-t text-left">
+   625→                <p className={`text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 ${fontClass}`}>
+   626→                  {isBn ? 'যাচাইকৃত বিক্রেতাদের সুবিধা' : 'Verified Seller Benefits'}
+   627→                </p>
+   628→                <ul className="space-y-2">
+   629→                  {[
+   630→                    isBn ? 'টিকেট বিক্রি করার অনুমতি' : 'Permission to sell tickets',
+   631→                    isBn ? 'ভেরিফাইড ব্যাজ প্রদর্শন' : 'Verified badge displayed on profile',
+   632→                    isBn ? 'ক্রেতাদের কাছে বেশি বিশ্বাসযোগ্যতা' : 'Higher trust from buyers',
+   633→                    isBn ? 'ওয়ালেট ও উত্তোলন সুবিধা' : 'Wallet & withdrawal access',
+   634→                  ].map((benefit, i) => (
+   635→                    <li key={i} className="flex items-center gap-2 text-sm">
+   636→                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+   637→                      <span className={fontClass}>{benefit}</span>
+   638→                    </li>
+   639→                  ))}
+   640→                </ul>
+   641→              </div>
+   642→            </CardContent>
+   643→          </Card>
+   644→        </motion.div>
+   645→      </div>
+   646→    );
+   647→  }
+   648→
+   649→  /* ================================================================ */
+   650→  /*  SUCCESS PAGE                                                     */
+   651→  /* ================================================================ */
+   652→
+   653→  if (success) {
+   654→    return (
+   655→      <div className="container mx-auto px-4 py-16 max-w-md">
+   656→        <motion.div
+   657→          initial={{ opacity: 0, scale: 0.9 }}
+   658→          animate={{ opacity: 1, scale: 1 }}
+   659→          className="text-center"
+   660→        >
+   661→          <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-6">
+   662→            <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+   663→          </div>
+   664→          <h2 className={`text-2xl font-bold mb-3 ${fontClass}`}>
+   665→            {t('success', language)}!
+   666→          </h2>
+   667→          <p className={`text-muted-foreground mb-8 ${fontClass}`}>
+   668→            {isBn
+   669→              ? 'আপনার টিকেট বিক্রির জন্য তালিকাভুক্ত হয়েছে। ক্রেতারা এখন এটি দেখতে পাবেন।'
+   670→              : 'Your ticket has been listed for sale. Buyers can now see it.'}
+   671→          </p>
+   672→          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+   673→            <Button onClick={() => navigate('my-tickets')} className="bg-gradient-to-r from-primary to-primary/90">
+   674→              <Ticket className="w-4 h-4 mr-2" />
+   675→              {t('myTickets', language)}
+   676→            </Button>
+   677→            <Button variant="outline" onClick={() => navigate('search')}>
+   678→              {t('searchTickets', language)}
+   679→            </Button>
+   680→          </div>
+   681→        </motion.div>
+   682→      </div>
+   683→    );
+   684→  }
+   685→
+   686→  /* ================================================================ */
+   687→  /*  PREVIEW CARD                                                     */
+   688→  /* ================================================================ */
+   689→
+   690→  const PreviewCard = () => {
+   691→    const fromDist = ALL_BD_DISTRICTS.find((d) => d.label === form.from);
+   692→    const toDist = ALL_BD_DISTRICTS.find((d) => d.label === form.to);
+   693→    const activeTransport = transportTabItems.find((t) => t.id === form.transportType);
+   694→    const TransportIcon = activeTransport?.icon || Bus;
+   695→
+   696→    return (
+   697→      <Card className="border-primary/20 shadow-md overflow-hidden">
+   698→        <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3 flex items-center justify-between">
+   699→          <div className="flex items-center gap-2">
+   700→            <TransportIcon className="w-5 h-5 text-primary" />
+   701→            <span className={`font-semibold text-sm ${fontClass}`}>
+   702→              {activeTransport ? (isBn ? activeTransport.labelBn : activeTransport.labelEn) : ''}
+   703→            </span>
+   704→          </div>
+   705→          <Badge variant={form.ticketType === 'online_copy' ? 'default' : 'secondary'} className="text-xs">
+   706→            {form.ticketType === 'online_copy'
+   707→              ? t('onlineCopy', language)
+   708→              : t('counterCopy', language)}
+   709→          </Badge>
+   710→        </div>
+   711→        <CardContent className="p-4 space-y-3">
+   712→          {/* Route */}
+   713→          <div className="flex items-center gap-3">
+   714→            <div className="flex-1 text-center">
+   715→              <p className="text-xs text-muted-foreground">{t('from', language)}</p>
+   716→              <p className={`font-bold text-sm ${fontClass}`}>
+   717→                {form.from ? (fromDist ? getDistrictLabel(fromDist) : form.from) : '—'}
+   718→              </p>
+   719→            </div>
+   720→            <div className="text-primary text-lg">→</div>
+   721→            <div className="flex-1 text-center">
+   722→              <p className="text-xs text-muted-foreground">{t('to', language)}</p>
+   723→              <p className={`font-bold text-sm ${fontClass}`}>
+   724→                {form.to ? (toDist ? getDistrictLabel(toDist) : form.to) : '—'}
+   725→              </p>
+   726→            </div>
+   727→          </div>
+   728→          <Separator />
+   729→          {/* Details grid */}
+   730→          <div className="grid grid-cols-2 gap-2 text-xs">
+   731→            <div>
+   732→              <span className="text-muted-foreground">{t('transportCompany', language)}:</span>
+   733→              <p className={`font-medium truncate ${fontClass}`}>{form.transportCompany || '—'}</p>
+   734→            </div>
+   735→            <div>
+   736→              <span className="text-muted-foreground">{t('departureDate', language)}:</span>
+   737→              <p className="font-medium">{form.departureDate || '—'}</p>
+   738→            </div>
+   739→            <div>
+   740→              <span className="text-muted-foreground">{t('departureTime', language)}:</span>
+   741→              <p className="font-medium">{form.departureTime || '—'}</p>
+   742→            </div>
+   743→            <div>
+   744→              <span className="text-muted-foreground">{t('seatNumber', language)}:</span>
+   745→              <p className="font-medium">{form.seatNumber || '—'}</p>
+   746→            </div>
+   747→            {showSeatClass && form.seatClass && (
+   748→              <div>
+   749→                <span className="text-muted-foreground">{isBn ? 'ক্লাস' : 'Class'}:</span>
+   750→                <p className={`font-medium ${fontClass}`}>{getClassLabel(form.seatClass)}</p>
+   751→              </div>
+   752→            )}
+   753→            {showDeckType && form.deckType && (
+   754→              <div>
+   755→                <span className="text-muted-foreground">{isBn ? 'ডেক' : 'Deck'}:</span>
+   756→                <p className={`font-medium ${fontClass}`}>{getDeckLabel(form.deckType)}</p>
+   757→              </div>
+   758→            )}
+   759→            {form.coachNumber && (
+   760→              <div>
+   761→                <span className="text-muted-foreground">{t('coachNumber', language)}:</span>
+   762→                <p className="font-medium">{form.coachNumber}</p>
+   763→              </div>
+   764→            )}
+   765→          </div>
+   766→          <Separator />
+   767→          {/* Pricing */}
+   768→          <div className="space-y-1.5">
+   769→            <div className="flex justify-between text-sm">
+   770→              <span className={`text-muted-foreground ${fontClass}`}>{isBn ? 'টিকেট মূল্য' : 'Ticket Price'}</span>
+   771→              <span className="font-semibold">৳{form.sellingPrice ? parseFloat(form.sellingPrice).toLocaleString() : '0'}</span>
+   772→            </div>
+   773→            <div className="flex justify-between text-sm">
+   774→              <span className={`text-muted-foreground ${fontClass}`}>{t('platformFee', language)} ({PLATFORM_FEE_PERCENTAGE}%)</span>
+   775→              <span className="text-amber-600 dark:text-amber-400 font-medium">-৳{platformFee.toLocaleString()}</span>
+   776→            </div>
+   777→            <Separator />
+   778→            <div className="flex justify-between text-sm font-bold">
+   779→              <span className={fontClass}>{isBn ? 'আপনি পাবেন' : 'You Receive'}</span>
+   780→              <span className="text-emerald-600 dark:text-emerald-400">৳{sellerReceives.toLocaleString()}</span>
+   781→            </div>
+   782→          </div>
+   783→          {/* Delivery info */}
+   784→          {isCounterCopy && form.deliveryType && (
+   785→            <>
+   786→              <Separator />
+   787→              <div className="text-xs">
+   788→                <span className="text-muted-foreground">{t('deliveryMethod', language)}: </span>
+   789→                <span className="font-medium">
+   790→                  {form.deliveryType === 'in_person'
+   791→                    ? t('inPerson', language)
+   792→                    : `${t('courier', language)} - ${getCourierLabel(form.courierName)}`}
+   793→                </span>
+   794→              </div>
+   795→            </>
+   796→          )}
+   797→          {!isCounterCopy && form.ticketDocument && (
+   798→            <>
+   799→              <Separator />
+   800→              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+   801→                <FileText className="w-3.5 h-3.5" />
+   802→                <span className={fontClass}>{isBn ? 'ক্রেতা পেমেন্টের পর ইমেইলে PDF পাবেন' : 'Buyer will receive PDF via email after payment'}</span>
+   803→              </div>
+   804→            </>
+   805→          )}
+   806→        </CardContent>
+   807→      </Card>
+   808→    );
+   809→  };
+   810→
+   811→  /* ================================================================ */
+   812→  /*  MAIN FORM                                                        */
+   813→  /* ================================================================ */
+   814→
+   815→  return (
+   816→    <div className="container mx-auto px-3 sm:px-4 py-6 max-w-4xl">
+   817→      {/* Header */}
+   818→      <div className="flex items-center justify-between mb-6">
+   819→        <Button variant="ghost" onClick={() => navigate('home')} className="gap-1.5">
+   820→          <ArrowLeft className="w-4 h-4" />
+   821→          <span className={fontClass}>{t('back', language)}</span>
+   822→        </Button>
+   823→        <Button
+   824→          variant="outline"
+   825→          size="sm"
+   826→          onClick={() => setShowPreview(!showPreview)}
+   827→          className="gap-1.5 lg:hidden"
+   828→        >
+   829→          <Eye className="w-4 h-4" />
+   830→          {isBn ? 'প্রিভিউ' : 'Preview'}
+   831→        </Button>
+   832→      </div>
+   833→
+   834→      <div className="flex items-center gap-3 mb-6">
+   835→        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+   836→          <Ticket className="w-5 h-5 text-primary" />
+   837→        </div>
+   838→        <div>
+   839→          <h1 className={`text-xl font-bold ${fontClass}`}>{t('sellTicket', language)}</h1>
+   840→          <p className={`text-sm text-muted-foreground ${fontClass}`}>
+   841→            {isBn ? 'আপনার টিকেটের বিস্তারিত তথ্য পূরণ করুন' : 'Fill in your ticket details to list for sale'}
+   842→          </p>
+   843→        </div>
+   844→      </div>
+   845→
+   846→      <div className="flex flex-col lg:flex-row gap-6">
+   847→        {/* ---- FORM COLUMN ---- */}
+   848→        <div className="flex-1 min-w-0">
+   849→          <form onSubmit={handleSubmit} className="space-y-5">
+   850→
+   851→            {/* ====== SECTION 1: Ticket Information ====== */}
+   852→            <FormSection
+   853→              title={isBn ? 'টিকেট তথ্য' : 'Ticket Information'}
+   854→              icon={<Ticket className="w-4 h-4 text-primary" />}
+   855→              language={language}
+   856→            >
+   857→              {/* Transport Type — Horizontal Tabs */}
+   858→              <div className="space-y-1.5 mb-5">
+   859→                <FieldLabel required language={language}>{t('transport', language)}</FieldLabel>
+   860→                <div className="grid grid-cols-4 gap-2">
+   861→                  {transportTabItems.map((item) => {
+   862→                    const isActive = form.transportType === item.id;
+   863→                    return (
+   864→                      <button
+   865→                        key={item.id}
+   866→                        type="button"
+   867→                        onClick={() => set('transportType', item.id)}
+   868→                        className={`
+   869→                          flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 
+   870→                          py-3 px-2 rounded-xl border-2 transition-all text-sm font-medium
+   871→                          min-h-[56px] sm:min-h-[48px]
+   872→                          ${isActive
+   873→                            ? `border-primary bg-gradient-to-br ${item.color} text-white shadow-md`
+   874→                            : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+   875→                          }
+   876→                          ${fontClass}
+   877→                        `}
+   878→                      >
+   879→                        <item.icon className="w-5 h-5 shrink-0" />
+   880→                        <span className="text-xs sm:text-sm">{isBn ? item.labelBn : item.labelEn}</span>
+   881→                      </button>
+   882→                    );
+   883→                  })}
+   884→                </div>
+   885→              </div>
+   886→
+   887→              {/* Ticket Type — Horizontal Tabs */}
+   888→              <div className="space-y-1.5 mb-5">
+   889→                <FieldLabel required language={language}>{t('ticketType', language)}</FieldLabel>
+   890→                <div className="grid grid-cols-2 gap-3">
+   891→                  <button
+   892→                    type="button"
+   893→                    onClick={() => set('ticketType', 'online_copy')}
+   894→                    className={`
+   895→                      flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 transition-all text-sm font-medium
+   896→                      min-h-[48px]
+   897→                      ${form.ticketType === 'online_copy'
+   898→                        ? 'border-primary bg-primary text-primary-foreground shadow-md'
+   899→                        : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+   900→                      }
+   901→                      ${fontClass}
+   902→                    `}
+   903→                  >
+   904→                    <FileText className="w-4 h-4 shrink-0" />
+   905→                    {t('onlineCopy', language)}
+   906→                  </button>
+   907→                  <button
+   908→                    type="button"
+   909→                    onClick={() => set('ticketType', 'counter_copy')}
+   910→                    className={`
+   911→                      flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 transition-all text-sm font-medium
+   912→                      min-h-[48px]
+   913→                      ${form.ticketType === 'counter_copy'
+   914→                        ? 'border-primary bg-primary text-primary-foreground shadow-md'
+   915→                        : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+   916→                      }
+   917→                      ${fontClass}
+   918→                    `}
+   919→                  >
+   920→                    <ImageIcon className="w-4 h-4 shrink-0" />
+   921→                    {t('counterCopy', language)}
+   922→                  </button>
+   923→                </div>
+   924→              </div>
+   925→
+   926→              {/* Transport Company + PNR */}
+   927→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+   928→                <div className="space-y-1.5">
+   929→                  <FieldLabel required language={language}>{t('transportCompany', language)}</FieldLabel>
+   930→                  <Input
+   931→                    value={form.transportCompany}
+   932→                    onChange={(e) => set('transportCompany', e.target.value)}
+   933→                    placeholder={isBn ? 'যেমন: Green Line, Shyamoli' : 'e.g. Green Line, Shyamoli'}
+   934→                    className={`h-11 ${fontClass}`}
+   935→                  />
+   936→                </div>
+   937→                <div className="space-y-1.5">
+   938→                  <FieldLabel required language={language}>
+   939→                    {isBn ? 'টিকেট/PNR নম্বর' : 'Ticket/PNR Number'}
+   940→                  </FieldLabel>
+   941→                  <Input
+   942→                    value={form.pnrNumber}
+   943→                    onChange={(e) => set('pnrNumber', e.target.value)}
+   944→                    placeholder={isBn ? 'যেমন: ETR-12345678' : 'e.g. ETR-12345678'}
+   945→                    className="h-11"
+   946→                  />
+   947→                </div>
+   948→              </div>
+   949→
+   950→              {/* File Upload — Full width drag & drop */}
+   951→              <div className="space-y-1.5">
+   952→                <FieldLabel required language={language}>
+   953→                  {isBn
+   954→                    ? form.ticketType === 'online_copy'
+   955→                      ? 'টিকেট PDF আপলোড'
+   956→                      : 'টিকেট ছবি আপলোড'
+   957→                    : form.ticketType === 'online_copy'
+   958→                      ? 'Ticket PDF Upload'
+   959→                      : 'Ticket Image Upload'}
+   960→                </FieldLabel>
+   961→
+   962→                {uploadFileName ? (
+   963→                  <div className="flex items-center gap-3 p-4 rounded-xl border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
+   964→                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+   965→                    <div className="flex-1 min-w-0">
+   966→                      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400 truncate">{uploadFileName}</p>
+   967→                      <p className={`text-xs text-emerald-600/70 dark:text-emerald-500 ${fontClass}`}>
+   968→                        {isBn ? 'সফলভাবে আপলোড হয়েছে' : 'Uploaded successfully'}
+   969→                      </p>
+   970→                    </div>
+   971→                    <button
+   972→                      type="button"
+   973→                      onClick={() => {
+   974→                        set('ticketDocument', '');
+   975→                        setUploadFileName('');
+   976→                      }}
+   977→                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
+   978→                    >
+   979→                      <X className="w-4 h-4" />
+   980→                    </button>
+   981→                  </div>
+   982→                ) : (
+   983→                  <div
+   984→                    onDrop={handleDrop}
+   985→                    onDragOver={handleDragOver}
+   986→                    onDragLeave={handleDragLeave}
+   987→                    onClick={() => fileInputRef.current?.click()}
+   988→                    className={`
+   989→                      relative cursor-pointer rounded-xl border-2 border-dashed transition-all
+   990→                      flex flex-col items-center justify-center gap-3 p-8 min-h-[160px]
+   991→                      ${dragOver
+   992→                        ? 'border-primary bg-primary/5 scale-[1.01]'
+   993→                        : 'border-border hover:border-primary/40 hover:bg-primary/[0.02]'
+   994→                      }
+   995→                    `}
+   996→                  >
+   997→                    {uploading ? (
+   998→                      <>
+   999→                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+  1000→                        <p className={`text-sm text-muted-foreground ${fontClass}`}>
+  1001→                          {isBn ? 'আপলোড হচ্ছে...' : 'Uploading...'}
+  1002→                        </p>
+  1003→                      </>
+  1004→                    ) : (
+  1005→                      <>
+  1006→                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${dragOver ? 'bg-primary/10' : 'bg-muted/50'}`}>
+  1007→                          <CloudUpload className={`w-6 h-6 ${dragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+  1008→                        </div>
+  1009→                        <div className="text-center">
+  1010→                          <p className={`text-sm font-medium ${fontClass}`}>
+  1011→                            {isBn ? 'ফাইল এখানে ড্র্যাগ ও ড্রপ করুন' : 'Drag & drop your file here'}
+  1012→                          </p>
+  1013→                          <p className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>
+  1014→                            {isBn ? 'অথবা' : 'or'}{' '}
+  1015→                            <span className="text-primary font-medium underline underline-offset-2">
+  1016→                              {isBn ? 'ফাইল ব্রাউজ করুন' : 'browse files'}
+  1017→                            </span>
+  1018→                          </p>
+  1019→                        </div>
+  1020→                        <p className={`text-xs text-muted-foreground ${fontClass}`}>
+  1021→                          {form.ticketType === 'online_copy'
+  1022→                            ? isBn ? 'শুধুমাত্র PDF ফাইল (সর্বোচ্চ 10MB)' : 'Only PDF files allowed (max 10MB)'
+  1023→                            : isBn ? 'শুধুমাত্র PNG/JPG/JPEG ফাইল (সর্বোচ্চ 5MB)' : 'Only PNG/JPG/JPEG files allowed (max 5MB)'}
+  1024→                        </p>
+  1025→                      </>
+  1026→                    )}
+  1027→                    <input
+  1028→                      ref={fileInputRef}
+  1029→                      type="file"
+  1030→                      className="hidden"
+  1031→                      accept={form.ticketType === 'online_copy' ? '.pdf' : '.png,.jpg,.jpeg'}
+  1032→                      onChange={handleFileInputChange}
+  1033→                    />
+  1034→                  </div>
+  1035→                )}
+  1036→              </div>
+  1037→            </FormSection>
+  1038→
+  1039→            {/* ====== SECTION 2: Route ====== */}
+  1040→            <FormSection
+  1041→              title={isBn ? 'রুট' : 'Route'}
+  1042→              icon={<MapPin className="w-4 h-4 text-primary" />}
+  1043→              language={language}
+  1044→            >
+  1045→              {/* From & To — Side by side */}
+  1046→              <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-3 items-end mb-4">
+  1047→                <div className="space-y-1.5">
+  1048→                  <FieldLabel required language={language}>{t('from', language)}</FieldLabel>
+  1049→                  <Select value={form.from} onValueChange={(v) => set('from', v)}>
+  1050→                    <SelectTrigger className="h-11 w-full">
+  1051→                      <SelectValue placeholder={isBn ? 'জেলা নির্বাচন' : 'Select district'} />
+  1052→                    </SelectTrigger>
+  1053→                    <SelectContent className="max-h-64">
+  1054→                      {ALL_BD_DISTRICTS.map((dist) => (
+  1055→                        <SelectItem
+  1056→                          key={dist.label}
+  1057→                          value={dist.label}
+  1058→                          disabled={dist.label === form.to}
+  1059→                        >
+  1060→                          <span className={fontClass}>{isBn ? dist.labelBn : dist.label}</span>
+  1061→                          {dist.label === form.to && (
+  1062→                            <span className="text-xs text-muted-foreground ml-2">({isBn ? 'গন্তব্য' : 'destination'})</span>
+  1063→                          )}
+  1064→                        </SelectItem>
+  1065→                      ))}
+  1066→                    </SelectContent>
+  1067→                  </Select>
+  1068→                </div>
+  1069→
+  1070→                <div className="flex items-center justify-center pb-1">
+  1071→                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+  1072→                    <ArrowLeftRight className="w-4 h-4 text-primary" />
+  1073→                  </div>
+  1074→                </div>
+  1075→
+  1076→                <div className="space-y-1.5">
+  1077→                  <FieldLabel required language={language}>{t('to', language)}</FieldLabel>
+  1078→                  <Select value={form.to} onValueChange={(v) => set('to', v)}>
+  1079→                    <SelectTrigger className="h-11 w-full">
+  1080→                      <SelectValue placeholder={isBn ? 'জেলা নির্বাচন' : 'Select district'} />
+  1081→                    </SelectTrigger>
+  1082→                    <SelectContent className="max-h-64">
+  1083→                      {ALL_BD_DISTRICTS.map((dist) => (
+  1084→                        <SelectItem
+  1085→                          key={dist.label}
+  1086→                          value={dist.label}
+  1087→                          disabled={dist.label === form.from}
+  1088→                        >
+  1089→                          <span className={fontClass}>{isBn ? dist.labelBn : dist.label}</span>
+  1090→                          {dist.label === form.from && (
+  1091→                            <span className="text-xs text-muted-foreground ml-2">({isBn ? 'শুরু' : 'origin'})</span>
+  1092→                          )}
+  1093→                        </SelectItem>
+  1094→                      ))}
+  1095→                    </SelectContent>
+  1096→                  </Select>
+  1097→                </div>
+  1098→              </div>
+  1099→
+  1100→              {/* Same district warning */}
+  1101→              {form.from && form.to && form.from === form.to && (
+  1102→                <motion.div
+  1103→                  initial={{ opacity: 0, y: -4 }}
+  1104→                  animate={{ opacity: 1, y: 0 }}
+  1105→                  className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center gap-2 mb-4"
+  1106→                >
+  1107→                  <AlertTriangle className="w-4 h-4 shrink-0" />
+  1108→                  <span className={fontClass}>{isBn ? 'শুরু ও গন্তব্য একই হতে পারে না' : 'From and To cannot be the same district'}</span>
+  1109→                </motion.div>
+  1110→              )}
+  1111→
+  1112→              {/* Departure Date & Time — Side by side */}
+  1113→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+  1114→                <div className="space-y-1.5">
+  1115→                  <FieldLabel required language={language}>{t('departureDate', language)}</FieldLabel>
+  1116→                  <Input
+  1117→                    type="date"
+  1118→                    value={form.departureDate}
+  1119→                    onChange={(e) => set('departureDate', e.target.value)}
+  1120→                    min={new Date().toISOString().split('T')[0]}
+  1121→                    className="h-11"
+  1122→                  />
+  1123→                </div>
+  1124→                <div className="space-y-1.5">
+  1125→                  <FieldLabel required language={language}>{t('departureTime', language)}</FieldLabel>
+  1126→                  <Input
+  1127→                    type="time"
+  1128→                    value={form.departureTime}
+  1129→                    onChange={(e) => set('departureTime', e.target.value)}
+  1130→                    className="h-11"
+  1131→                  />
+  1132→                </div>
+  1133→              </div>
+  1134→
+  1135→              {/* Boarding & Dropping Point */}
+  1136→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  1137→                <div className="space-y-1.5">
+  1138→                  <FieldLabel language={language}>{isBn ? 'বোর্ডিং পয়েন্ট' : 'Boarding Point'}</FieldLabel>
+  1139→                  <Input
+  1140→                    value={form.boardingPoint}
+  1141→                    onChange={(e) => set('boardingPoint', e.target.value)}
+  1142→                    placeholder={isBn ? 'যেমন: Gabtoli, Sayedabad' : 'e.g. Gabtoli, Sayedabad'}
+  1143→                    className={`h-11 ${fontClass}`}
+  1144→                  />
+  1145→                </div>
+  1146→                <div className="space-y-1.5">
+  1147→                  <FieldLabel language={language}>{isBn ? 'ড্রপিং পয়েন্ট' : 'Dropping Point'}</FieldLabel>
+  1148→                  <Input
+  1149→                    value={form.droppingPoint}
+  1150→                    onChange={(e) => set('droppingPoint', e.target.value)}
+  1151→                    placeholder={isBn ? 'যেমন: Oxygen More, CDA Market' : 'e.g. Oxygen More, CDA Market'}
+  1152→                    className={`h-11 ${fontClass}`}
+  1153→                  />
+  1154→                </div>
+  1155→              </div>
+  1156→            </FormSection>
+  1157→
+  1158→            {/* ====== SECTION 3: Class & Seat ====== */}
+  1159→            <FormSection
+  1160→              title={isBn ? 'ক্লাস ও আসন' : 'Class & Seat'}
+  1161→              icon={<Bus className="w-4 h-4 text-primary" />}
+  1162→              language={language}
+  1163→            >
+  1164→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  1165→                <AnimatePresence mode="wait">
+  1166→                  {showSeatClass && (
+  1167→                    <motion.div
+  1168→                      initial={{ opacity: 0, height: 0 }}
+  1169→                      animate={{ opacity: 1, height: 'auto' }}
+  1170→                      exit={{ opacity: 0, height: 0 }}
+  1171→                      className="space-y-1.5"
+  1172→                    >
+  1173→                      <FieldLabel required language={language}>{isBn ? 'ক্লাস' : 'Class'}</FieldLabel>
+  1174→                      <Select value={form.seatClass} onValueChange={(v) => set('seatClass', v)}>
+  1175→                        <SelectTrigger className="h-11">
+  1176→                          <SelectValue placeholder={isBn ? 'ক্লাস নির্বাচন' : 'Select class'} />
+  1177→                        </SelectTrigger>
+  1178→                        <SelectContent>
+  1179→                          {BUS_CLASSES.map((cls) => (
+  1180→                            <SelectItem key={cls.id} value={cls.id}>
+  1181→                              <span className={fontClass}>{isBn ? cls.labelBn : cls.label}</span>
+  1182→                            </SelectItem>
+  1183→                          ))}
+  1184→                        </SelectContent>
+  1185→                      </Select>
+  1186→                    </motion.div>
+  1187→                  )}
+  1188→                </AnimatePresence>
+  1189→
+  1190→                <AnimatePresence mode="wait">
+  1191→                  {showDeckType && (
+  1192→                    <motion.div
+  1193→                      initial={{ opacity: 0, height: 0 }}
+  1194→                      animate={{ opacity: 1, height: 'auto' }}
+  1195→                      exit={{ opacity: 0, height: 0 }}
+  1196→                      className="space-y-1.5"
+  1197→                    >
+  1198→                      <FieldLabel required language={language}>{isBn ? 'ডেক টাইপ' : 'Deck Type'}</FieldLabel>
+  1199→                      <Select value={form.deckType} onValueChange={(v) => set('deckType', v)}>
+  1200→                        <SelectTrigger className="h-11">
+  1201→                          <SelectValue placeholder={isBn ? 'ডেক নির্বাচন' : 'Select deck'} />
+  1202→                        </SelectTrigger>
+  1203→                        <SelectContent>
+  1204→                          {DECK_TYPES.map((dk) => (
+  1205→                            <SelectItem key={dk.id} value={dk.id}>
+  1206→                              <span className={fontClass}>{isBn ? dk.labelBn : dk.label}</span>
+  1207→                            </SelectItem>
+  1208→                          ))}
+  1209→                        </SelectContent>
+  1210→                      </Select>
+  1211→                    </motion.div>
+  1212→                  )}
+  1213→                </AnimatePresence>
+  1214→
+  1215→                <div className="space-y-1.5">
+  1216→                  <FieldLabel language={language}>{t('seatNumber', language)}</FieldLabel>
+  1217→                  <Input
+  1218→                    value={form.seatNumber}
+  1219→                    onChange={(e) => set('seatNumber', e.target.value)}
+  1220→                    placeholder={isBn ? 'যেমন: A1, B3' : 'e.g. A1, B3'}
+  1221→                    className="h-11"
+  1222→                  />
+  1223→                </div>
+  1224→
+  1225→                <div className="space-y-1.5">
+  1226→                  <FieldLabel language={language}>
+  1227→                    {form.transportType === 'train'
+  1228→                      ? isBn ? 'কোচ/ক্যাবিন নম্বর' : 'Coach/Cabin Number'
+  1229→                      : form.transportType === 'flight'
+  1230→                        ? isBn ? 'রুম/সিট নম্বর' : 'Room/Seat Number'
+  1231→                        : form.transportType === 'launch'
+  1232→                          ? isBn ? 'ক্যাবিন/রুম নম্বর' : 'Cabin/Room Number'
+  1233→                          : t('coachNumber', language)}
+  1234→                  </FieldLabel>
+  1235→                  <Input
+  1236→                    value={form.coachNumber}
+  1237→                    onChange={(e) => set('coachNumber', e.target.value)}
+  1238→                    placeholder={
+  1239→                      form.transportType === 'train'
+  1240→                        ? isBn ? 'যেমন: S-1, KA-3' : 'e.g. S-1, KA-3'
+  1241→                        : form.transportType === 'launch'
+  1242→                          ? isBn ? 'যেমন: Cabin-12' : 'e.g. Cabin-12'
+  1243→                          : isBn ? 'যেমন: Coach-1' : 'e.g. Coach-1'
+  1244→                    }
+  1245→                    className="h-11"
+  1246→                  />
+  1247→                </div>
+  1248→              </div>
+  1249→
+  1250→              {!showSeatClass && (
+  1251→                <div className="flex items-center gap-2 mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+  1252→                  <Info className="w-4 h-4 shrink-0" />
+  1253→                  <span className={fontClass}>
+  1254→                    {form.transportType === 'train'
+  1255→                      ? isBn ? 'ট্রেনের ক্লাস নির্বাচন এখানে প্রযোজ্য নয়' : 'Class selection is not applicable for train tickets'
+  1256→                      : form.transportType === 'flight'
+  1257→                        ? isBn ? 'ফ্লাইটের ক্লাস টিকেটে উল্লেখ থাকবে' : 'Flight class is mentioned on the ticket'
+  1258→                        : isBn ? 'লঞ্চের ক্যাবিন টাইপ টিকেটে উল্লেখ থাকবে' : 'Launch cabin type is mentioned on the ticket'}
+  1259→                  </span>
+  1260→                </div>
+  1261→              )}
+  1262→            </FormSection>
+  1263→
+  1264→            {/* ====== SECTION 4: Pricing ====== */}
+  1265→            <FormSection
+  1266→              title={isBn ? 'মূল্য' : 'Pricing'}
+  1267→              icon={<DollarSign className="w-4 h-4 text-primary" />}
+  1268→              language={language}
+  1269→            >
+  1270→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+  1271→                <div className="space-y-1.5">
+  1272→                  <FieldLabel required language={language}>
+  1273→                    {isBn ? 'মূল টিকেট মূল্য (৳)' : 'Original Ticket Price (৳)'}
+  1274→                  </FieldLabel>
+  1275→                  <Input
+  1276→                    type="number"
+  1277→                    min="0"
+  1278→                    value={form.originalPrice}
+  1279→                    onChange={(e) => set('originalPrice', e.target.value)}
+  1280→                    placeholder="0"
+  1281→                    className="h-11"
+  1282→                  />
+  1283→                </div>
+  1284→                <div className="space-y-1.5">
+  1285→                  <FieldLabel required language={language}>
+  1286→                    {isBn ? 'বিক্রয় মূল্য (৳)' : 'Selling Price (৳)'}
+  1287→                  </FieldLabel>
+  1288→                  <Input
+  1289→                    type="number"
+  1290→                    min="0"
+  1291→                    value={form.sellingPrice}
+  1292→                    onChange={(e) => set('sellingPrice', e.target.value)}
+  1293→                    placeholder="0"
+  1294→                    className="h-11"
+  1295→                  />
+  1296→                </div>
+  1297→              </div>
+  1298→
+  1299→              {/* Price breakdown panel */}
+  1300→              <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
+  1301→                <div className="flex items-center justify-between">
+  1302→                  <span className={`text-sm ${fontClass}`}>{isBn ? 'টিকেট মূল্য' : 'Ticket Price'}</span>
+  1303→                  <span className="text-sm font-semibold">
+  1304→                    ৳{form.sellingPrice ? parseFloat(form.sellingPrice).toLocaleString() : '0'}
+  1305→                  </span>
+  1306→                </div>
+  1307→                <div className="flex items-center justify-between">
+  1308→                  <span className={`text-sm text-muted-foreground ${fontClass}`}>
+  1309→                    {t('platformFee', language)} {PLATFORM_FEE_PERCENTAGE}% ({isBn ? `সর্বনিম্ন ৳${PLATFORM_FEE_MINIMUM}` : `min ৳${PLATFORM_FEE_MINIMUM}`})
+  1310→                  </span>
+  1311→                  <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+  1312→                    -৳{platformFee.toLocaleString()}
+  1313→                  </span>
+  1314→                </div>
+  1315→                <Separator />
+  1316→                <div className="flex items-center justify-between">
+  1317→                  <span className={`text-sm font-bold ${fontClass}`}>
+  1318→                    {isBn ? 'ক্রেতা প্রদান করবে মোট' : 'Buyer will pay to you (seller) total'}
+  1319→                  </span>
+  1320→                  <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+  1321→                    ৳{form.sellingPrice ? (parseFloat(form.sellingPrice) + platformFee).toLocaleString() : '0'}
+  1322→                  </span>
+  1323→                </div>
+  1324→                <div className="flex items-center justify-between">
+  1325→                  <span className={`text-sm font-medium ${fontClass}`}>
+  1326→                    {isBn ? 'আপনি পাবেন (ফি কাটার পর)' : 'You will receive (after fee deduction)'}
+  1327→                  </span>
+  1328→                  <span className="text-sm font-bold text-primary">
+  1329→                    ৳{sellerReceives.toLocaleString()}
+  1330→                  </span>
+  1331→                </div>
+  1332→              </div>
+  1333→            </FormSection>
+  1334→
+  1335→            {/* ====== SECTION 5: Delivery ====== */}
+  1336→            <AnimatePresence mode="wait">
+  1337→              {isCounterCopy ? (
+  1338→                <motion.div
+  1339→                  key="delivery-section"
+  1340→                  initial={{ opacity: 0, height: 0 }}
+  1341→                  animate={{ opacity: 1, height: 'auto' }}
+  1342→                  exit={{ opacity: 0, height: 0 }}
+  1343→                  transition={{ duration: 0.3 }}
+  1344→                >
+  1345→                  <FormSection
+  1346→                    title={isBn ? 'ডেলিভারি' : 'Delivery'}
+  1347→                    icon={<Truck className="w-4 h-4 text-primary" />}
+  1348→                    language={language}
+  1349→                  >
+  1350→                    <div className="space-y-1.5 mb-4">
+  1351→                      <FieldLabel required language={language}>
+  1352→                        {isBn ? 'টিকেট ডেলিভারি ধরন' : 'Ticket Delivery Type'}
+  1353→                      </FieldLabel>
+  1354→                      <Select value={form.deliveryType} onValueChange={(v) => set('deliveryType', v)}>
+  1355→                        <SelectTrigger className="h-11">
+  1356→                          <SelectValue placeholder={isBn ? 'ডেলিভারি ধরন নির্বাচন' : 'Select delivery type'} />
+  1357→                        </SelectTrigger>
+  1358→                        <SelectContent>
+  1359→                          <SelectItem value="in_person">
+  1360→                            <span className="flex items-center gap-2">
+  1361→                              <User className="w-4 h-4" />
+  1362→                              {t('inPerson', language)}
+  1363→                            </span>
+  1364→                          </SelectItem>
+  1365→                          <SelectItem value="courier">
+  1366→                            <span className="flex items-center gap-2">
+  1367→                              <Package className="w-4 h-4" />
+  1368→                              {t('courier', language)}
+  1369→                            </span>
+  1370→                          </SelectItem>
+  1371→                        </SelectContent>
+  1372→                      </Select>
+  1373→                    </div>
+  1374→
+  1375→                    <AnimatePresence mode="wait">
+  1376→                      {form.deliveryType === 'in_person' && (
+  1377→                        <motion.div
+  1378→                          initial={{ opacity: 0, height: 0 }}
+  1379→                          animate={{ opacity: 1, height: 'auto' }}
+  1380→                          exit={{ opacity: 0, height: 0 }}
+  1381→                          className="space-y-1.5"
+  1382→                        >
+  1383→                          <FieldLabel required language={language}>
+  1384→                            {isBn ? 'মিটিং প্লেস' : 'Meeting Place'}
+  1385→                          </FieldLabel>
+  1386→                          <Input
+  1387→                            value={form.meetingPlace}
+  1388→                            onChange={(e) => set('meetingPlace', e.target.value)}
+  1389→                            placeholder={isBn ? 'যেমন: কমলাপুর রেলস্টেশন, গেট নং ৩' : 'e.g. Kamalapur Railway Station, Gate 3'}
+  1390→                            className={`h-11 ${fontClass}`}
+  1391→                          />
+  1392→                        </motion.div>
+  1393→                      )}
+  1394→                    </AnimatePresence>
+  1395→
+  1396→                    <AnimatePresence mode="wait">
+  1397→                      {form.deliveryType === 'courier' && (
+  1398→                        <motion.div
+  1399→                          initial={{ opacity: 0, height: 0 }}
+  1400→                          animate={{ opacity: 1, height: 'auto' }}
+  1401→                          exit={{ opacity: 0, height: 0 }}
+  1402→                          className="space-y-4"
+  1403→                        >
+  1404→                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  1405→                            <div className="space-y-1.5">
+  1406→                              <FieldLabel required language={language}>
+  1407→                                {isBn ? 'কুরিয়ার সার্ভিস' : 'Courier Name'}
+  1408→                              </FieldLabel>
+  1409→                              <Select value={form.courierName} onValueChange={(v) => set('courierName', v)}>
+  1410→                                <SelectTrigger className="h-11">
+  1411→                                  <SelectValue placeholder={isBn ? 'কুরিয়ার নির্বাচন' : 'Select courier'} />
+  1412→                                </SelectTrigger>
+  1413→                                <SelectContent>
+  1414→                                  {COURIER_COMPANIES.map((cr) => (
+  1415→                                    <SelectItem key={cr.id} value={cr.id}>
+  1416→                                      <span className={fontClass}>{isBn ? cr.labelBn : cr.label}</span>
+  1417→                                    </SelectItem>
+  1418→                                  ))}
+  1419→                                </SelectContent>
+  1420→                              </Select>
+  1421→                            </div>
+  1422→
+  1423→                            <div className="space-y-1.5">
+  1424→                              <FieldLabel required language={language}>
+  1425→                                {isBn ? 'ডেলিভারি ধরন' : 'Delivery Type'}
+  1426→                              </FieldLabel>
+  1427→                              <Select value={form.deliverySpeed} onValueChange={(v) => set('deliverySpeed', v)}>
+  1428→                                <SelectTrigger className="h-11">
+  1429→                                  <SelectValue placeholder={isBn ? 'ধরন নির্বাচন' : 'Select type'} />
+  1430→                                </SelectTrigger>
+  1431→                                <SelectContent>
+  1432→                                  {DELIVERY_SPEEDS.map((ds) => (
+  1433→                                    <SelectItem key={ds.id} value={ds.id}>
+  1434→                                      <span className={fontClass}>{isBn ? ds.labelBn : ds.label}</span>
+  1435→                                    </SelectItem>
+  1436→                                  ))}
+  1437→                                </SelectContent>
+  1438→                              </Select>
+  1439→                            </div>
+  1440→                          </div>
+  1441→
+  1442→                          <div className="space-y-2">
+  1443→                            <FieldLabel language={language}>
+  1444→                              {isBn ? 'ডেলিভারি চার্জ প্রদানকারী' : 'Delivery Charge Paid by'}
+  1445→                            </FieldLabel>
+  1446→                            <RadioGroup
+  1447→                              value={form.deliveryChargePaidBy}
+  1448→                              onValueChange={(v) => set('deliveryChargePaidBy', v)}
+  1449→                              className="flex gap-6"
+  1450→                            >
+  1451→                              <div className="flex items-center gap-2">
+  1452→                                <RadioGroupItem value="seller" id="paid-seller" />
+  1453→                                <Label htmlFor="paid-seller" className={`text-sm ${fontClass}`}>
+  1454→                                  {isBn ? 'বিক্রেতা (আপনি)' : 'Seller (You)'}
+  1455→                                </Label>
+  1456→                              </div>
+  1457→                              <div className="flex items-center gap-2">
+  1458→                                <RadioGroupItem value="buyer" id="paid-buyer" />
+  1459→                                <Label htmlFor="paid-buyer" className={`text-sm ${fontClass}`}>
+  1460→                                  {t('buyer', language)}
+  1461→                                </Label>
+  1462→                              </div>
+  1463→                            </RadioGroup>
+  1464→                          </div>
+  1465→
+  1466→                          <AnimatePresence mode="wait">
+  1467→                            {form.deliveryChargePaidBy === 'buyer' && (
+  1468→                              <motion.div
+  1469→                                initial={{ opacity: 0, height: 0 }}
+  1470→                                animate={{ opacity: 1, height: 'auto' }}
+  1471→                                exit={{ opacity: 0, height: 0 }}
+  1472→                                className="space-y-1.5"
+  1473→                              >
+  1474→                                <FieldLabel required language={language}>
+  1475→                                  {isBn ? 'ডেলিভারি চার্জ (৳)' : 'Delivery Charge (৳)'}
+  1476→                                </FieldLabel>
+  1477→                                <Input
+  1478→                                  type="number"
+  1479→                                  min="0"
+  1480→                                  value={form.deliveryCharge}
+  1481→                                  onChange={(e) => set('deliveryCharge', e.target.value)}
+  1482→                                  placeholder="0"
+  1483→                                  className="h-11"
+  1484→                                />
+  1485→                              </motion.div>
+  1486→                            )}
+  1487→                          </AnimatePresence>
+  1488→                        </motion.div>
+  1489→                      )}
+  1490→                    </AnimatePresence>
+  1491→                  </FormSection>
+  1492→                </motion.div>
+  1493→              ) : (
+  1494→                <motion.div
+  1495→                  key="online-delivery-info"
+  1496→                  initial={{ opacity: 0, height: 0 }}
+  1497→                  animate={{ opacity: 1, height: 'auto' }}
+  1498→                  exit={{ opacity: 0, height: 0 }}
+  1499→                  transition={{ duration: 0.3 }}
+  1500→                >
+  1501→                  <Card className="border-border/50 shadow-sm">
+  1502→                    <CardContent className="p-4 sm:p-6">
+  1503→                      <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg">
+  1504→                        <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+  1505→                        <div>
+  1506→                          <p className={`text-sm font-medium ${fontClass}`}>
+  1507→                            {isBn ? 'অনলাইন কপি ডেলিভারি' : 'Online Copy Delivery'}
+  1508→                          </p>
+  1509→                          <p className={`text-sm text-muted-foreground mt-1 ${fontClass}`}>
+  1510→                            {isBn
+  1511→                              ? 'ক্রেতা পেমেন্টের পর টিকেটটি PDF হিসেবে ইমেইলে পাবেন।'
+  1512→                              : 'Buyer will receive the ticket as PDF via email after payment.'}
+  1513→                          </p>
+  1514→                        </div>
+  1515→                      </div>
+  1516→                    </CardContent>
+  1517→                  </Card>
+  1518→                </motion.div>
+  1519→              )}
+  1520→            </AnimatePresence>
+  1521→
+  1522→            {/* ====== SECTION 6: Details ====== */}
+  1523→            <FormSection
+  1524→              title={isBn ? 'বিস্তারিত' : 'Details'}
+  1525→              icon={<FileText className="w-4 h-4 text-primary" />}
+  1526→              language={language}
+  1527→            >
+  1528→              <div className="space-y-4">
+  1529→                <div className="space-y-1.5">
+  1530→                  <FieldLabel language={language}>{t('description', language)}</FieldLabel>
+  1531→                  <Textarea
+  1532→                    value={form.description}
+  1533→                    onChange={(e) => set('description', e.target.value)}
+  1534→                    placeholder={isBn ? 'টিকেট সম্পর্কে বিস্তারিত লিখুন...' : 'Write details about the ticket...'}
+  1535→                    rows={3}
+  1536→                    className={fontClass}
+  1537→                  />
+  1538→                </div>
+  1539→                <div className="space-y-1.5">
+  1540→                  <FieldLabel language={language}>
+  1541→                    {isBn ? 'বিক্রেতা নোট' : 'Seller Notes'}
+  1542→                  </FieldLabel>
+  1543→                  <Textarea
+  1544→                    value={form.sellerNotes}
+  1545→                    onChange={(e) => set('sellerNotes', e.target.value)}
+  1546→                    placeholder={isBn ? 'ক্রেতার জন্য বিশেষ নোট...' : 'Special notes for the buyer...'}
+  1547→                    rows={2}
+  1548→                    className={fontClass}
+  1549→                  />
+  1550→                </div>
+  1551→              </div>
+  1552→            </FormSection>
+  1553→
+  1554→            {/* ====== TICKET PREVIEW (inline for mobile) ====== */}
+  1555→            <div className="lg:hidden">
+  1556→              <AnimatePresence mode="wait">
+  1557→                {showPreview && (
+  1558→                  <motion.div
+  1559→                    initial={{ opacity: 0, height: 0 }}
+  1560→                    animate={{ opacity: 1, height: 'auto' }}
+  1561→                    exit={{ opacity: 0, height: 0 }}
+  1562→                  >
+  1563→                    <div className="mb-2">
+  1564→                      <h3 className={`text-sm font-semibold flex items-center gap-2 ${fontClass}`}>
+  1565→                        <Eye className="w-4 h-4" />
+  1566→                        {isBn ? 'টিকেট প্রিভিউ' : 'Ticket Preview'}
+  1567→                      </h3>
+  1568→                    </div>
+  1569→                    <PreviewCard />
+  1570→                  </motion.div>
+  1571→                )}
+  1572→              </AnimatePresence>
+  1573→            </div>
+  1574→
+  1575→            {/* ====== AGREEMENTS ====== */}
+  1576→            <Card className="border-border/50 shadow-sm">
+  1577→              <CardContent className="p-4 sm:p-6 space-y-4">
+  1578→                <h3 className={`text-sm font-semibold flex items-center gap-2 ${fontClass}`}>
+  1579→                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+  1580→                  {isBn ? 'চুক্তি ও নিশ্চিতকরণ' : 'Agreements & Confirmation'}
+  1581→                </h3>
+  1582→
+  1583→                <div className="space-y-3">
+  1584→                  <div className="flex items-start gap-3">
+  1585→                    <Checkbox
+  1586→                      id="confirm-correct"
+  1587→                      checked={form.confirmCorrect}
+  1588→                      onCheckedChange={(v) => set('confirmCorrect', v === true)}
+  1589→                      className="mt-0.5"
+  1590→                    />
+  1591→                    <Label htmlFor="confirm-correct" className={`text-sm leading-relaxed cursor-pointer ${fontClass}`}>
+  1592→                      {isBn
+  1593→                        ? 'আমি নিশ্চিত করছি যে এই টিকেট তথ্য সঠিক।'
+  1594→                        : 'I confirm this ticket information is correct.'}
+  1595→                    </Label>
+  1596→                  </div>
+  1597→
+  1598→                  <div className="flex items-start gap-3">
+  1599→                    <Checkbox
+  1600→                      id="confirm-legal"
+  1601→                      checked={form.confirmLegalRight}
+  1602→                      onCheckedChange={(v) => set('confirmLegalRight', v === true)}
+  1603→                      className="mt-0.5"
+  1604→                    />
+  1605→                    <Label htmlFor="confirm-legal" className={`text-sm leading-relaxed cursor-pointer ${fontClass}`}>
+  1606→                      {isBn
+  1607→                        ? 'আমার এই টিকেট হস্তান্তরের আইনি অধিকার আছে।'
+  1608→                        : 'I have the legal right to transfer this ticket.'}
+  1609→                    </Label>
+  1610→                  </div>
+  1611→
+  1612→                  <div className="flex items-start gap-3">
+  1613→                    <Checkbox
+  1614→                      id="confirm-fake"
+  1615→                      checked={form.confirmFakeWarning}
+  1616→                      onCheckedChange={(v) => set('confirmFakeWarning', v === true)}
+  1617→                      className="mt-0.5"
+  1618→                    />
+  1619→                    <Label htmlFor="confirm-fake" className={`text-sm leading-relaxed cursor-pointer ${fontClass}`}>
+  1620→                      {isBn
+  1621→                        ? 'আমি বুঝতে পেরেছি যে জাল টিকেট জমা দিলে আমার অ্যাকাউন্ট স্থগিত হতে পারে।'
+  1622→                        : 'I understand fake ticket submission may result in account suspension.'}
+  1623→                    </Label>
+  1624→                  </div>
+  1625→                </div>
+  1626→              </CardContent>
+  1627→            </Card>
+  1628→
+  1629→            {/* Error */}
+  1630→            {error && (
+  1631→              <motion.div
+  1632→                initial={{ opacity: 0, y: -4 }}
+  1633→                animate={{ opacity: 1, y: 0 }}
+  1634→                className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive flex items-center gap-2"
+  1635→              >
+  1636→                <AlertTriangle className="w-4 h-4 shrink-0" />
+  1637→                <span className={fontClass}>{error}</span>
+  1638→              </motion.div>
+  1639→            )}
+  1640→
+  1641→            {/* Submit */}
+  1642→            <Button
+  1643→              type="submit"
+  1644→              className="w-full bg-gradient-to-r from-primary to-primary/90 h-12 text-base font-semibold"
+  1645→              disabled={submitting || uploading}
+  1646→            >
+  1647→              {submitting ? (
+  1648→                <>
+  1649→                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+  1650→                  {isBn ? 'জমা হচ্ছে...' : 'Submitting...'}
+  1651→                </>
+  1652→              ) : (
+  1653→                <>
+  1654→                  <Ticket className="w-4 h-4 mr-2" />
+  1655→                  {isBn ? 'টিকেট তালিকাভুক্ত করুন' : 'List Ticket for Sale'}
+  1656→                </>
+  1657→              )}
+  1658→            </Button>
+  1659→          </form>
+  1660→        </div>
+  1661→
+  1662→        {/* ---- PREVIEW SIDEBAR (desktop) ---- */}
+  1663→        <div className="hidden lg:block w-80 shrink-0">
+  1664→          <div className="sticky top-6">
+  1665→            <h3 className={`text-sm font-semibold flex items-center gap-2 mb-3 ${fontClass}`}>
+  1666→              <Eye className="w-4 h-4" />
+  1667→              {isBn ? 'টিকেট প্রিভিউ' : 'Ticket Preview'}
+  1668→            </h3>
+  1669→            <PreviewCard />
+  1670→          </div>
+  1671→        </div>
+  1672→      </div>
+  1673→    </div>
+  1674→  );
+  1675→}
+  1676→

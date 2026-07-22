@@ -1,0 +1,570 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, lazy, Suspense, ComponentType } from 'react';
+     4→import { AnimatePresence, motion } from 'framer-motion';
+     5→import AppShell from '@/components/layout/AppShell';
+     6→import { useAppStore, useLanguageStore } from '@/lib/store';
+     7→import {
+     8→  MoonStar, Ticket, ArrowRight, Bus, TrainFront, Plane, Ship,
+     9→  Shield, Star, Users, Zap, Search, ChevronRight, TrendingUp,
+    10→  Clock, MapPin, Heart, CheckCircle2, Sparkles
+    11→} from 'lucide-react';
+    12→import { Button } from '@/components/ui/button';
+    13→import { Card, CardContent } from '@/components/ui/card';
+    14→import { Badge } from '@/components/ui/badge';
+    15→import { Input } from '@/components/ui/input';
+    16→import { t } from '@/lib/i18n';
+    17→import { POPULAR_ROUTES } from '@/lib/constants';
+    18→
+    19→// Loading fallback
+    20→function PageLoader() {
+    21→  return (
+    22→    <div className="flex items-center justify-center min-h-[60vh]">
+    23→      <div className="flex flex-col items-center gap-4">
+    24→        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+    25→        <p className="text-muted-foreground text-sm">Loading...</p>
+    26→      </div>
+    27→    </div>
+    28→  );
+    29→}
+    30→
+    31→// Pre-created lazy page components (declared outside render to avoid re-creation)
+    32→const LazyLoginPage = lazy(() => import('@/components/pages/LoginPage'));
+    33→const LazyRegisterPage = lazy(() => import('@/components/pages/RegisterPage'));
+    34→const LazyKycPage = lazy(() => import('@/components/pages/KycPage'));
+    35→const LazySearchPage = lazy(() => import('@/components/pages/SearchPage'));
+    36→const LazyTicketDetailsPage = lazy(() => import('@/components/pages/TicketDetailsPage'));
+    37→const LazySellTicketPage = lazy(() => import('@/components/pages/SellTicketPage'));
+    38→const LazyDashboardPage = lazy(() => import('@/components/pages/DashboardPage'));
+    39→const LazyAdminPage = lazy(() => import('@/components/pages/AdminPage'));
+    40→const LazyInfoPage = lazy(() => import('@/components/pages/InfoPage'));
+    41→
+    42→const pageComponents: Record<string, ComponentType> = {
+    43→  login: LazyLoginPage,
+    44→  register: LazyRegisterPage,
+    45→  search: LazySearchPage,
+    46→  bus: LazySearchPage,
+    47→  train: LazySearchPage,
+    48→  flight: LazySearchPage,
+    49→  launch: LazySearchPage,
+    50→  'ticket-details': LazyTicketDetailsPage,
+    51→  'sell-ticket': LazySellTicketPage,
+    52→  profile: LazyDashboardPage,
+    53→  kyc: LazyKycPage,
+    54→  wallet: LazyDashboardPage,
+    55→  'my-tickets': LazyDashboardPage,
+    56→  'my-orders': LazyDashboardPage,
+    57→  settings: LazyDashboardPage,
+    58→  notifications: LazyDashboardPage,
+    59→  admin: LazyAdminPage,
+    60→  'admin-users': LazyAdminPage,
+    61→  'admin-kyc': LazyAdminPage,
+    62→  'admin-tickets': LazyAdminPage,
+    63→  'admin-orders': LazyAdminPage,
+    64→  'admin-payments': LazyAdminPage,
+    65→  'admin-escrow': LazyAdminPage,
+    66→  'admin-wallets': LazyAdminPage,
+    67→  'admin-withdrawals': LazyAdminPage,
+    68→  'admin-reviews': LazyAdminPage,
+    69→  'admin-reports': LazyAdminPage,
+    70→  'admin-settings': LazyAdminPage,
+    71→  'admin-activity-logs': LazyAdminPage,
+    72→  about: LazyInfoPage,
+    73→  contact: LazyInfoPage,
+    74→  'how-it-works': LazyInfoPage,
+    75→  faq: LazyInfoPage,
+    76→  blog: LazyInfoPage,
+    77→  support: LazyInfoPage,
+    78→  terms: LazyInfoPage,
+    79→  privacy: LazyInfoPage,
+    80→  refund: LazyInfoPage,
+    81→  'payment-policy': LazyInfoPage,
+    82→  chat: LazyInfoPage,
+    83→};
+    84→
+    85→// Lazy page loader - only imports the page when needed
+    86→function LazyPage({ pageName }: { pageName: string }) {
+    87→  const PageComponent = pageComponents[pageName];
+    88→  if (!PageComponent) return <div>Page not found</div>;
+    89→  return (
+    90→    <Suspense fallback={<PageLoader />}>
+    91→      <PageComponent />
+    92→    </Suspense>
+    93→  );
+    94→}
+    95→
+    96→// Auth pages (no header/footer shell)
+    97→const authPages = new Set(['login', 'register', 'forgot-password']);
+    98→
+    99→// Home Page (inline for fast initial load - no dynamic import needed)
+   100→function HomePage() {
+   101→  const { navigate } = useAppStore();
+   102→  const { language } = useLanguageStore();
+   103→
+   104→  const transportTypes = [
+   105→    { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, gradient: 'icon-bg-green', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
+   106→    { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const, gradient: 'icon-bg-blue', lightBg: 'bg-blue/10', hoverBorder: 'hover:border-blue/30' },
+   107→    { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const, gradient: 'icon-bg-orange', lightBg: 'bg-orange/10', hoverBorder: 'hover:border-orange/30' },
+   108→    { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, gradient: 'icon-bg-green', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
+   109→  ];
+   110→
+   111→  const features = [
+   112→    {
+   113→      icon: Shield, title: t('verified', language) + ' ' + t('seller', language),
+   114→      desc: language === 'en' ? 'All sellers go through KYC verification for your safety' : 'আপনার নিরাপত্তার জন্য সকল বিক্রেতা কেওয়াইসি যাচাইয় যান',
+   115→      gradient: 'icon-bg-green'
+   116→    },
+   117→    {
+   118→      icon: Star, title: language === 'en' ? 'Escrow Protection' : 'এসক্রো সুরক্ষা',
+   119→      desc: language === 'en' ? 'Your payment is held securely until the journey is complete' : 'যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট নিরাপদে রাখা হয়',
+   120→      gradient: 'icon-bg-orange'
+   121→    },
+   122→    {
+   123→      icon: Zap, title: language === 'en' ? 'Instant Delivery' : 'তাৎক্ষণিক ডেলিভারি',
+   124→      desc: language === 'en' ? 'Get your tickets delivered instantly to your device' : 'আপনার ডিভাইসে তাৎক্ষণিক টিকেট ডেলিভারি',
+   125→      gradient: 'icon-bg-blue'
+   126→    },
+   127→    {
+   128→      icon: Users, title: language === 'en' ? '24/7 Support' : '২৪/৭ সাহায্য',
+   129→      desc: language === 'en' ? 'Our support team is always here to help you' : 'আমাদের সাহায্য দল সবসময় আপনাকে সাহায্য করতে এখানে',
+   130→      gradient: 'icon-bg-green'
+   131→    },
+   132→  ];
+   133→
+   134→  const stats = [
+   135→    { value: '10,000+', label: language === 'en' ? 'Tickets Sold' : 'টিকেট বিক্রি', color: 'text-primary' },
+   136→    { value: '5,000+', label: language === 'en' ? 'Happy Users' : 'সুখী ব্যবহারকারী', color: 'text-orange' },
+   137→    { value: '500+', label: language === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা', color: 'text-blue' },
+   138→    { value: '64+', label: language === 'en' ? 'Cities Covered' : 'শহর কভারেজ', color: 'text-primary' },
+   139→  ];
+   140→
+   141→  const steps = [
+   142→    {
+   143→      step: '01', title: t('step1Title', language), desc: t('step1Desc', language),
+   144→      gradient: 'icon-bg-green', accent: 'bg-primary/10 border-primary/20'
+   145→    },
+   146→    {
+   147→      step: '02', title: t('step2Title', language), desc: t('step2Desc', language),
+   148→      gradient: 'icon-bg-orange', accent: 'bg-orange/10 border-orange/20'
+   149→    },
+   150→    {
+   151→      step: '03', title: t('step3Title', language), desc: t('step3Desc', language),
+   152→      gradient: 'icon-bg-blue', accent: 'bg-blue/10 border-blue/20'
+   153→    },
+   154→    {
+   155→      step: '04', title: t('step4Title', language), desc: t('step4Desc', language),
+   156→      gradient: 'icon-bg-green', accent: 'bg-primary/10 border-primary/20'
+   157→    },
+   158→  ];
+   159→
+   160→  return (
+   161→    <>
+   162→      {/* ========== HERO SECTION ========== */}
+   163→      <section className="relative overflow-hidden bg-gradient-hero-light">
+   164→        {/* Animated background decorations */}
+   165→        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+   166→          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
+   167→          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue/6 rounded-full blur-3xl" />
+   168→          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange/4 rounded-full blur-3xl" />
+   169→          <motion.div className="absolute top-20 left-[10%] text-primary/8" animate={{ y: [-10, 10, -10] }} transition={{ duration: 4, repeat: Infinity }}>
+   170→            <Bus className="w-14 h-14" />
+   171→          </motion.div>
+   172→          <motion.div className="absolute top-40 right-[12%] text-orange/8" animate={{ y: [10, -10, 10] }} transition={{ duration: 3.5, repeat: Infinity }}>
+   173→            <Plane className="w-12 h-12" />
+   174→          </motion.div>
+   175→          <motion.div className="absolute bottom-32 left-[18%] text-blue/8" animate={{ y: [-8, 8, -8] }} transition={{ duration: 5, repeat: Infinity }}>
+   176→            <TrainFront className="w-16 h-16" />
+   177→          </motion.div>
+   178→        </div>
+   179→
+   180→        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-28 relative">
+   181→          <div className="max-w-4xl mx-auto text-center">
+   182→            {/* Badge */}
+   183→            <motion.div
+   184→              initial={{ opacity: 0, y: 30 }}
+   185→              animate={{ opacity: 1, y: 0 }}
+   186→              transition={{ duration: 0.6 }}
+   187→            >
+   188→              <Badge className="mb-6 px-4 py-1.5 text-sm bg-gradient-to-r from-primary/15 to-orange/15 text-primary border-primary/20 hover:from-primary/20 hover:to-orange/20">
+   189→                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+   190→                {language === 'en' ? 'Eid Special 2025' : 'ঈদ স্পেশাল ২০২৫'}
+   191→              </Badge>
+   192→            </motion.div>
+   193→
+   194→            {/* Title */}
+   195→            <motion.h1
+   196→              className={`text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] ${language === 'bn' ? 'font-bangla' : ''}`}
+   197→              initial={{ opacity: 0, y: 30 }}
+   198→              animate={{ opacity: 1, y: 0 }}
+   199→              transition={{ duration: 0.6, delay: 0.1 }}
+   200→            >
+   201→              <span className="text-gradient-hero">
+   202→                {t('heroTitle', language)}
+   203→              </span>
+   204→            </motion.h1>
+   205→
+   206→            {/* Subtitle */}
+   207→            <motion.p
+   208→              className={`text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}
+   209→              initial={{ opacity: 0, y: 30 }}
+   210→              animate={{ opacity: 1, y: 0 }}
+   211→              transition={{ duration: 0.6, delay: 0.2 }}
+   212→            >
+   213→              {t('heroSubtitle', language)}
+   214→            </motion.p>
+   215→
+   216→            {/* Search Bar */}
+   217→            <motion.div
+   218→              initial={{ opacity: 0, y: 30 }}
+   219→              animate={{ opacity: 1, y: 0 }}
+   220→              transition={{ duration: 0.6, delay: 0.3 }}
+   221→              className="max-w-xl mx-auto mb-8"
+   222→            >
+   223→              <div className="flex items-center gap-2 p-2 rounded-2xl bg-card border-2 border-primary/20 shadow-xl shadow-primary/5 focus-within:border-primary/40 transition-colors">
+   224→                <div className="flex-1 flex items-center gap-2 px-3">
+   225→                  <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+   226→                  <Input
+   227→                    placeholder={t('searchPlaceholder', language)}
+   228→                    className="border-0 shadow-none focus-visible:ring-0 h-10 text-base"
+   229→                    onClick={() => navigate('search')}
+   230→                    readOnly
+   231→                  />
+   232→                </div>
+   233→                <Button
+   234→                  size="lg"
+   235→                  onClick={() => navigate('search')}
+   236→                  className="btn-gradient-primary rounded-xl px-6 h-10"
+   237→                >
+   238→                  <Search className="w-4 h-4 mr-2" />
+   239→                  {t('search', language)}
+   240→                </Button>
+   241→              </div>
+   242→            </motion.div>
+   243→
+   244→            {/* CTA Buttons */}
+   245→            <motion.div
+   246→              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+   247→              initial={{ opacity: 0, y: 30 }}
+   248→              animate={{ opacity: 1, y: 0 }}
+   249→              transition={{ duration: 0.6, delay: 0.4 }}
+   250→            >
+   251→              <Button size="lg" onClick={() => navigate('search')} className="btn-gradient-brand rounded-xl text-base px-8 h-12">
+   252→                <Ticket className="w-5 h-5 mr-2" />
+   253→                {t('searchTickets', language)}
+   254→                <ArrowRight className="w-4 h-4 ml-1" />
+   255→              </Button>
+   256→              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8 h-12 rounded-xl border-orange/30 hover:bg-orange/10 hover:text-orange hover:border-orange">
+   257→                {t('sellTickets', language)}
+   258→              </Button>
+   259→            </motion.div>
+   260→          </div>
+   261→        </div>
+   262→
+   263→        {/* Wave divider */}
+   264→        <div className="absolute bottom-0 left-0 right-0">
+   265→          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+   266→            <path d="M0 60L48 55C96 50 192 40 288 35C384 30 480 30 576 33.3C672 36.7 768 43.3 864 45C960 46.7 1056 43.3 1152 38.3C1248 33.3 1344 26.7 1392 23.3L1440 20V60H0Z" className="fill-background" />
+   267→          </svg>
+   268→        </div>
+   269→      </section>
+   270→
+   271→      {/* ========== TRANSPORT TYPES ========== */}
+   272→      <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+   273→        <motion.div
+   274→          className="text-center mb-10"
+   275→          initial={{ opacity: 0, y: 20 }}
+   276→          whileInView={{ opacity: 1, y: 0 }}
+   277→          viewport={{ once: true }}
+   278→          transition={{ duration: 0.5 }}
+   279→        >
+   280→          <Badge variant="secondary" className="mb-3 bg-primary/10 text-primary border-primary/20">
+   281→            {t('allTransport', language)}
+   282→          </Badge>
+   283→          <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+   284→            {language === 'en' ? 'Choose Your Transport' : 'আপনার যানবাহন বেছে নিন'}
+   285→          </h2>
+   286→        </motion.div>
+   287→
+   288→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+   289→          {transportTypes.map((transport, index) => (
+   290→            <motion.div
+   291→              key={transport.id}
+   292→              initial={{ opacity: 0, y: 20 }}
+   293→              whileInView={{ opacity: 1, y: 0 }}
+   294→              viewport={{ once: true }}
+   295→              transition={{ duration: 0.4, delay: index * 0.1 }}
+   296→            >
+   297→              <Card
+   298→                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 card-gradient-hover`}
+   299→                onClick={() => navigate('search', { transportType: transport.id })}
+   300→              >
+   301→                <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center gap-4">
+   302→                  <div className={`w-16 h-16 rounded-2xl ${transport.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
+   303→                    <transport.icon className="w-8 h-8 text-white" />
+   304→                  </div>
+   305→                  <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>
+   306→                    {t(transport.labelKey, language)}
+   307→                  </h3>
+   308→                  <div className="flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary transition-colors">
+   309→                    <span className={language === 'bn' ? 'font-bangla' : ''}>
+   310→                      {language === 'en' ? 'Browse tickets' : 'টিকেট দেখুন'}
+   311→                    </span>
+   312→                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+   313→                  </div>
+   314→                </CardContent>
+   315→              </Card>
+   316→            </motion.div>
+   317→          ))}
+   318→        </div>
+   319→      </section>
+   320→
+   321→      {/* ========== HOW IT WORKS ========== */}
+   322→      <section className="bg-section-green">
+   323→        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+   324→          <motion.div
+   325→            className="text-center mb-12"
+   326→            initial={{ opacity: 0, y: 20 }}
+   327→            whileInView={{ opacity: 1, y: 0 }}
+   328→            viewport={{ once: true }}
+   329→            transition={{ duration: 0.5 }}
+   330→          >
+   331→            <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
+   332→              {t('howItWorks', language)}
+   333→            </Badge>
+   334→            <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+   335→              {t('howItWorksTitle', language)}
+   336→            </h2>
+   337→          </motion.div>
+   338→
+   339→          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+   340→            {steps.map((item, index) => (
+   341→              <motion.div
+   342→                key={index}
+   343→                initial={{ opacity: 0, y: 20 }}
+   344→                whileInView={{ opacity: 1, y: 0 }}
+   345→                viewport={{ once: true }}
+   346→                transition={{ duration: 0.4, delay: index * 0.1 }}
+   347→              >
+   348→                <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover">
+   349→                  <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+   350→                    <div className={`w-14 h-14 rounded-2xl ${item.gradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+   351→                      {item.step}
+   352→                    </div>
+   353→                    <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{item.title}</h3>
+   354→                    <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{item.desc}</p>
+   355→                  </CardContent>
+   356→                </Card>
+   357→              </motion.div>
+   358→            ))}
+   359→          </div>
+   360→        </div>
+   361→      </section>
+   362→
+   363→      {/* ========== WHY CHOOSE US ========== */}
+   364→      <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+   365→        <motion.div
+   366→          className="text-center mb-12"
+   367→          initial={{ opacity: 0, y: 20 }}
+   368→          whileInView={{ opacity: 1, y: 0 }}
+   369→          viewport={{ once: true }}
+   370→          transition={{ duration: 0.5 }}
+   371→        >
+   372→          <Badge variant="secondary" className="mb-3 bg-blue/10 text-blue border-blue/20">
+   373→            {t('whyChooseUs', language)}
+   374→          </Badge>
+   375→          <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+   376→            {t('whyChooseUs', language)}
+   377→          </h2>
+   378→        </motion.div>
+   379→
+   380→        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+   381→          {features.map((feature, index) => (
+   382→            <motion.div
+   383→              key={index}
+   384→              initial={{ opacity: 0, y: 20 }}
+   385→              whileInView={{ opacity: 1, y: 0 }}
+   386→              viewport={{ once: true }}
+   387→              transition={{ duration: 0.4, delay: index * 0.1 }}
+   388→            >
+   389→              <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover">
+   390→                <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+   391→                  <div className={`w-14 h-14 rounded-2xl ${feature.gradient} flex items-center justify-center shadow-lg`}>
+   392→                    <feature.icon className="w-7 h-7 text-white" />
+   393→                  </div>
+   394→                  <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.title}</h3>
+   395→                  <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.desc}</p>
+   396→                </CardContent>
+   397→              </Card>
+   398→            </motion.div>
+   399→          ))}
+   400→        </div>
+   401→      </section>
+   402→
+   403→      {/* ========== STATS ========== */}
+   404→      <section className="relative overflow-hidden bg-gradient-hero py-16 lg:py-20">
+   405→        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
+   406→        <div className="container mx-auto px-4 lg:px-8 relative">
+   407→          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+   408→            {stats.map((stat, index) => (
+   409→              <motion.div
+   410→                key={index}
+   411→                className="text-center"
+   412→                initial={{ opacity: 0, scale: 0.8 }}
+   413→                whileInView={{ opacity: 1, scale: 1 }}
+   414→                viewport={{ once: true }}
+   415→                transition={{ duration: 0.4, delay: index * 0.1 }}
+   416→              >
+   417→                <div className="text-3xl lg:text-5xl font-bold text-white mb-2">{stat.value}</div>
+   418→                <div className={`text-white/80 text-sm lg:text-base ${language === 'bn' ? 'font-bangla' : ''}`}>{stat.label}</div>
+   419→              </motion.div>
+   420→            ))}
+   421→          </div>
+   422→        </div>
+   423→      </section>
+   424→
+   425→      {/* ========== POPULAR ROUTES ========== */}
+   426→      <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
+   427→        <motion.div
+   428→          className="text-center mb-10"
+   429→          initial={{ opacity: 0, y: 20 }}
+   430→          whileInView={{ opacity: 1, y: 0 }}
+   431→          viewport={{ once: true }}
+   432→          transition={{ duration: 0.5 }}
+   433→        >
+   434→          <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
+   435→            <TrendingUp className="w-3 h-3 mr-1" />
+   436→            {t('popularRoutes', language)}
+   437→          </Badge>
+   438→          <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+   439→            {t('popularRoutes', language)}
+   440→          </h2>
+   441→        </motion.div>
+   442→
+   443→        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   444→          {POPULAR_ROUTES.map((route, index) => (
+   445→            <motion.div
+   446→              key={index}
+   447→              initial={{ opacity: 0, y: 15 }}
+   448→              whileInView={{ opacity: 1, y: 0 }}
+   449→              viewport={{ once: true }}
+   450→              transition={{ duration: 0.3, delay: index * 0.05 }}
+   451→            >
+   452→              <Card
+   453→                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300 card-gradient-hover"
+   454→                onClick={() => navigate('search', { from: route.from, to: route.to })}
+   455→              >
+   456→                <CardContent className="p-5 flex items-center gap-3">
+   457→                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-gradient-primary group-hover:text-primary-foreground transition-all">
+   458→                    <MapPin className="w-4 h-4" />
+   459→                  </div>
+   460→                  <div className="flex items-center gap-2 flex-1 min-w-0">
+   461→                    <span className={`font-medium truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+   462→                      {language === 'bn' ? route.fromBn : route.from}
+   463→                    </span>
+   464→                    <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+   465→                    <span className={`font-medium truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+   466→                      {language === 'bn' ? route.toBn : route.to}
+   467→                    </span>
+   468→                  </div>
+   469→                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+   470→                </CardContent>
+   471→              </Card>
+   472→            </motion.div>
+   473→          ))}
+   474→        </div>
+   475→      </section>
+   476→
+   477→      {/* ========== CTA ========== */}
+   478→      <section className="relative overflow-hidden bg-gradient-spectrum-light">
+   479→        <div className="absolute inset-0 pointer-events-none">
+   480→          <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary/6 rounded-full blur-3xl" />
+   481→          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange/6 rounded-full blur-3xl" />
+   482→        </div>
+   483→        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20 relative">
+   484→          <div className="max-w-2xl mx-auto text-center">
+   485→            <motion.div
+   486→              initial={{ opacity: 0, y: 20 }}
+   487→              whileInView={{ opacity: 1, y: 0 }}
+   488→              viewport={{ once: true }}
+   489→              transition={{ duration: 0.5 }}
+   490→            >
+   491→              <Badge className="mb-4 bg-orange/15 text-orange border-orange/20">
+   492→                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+   493→                {language === 'en' ? 'Start Earning' : 'আয় শুরু করুন'}
+   494→              </Badge>
+   495→              <h2 className={`text-2xl lg:text-4xl font-bold mb-4 ${language === 'bn' ? 'font-bangla' : ''}`}>
+   496→                <span className="text-gradient-brand">
+   497→                  {language === 'en' ? 'Start Selling Your Tickets Today' : 'আজই আপনার টিকেট বিক্রি শুরু করুন'}
+   498→                </span>
+   499→              </h2>
+   500→              <p className={`text-muted-foreground mb-8 max-w-lg mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>
+   501→                {language === 'en' ? 'Join thousands of verified sellers and reach millions of travelers across Bangladesh' : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং বাংলাদেশ জুড়ে লক্ষ লক্ষ যাত্রীর কাছে পৌঁছান'}
+   502→              </p>
+   503→              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+   504→                <Button size="lg" onClick={() => navigate('sell-ticket')} className="btn-gradient-orange rounded-xl px-8 h-12 text-base">
+   505→                  <Ticket className="w-5 h-5 mr-2" />
+   506→                  {t('sellTickets', language)}
+   507→                </Button>
+   508→                <Button size="lg" variant="outline" onClick={() => navigate('how-it-works')} className="rounded-xl px-8 h-12 text-base border-blue/30 hover:bg-blue/10 hover:text-blue hover:border-blue">
+   509→                  {language === 'en' ? 'Learn More' : 'আরও জানুন'}
+   510→                </Button>
+   511→              </div>
+   512→            </motion.div>
+   513→          </div>
+   514→        </div>
+   515→      </section>
+   516→    </>
+   517→  );
+   518→}
+   519→
+   520→// Page Router
+   521→function PageRouter() {
+   522→  const { currentPage } = useAppStore();
+   523→
+   524→  // Home page renders inline (no dynamic import)
+   525→  if (currentPage === 'home') {
+   526→    return (
+   527→      <AppShell>
+   528→        <motion.div key="home" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+   529→          <HomePage />
+   530→        </motion.div>
+   531→      </AppShell>
+   532→    );
+   533→  }
+   534→
+   535→  // Auth pages (no shell)
+   536→  if (authPages.has(currentPage)) {
+   537→    return (
+   538→      <Suspense fallback={<PageLoader />}>
+   539→        <motion.div key={currentPage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+   540→          <LazyPage pageName={currentPage} />
+   541→        </motion.div>
+   542→      </Suspense>
+   543→    );
+   544→  }
+   545→
+   546→  // All other pages (with shell)
+   547→  if (pageComponents[currentPage]) {
+   548→    return (
+   549→      <AppShell>
+   550→        <Suspense fallback={<PageLoader />}>
+   551→          <motion.div key={currentPage} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+   552→            <LazyPage pageName={currentPage} />
+   553→          </motion.div>
+   554→        </Suspense>
+   555→      </AppShell>
+   556→    );
+   557→  }
+   558→
+   559→  // Fallback to home
+   560→  return (
+   561→    <AppShell>
+   562→      <HomePage />
+   563→    </AppShell>
+   564→  );
+   565→}
+   566→
+   567→export default function Home() {
+   568→  return <PageRouter />;
+   569→}
+   570→

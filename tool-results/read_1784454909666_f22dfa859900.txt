@@ -1,0 +1,832 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef, useCallback } from 'react';
+     4→import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
+     5→import { t } from '@/lib/i18n';
+     6→import { BD_DIVISIONS, BD_DISTRICTS } from '@/lib/constants';
+     7→import { Button } from '@/components/ui/button';
+     8→import { Input } from '@/components/ui/input';
+     9→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+    10→import { Label } from '@/components/ui/label';
+    11→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    12→import { Badge } from '@/components/ui/badge';
+    13→import { Separator } from '@/components/ui/separator';
+    14→import { Progress } from '@/components/ui/progress';
+    15→import {
+    16→  ShieldCheck, User, Upload, Camera, MapPin, ArrowLeft, ArrowRight,
+    17→  Loader2, Check, AlertCircle, FileText, ImageIcon, Eye, EyeOff,
+    18→  RotateCcw, Lock, ChevronRight, Sun
+    19→} from 'lucide-react';
+    20→import { motion, AnimatePresence } from 'framer-motion';
+    21→import { toast } from 'sonner';
+    22→
+    23→type Step = 1 | 2;
+    24→
+    25→interface KycData {
+    26→  kycName: string;
+    27→  kycDob: string;
+    28→  kycGender: string;
+    29→  nameChanged: boolean;
+    30→  dobChanged: boolean;
+    31→  genderChanged: boolean;
+    32→  documentType: string;
+    33→  documentNumber: string;
+    34→  documentFront: string;
+    35→  documentBack: string;
+    36→  houseRoadVillage: string;
+    37→  upazilaThana: string;
+    38→  district: string;
+    39→  division: string;
+    40→  postalCode: string;
+    41→  selfiePhoto: string;
+    42→  selfieRight: string;
+    43→  selfieLeft: string;
+    44→  selfieSmile: string;
+    45→  selfieBlink: string;
+    46→  gpsLatitude: number | null;
+    47→  gpsLongitude: number | null;
+    48→  status: string;
+    49→  reviewNote: string | null;
+    50→}
+    51→
+    52→export default function KycPage() {
+    53→  const { navigate } = useAppStore();
+    54→  const { user, token, updateUser } = useAuthStore();
+    55→  const { language } = useLanguageStore();
+    56→  const isBn = language === 'bn';
+    57→  const fontClass = isBn ? 'font-bangla' : '';
+    58→
+    59→  const [currentStep, setCurrentStep] = useState<Step>(1);
+    60→  const [loading, setLoading] = useState(false);
+    61→  const [error, setError] = useState('');
+    62→  const [existingKyc, setExistingKyc] = useState<KycData | null>(null);
+    63→  const [kycStatus, setKycStatus] = useState<string | null>(null);
+    64→
+    65→  // Step 1: Personal Info + Document + Address
+    66→  const [kycName, setKycName] = useState('');
+    67→  const [kycDob, setKycDob] = useState('');
+    68→  const [kycGender, setKycGender] = useState('');
+    69→  const [nameLocked, setNameLocked] = useState(false);
+    70→  const [dobLocked, setDobLocked] = useState(false);
+    71→  const [genderLocked, setGenderLocked] = useState(false);
+    72→  const [documentType, setDocumentType] = useState('');
+    73→  const [documentNumber, setDocumentNumber] = useState('');
+    74→  const [documentFront, setDocumentFront] = useState('');
+    75→  const [documentBack, setDocumentBack] = useState('');
+    76→  const [houseRoadVillage, setHouseRoadVillage] = useState('');
+    77→  const [upazilaThana, setUpazilaThana] = useState('');
+    78→  const [district, setDistrict] = useState('');
+    79→  const [division, setDivision] = useState('');
+    80→  const [postalCode, setPostalCode] = useState('');
+    81→
+    82→  // Step 2: Selfie + GPS
+    83→  const [selfiePhoto, setSelfiePhoto] = useState('');
+    84→  const [selfieRight, setSelfieRight] = useState('');
+    85→  const [selfieLeft, setSelfieLeft] = useState('');
+    86→  const [selfieSmile, setSelfieSmile] = useState('');
+    87→  const [selfieBlink, setSelfieBlink] = useState('');
+    88→  const [gpsLatitude, setGpsLatitude] = useState<number | null>(null);
+    89→  const [gpsLongitude, setGpsLongitude] = useState<number | null>(null);
+    90→  const [gpsStatus, setGpsStatus] = useState<'pending' | 'granted' | 'denied'>('pending');
+    91→
+    92→  // Camera state
+    93→  const videoRef = useRef<HTMLVideoElement>(null);
+    94→  const canvasRef = useRef<HTMLCanvasElement>(null);
+    95→  const [cameraActive, setCameraActive] = useState(false);
+    96→  const [currentPose, setCurrentPose] = useState<'front' | 'right' | 'left' | 'smile' | 'blink'>('front');
+    97→  const [capturing, setCapturing] = useState(false);
+    98→
+    99→  // Upload states
+   100→  const [uploadingFront, setUploadingFront] = useState(false);
+   101→  const [uploadingBack, setUploadingBack] = useState(false);
+   102→
+   103→  // Load existing KYC data
+   104→  useEffect(() => {
+   105→    if (!token) { navigate('login'); return; }
+   106→    fetch('/api/kyc', { headers: { Authorization: `Bearer ${token}` } })
+   107→      .then(r => r.json())
+   108→      .then(data => {
+   109→        if (data.kyc) {
+   110→          setExistingKyc(data.kyc);
+   111→          setKycStatus(data.kyc.status);
+   112→          // Pre-fill form
+   113→          setKycName(data.kyc.kycName || '');
+   114→          setKycDob(data.kyc.kycDob || '');
+   115→          setKycGender(data.kyc.kycGender || '');
+   116→          setNameLocked(data.kyc.nameChanged);
+   117→          setDobLocked(data.kyc.dobChanged);
+   118→          setGenderLocked(data.kyc.genderChanged);
+   119→          setDocumentType(data.kyc.documentType || '');
+   120→          setDocumentNumber(data.kyc.documentNumber || '');
+   121→          setDocumentFront(data.kyc.documentFront || '');
+   122→          setDocumentBack(data.kyc.documentBack || '');
+   123→          setHouseRoadVillage(data.kyc.houseRoadVillage || '');
+   124→          setUpazilaThana(data.kyc.upazilaThana || '');
+   125→          setDistrict(data.kyc.district || '');
+   126→          setDivision(data.kyc.division || '');
+   127→          setPostalCode(data.kyc.postalCode || '');
+   128→          setSelfiePhoto(data.kyc.selfiePhoto || '');
+   129→          setSelfieRight(data.kyc.selfieRight || '');
+   130→          setSelfieLeft(data.kyc.selfieLeft || '');
+   131→          setSelfieSmile(data.kyc.selfieSmile || '');
+   132→          setSelfieBlink(data.kyc.selfieBlink || '');
+   133→          setGpsLatitude(data.kyc.gpsLatitude);
+   134→          setGpsLongitude(data.kyc.gpsLongitude);
+   135→        } else {
+   136→          // Pre-fill from profile
+   137→          if (data.profileName) setKycName(data.profileName);
+   138→          if (data.profileDob) setKycDob(data.profileDob);
+   139→          if (data.profileGender) setKycGender(data.profileGender);
+   140→        }
+   141→        setKycStatus(data.isKycVerified ? 'approved' : data.kyc?.status || null);
+   142→      })
+   143→      .catch(() => {});
+   144→  }, [token, navigate]);
+   145→
+   146→  // Request GPS
+   147→  useEffect(() => {
+   148→    if (navigator.geolocation) {
+   149→      navigator.geolocation.getCurrentPosition(
+   150→        (pos) => {
+   151→          setGpsLatitude(pos.coords.latitude);
+   152→          setGpsLongitude(pos.coords.longitude);
+   153→          setGpsStatus('granted');
+   154→        },
+   155→        () => setGpsStatus('denied'),
+   156→        { enableHighAccuracy: true }
+   157→      );
+   158→    }
+   159→  }, []);
+   160→
+   161→  // Get districts for selected division
+   162→  const districts = division ? (BD_DISTRICTS[division] || []) : [];
+   163→
+   164→  // File upload handler
+   165→  const uploadFile = async (file: File): Promise<string> => {
+   166→    const formData = new FormData();
+   167→    formData.append('file', file);
+   168→    const res = await fetch('/api/upload', {
+   169→      method: 'POST',
+   170→      headers: { Authorization: `Bearer ${token}` },
+   171→      body: formData,
+   172→    });
+   173→    const data = await res.json();
+   174→    if (!res.ok) throw new Error(data.error || 'Upload failed');
+   175→    return data.url;
+   176→  };
+   177→
+   178→  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
+   179→    const file = e.target.files?.[0];
+   180→    if (!file) return;
+   181→
+   182→    if (side === 'front') setUploadingFront(true);
+   183→    else setUploadingBack(true);
+   184→
+   185→    try {
+   186→      const url = await uploadFile(file);
+   187→      if (side === 'front') setDocumentFront(url);
+   188→      else setDocumentBack(url);
+   189→      toast.success(isBn ? 'আপলোড সফল!' : 'Upload successful!');
+   190→    } catch (err) {
+   191→      toast.error(err instanceof Error ? err.message : 'Upload failed');
+   192→    } finally {
+   193→      if (side === 'front') setUploadingFront(false);
+   194→      else setUploadingBack(false);
+   195→    }
+   196→  };
+   197→
+   198→  // Camera functions
+   199→  const startCamera = useCallback(async () => {
+   200→    try {
+   201→      const stream = await navigator.mediaDevices.getUserMedia({
+   202→        video: { facingMode: 'user', width: 640, height: 480 }
+   203→      });
+   204→      if (videoRef.current) {
+   205→        videoRef.current.srcObject = stream;
+   206→        setCameraActive(true);
+   207→      }
+   208→    } catch {
+   209→      toast.error(isBn ? 'ক্যামেরা অ্যাক্সেস ব্যর্থ' : 'Camera access failed');
+   210→    }
+   211→  }, [isBn]);
+   212→
+   213→  const stopCamera = useCallback(() => {
+   214→    if (videoRef.current?.srcObject) {
+   215→      const stream = videoRef.current.srcObject as MediaStream;
+   216→      stream.getTracks().forEach(track => track.stop());
+   217→      videoRef.current.srcObject = null;
+   218→    }
+   219→    setCameraActive(false);
+   220→  }, []);
+   221→
+   222→  const capturePhoto = useCallback(async (): Promise<string> => {
+   223→    if (!videoRef.current || !canvasRef.current) return '';
+   224→    const canvas = canvasRef.current;
+   225→    const video = videoRef.current;
+   226→    canvas.width = video.videoWidth;
+   227→    canvas.height = video.videoHeight;
+   228→    const ctx = canvas.getContext('2d');
+   229→    if (!ctx) return '';
+   230→    ctx.drawImage(video, 0, 0);
+   231→    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+   232→
+   233→    // Convert to file and upload
+   234→    const blob = await (await fetch(dataUrl)).blob();
+   235→    const file = new File([blob], `selfie-${currentPose}.jpg`, { type: 'image/jpeg' });
+   236→    return await uploadFile(file);
+   237→  }, [currentPose]);
+   238→
+   239→  const handleCapture = async () => {
+   240→    setCapturing(true);
+   241→    try {
+   242→      const url = await capturePhoto();
+   243→      switch (currentPose) {
+   244→        case 'front': setSelfiePhoto(url); break;
+   245→        case 'right': setSelfieRight(url); break;
+   246→        case 'left': setSelfieLeft(url); break;
+   247→        case 'smile': setSelfieSmile(url); break;
+   248→        case 'blink': setSelfieBlink(url); break;
+   249→      }
+   250→    } catch (err) {
+   251→      toast.error(isBn ? 'ক্যাপচার ব্যর্থ' : 'Capture failed');
+   252→    } finally {
+   253→      setCapturing(false);
+   254→    }
+   255→  };
+   256→
+   257→  // Document number label based on type
+   258→  const getDocNumberLabel = () => {
+   259→    switch (documentType) {
+   260→      case 'nid': return t('nidNumber', language);
+   261→      case 'driving_licence': return t('drivingLicenceNumber', language);
+   262→      case 'passport': return t('passportNumber', language);
+   263→      default: return t('documentNumber', language);
+   264→    }
+   265→  };
+   266→
+   267→  // Validate NID
+   268→  const isValidNid = (num: string) => {
+   269→    const digits = num.replace(/\D/g, '');
+   270→    return [10, 13, 17].includes(digits.length);
+   271→  };
+   272→
+   273→  // Step 1 validation
+   274→  const isStep1Valid = () => {
+   275→    return (
+   276→      kycName.trim().length >= 2 &&
+   277→      kycDob &&
+   278→      kycGender &&
+   279→      documentType &&
+   280→      documentNumber &&
+   281→      documentFront &&
+   282→      (documentType === 'passport' || documentBack) &&
+   283→      houseRoadVillage &&
+   284→      upazilaThana &&
+   285→      district &&
+   286→      division
+   287→    );
+   288→  };
+   289→
+   290→  // Step 2 validation
+   291→  const isStep2Valid = () => {
+   292→    return selfiePhoto && gpsStatus === 'granted';
+   293→  };
+   294→
+   295→  // Submit KYC
+   296→  const handleSubmit = async () => {
+   297→    if (!isStep2Valid()) {
+   298→      setError(isBn ? 'সেলফি ক্যাপচার ও জিপিএস প্রয়োজন' : 'Selfie capture and GPS are required');
+   299→      return;
+   300→    }
+   301→    setLoading(true);
+   302→    setError('');
+   303→    try {
+   304→      const res = await fetch('/api/kyc', {
+   305→        method: 'POST',
+   306→        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   307→        body: JSON.stringify({
+   308→          kycName, kycDob, kycGender,
+   309→          documentType, documentNumber, documentFront, documentBack,
+   310→          houseRoadVillage, upazilaThana, district, division, postalCode,
+   311→          selfiePhoto, selfieRight, selfieLeft, selfieSmile, selfieBlink,
+   312→          gpsLatitude, gpsLongitude,
+   313→        }),
+   314→      });
+   315→      const data = await res.json();
+   316→      if (!res.ok) throw new Error(data.error || 'KYC submission failed');
+   317→
+   318→      toast.success(t('kycSubmitSuccess', language));
+   319→      setKycStatus('pending');
+   320→      setExistingKyc(data.kyc);
+   321→      stopCamera();
+   322→    } catch (err) {
+   323→      setError(err instanceof Error ? err.message : 'Something went wrong');
+   324→    } finally {
+   325→      setLoading(false);
+   326→    }
+   327→  };
+   328→
+   329→  // Show status page if already submitted
+   330→  if (kycStatus === 'pending' && existingKyc) {
+   331→    return (
+   332→      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+   333→        <Card className="w-full max-w-md shadow-xl border-primary/10">
+   334→          <CardContent className="p-8 text-center space-y-4">
+   335→            <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+   336→              <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
+   337→            </div>
+   338→            <h2 className={`text-xl font-bold ${fontClass}`}>{t('kycPending', language)}</h2>
+   339→            <p className={`text-sm text-muted-foreground ${fontClass}`}>{t('kycPendingMessage', language)}</p>
+   340→            {existingKyc.reviewNote && (
+   341→              <div className="p-3 rounded-lg bg-muted text-sm">{existingKyc.reviewNote}</div>
+   342→            )}
+   343→            <Button variant="outline" onClick={() => navigate('home')} className={fontClass}>
+   344→              {t('back', language)}
+   345→            </Button>
+   346→          </CardContent>
+   347→        </Card>
+   348→      </div>
+   349→    );
+   350→  }
+   351→
+   352→  if (kycStatus === 'approved') {
+   353→    return (
+   354→      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+   355→        <Card className="w-full max-w-md shadow-xl border-emerald-200 dark:border-emerald-900/30">
+   356→          <CardContent className="p-8 text-center space-y-4">
+   357→            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+   358→              <ShieldCheck className="w-8 h-8 text-emerald-600" />
+   359→            </div>
+   360→            <h2 className={`text-xl font-bold ${fontClass}`}>{t('kycApproved', language)}</h2>
+   361→            <p className={`text-sm text-muted-foreground ${fontClass}`}>{t('kycApprovedMessage', language)}</p>
+   362→            <div className="grid grid-cols-3 gap-3 py-4">
+   363→              {[
+   364→                { icon: Check, label: t('verifiedBadge', language) },
+   365→                { icon: FileText, label: t('canSellTickets', language) },
+   366→                { icon: MapPin, label: t('canWithdraw', language) },
+   367→              ].map(item => (
+   368→                <div key={item.label} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+   369→                  <item.icon className="w-5 h-5 text-emerald-600" />
+   370→                  <span className={`text-xs text-emerald-700 dark:text-emerald-400 text-center ${fontClass}`}>{item.label}</span>
+   371→                </div>
+   372→              ))}
+   373→            </div>
+   374→            <Button onClick={() => navigate('home')} className="bg-gradient-to-r from-emerald-600 to-emerald-500">
+   375→              {isBn ? 'হোমে যান' : 'Go Home'}
+   376→            </Button>
+   377→          </CardContent>
+   378→        </Card>
+   379→      </div>
+   380→    );
+   381→  }
+   382→
+   383→  return (
+   384→    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 py-4 sm:py-6 px-3 sm:px-4 overflow-x-hidden">
+   385→      <div className="w-full max-w-2xl mx-auto">
+   386→        {/* Header */}
+   387→        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-4 sm:mb-6">
+   388→          <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-2 sm:mb-3 shadow-lg">
+   389→            <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
+   390→          </div>
+   391→          <h1 className={`text-xl sm:text-2xl font-bold ${fontClass}`}>{t('kycVerification', language)}</h1>
+   392→          <p className={`text-xs sm:text-sm text-muted-foreground mt-1 ${fontClass}`}>{t('becomeVerifiedSeller', language)}</p>
+   393→        </motion.div>
+   394→
+   395→        {/* Step indicator */}
+   396→        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-4 sm:mb-6">
+   397→          {[
+   398→            { num: 1, label: isBn ? 'নথি ও ঠিকানা' : 'Document & Address', shortLabel: isBn ? 'নথি' : 'Docs', icon: FileText },
+   399→            { num: 2, label: isBn ? 'সেলফি ও জিপিএস' : 'Selfie & GPS', shortLabel: isBn ? 'সেলফি' : 'Selfie', icon: Camera },
+   400→          ].map((step, idx) => (
+   401→            <div key={step.num} className="flex items-center">
+   402→              <div className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium transition-all ${
+   403→                currentStep >= step.num
+   404→                  ? 'bg-primary text-primary-foreground shadow-md'
+   405→                  : 'bg-muted text-muted-foreground'
+   406→              } ${fontClass}`}>
+   407→                <step.icon className="w-3.5 h-3.5 shrink-0" />
+   408→                <span className="hidden sm:inline">{step.label}</span>
+   409→                <span className="sm:hidden">{step.shortLabel}</span>
+   410→              </div>
+   411→              {idx < 1 && (
+   412→                <div className={`w-4 sm:w-8 h-0.5 mx-0.5 sm:mx-1 rounded transition-all ${
+   413→                  currentStep > step.num ? 'bg-primary' : 'bg-muted'
+   414→                }`} />
+   415→              )}
+   416→            </div>
+   417→          ))}
+   418→        </div>
+   419→
+   420→        <Card className="shadow-xl border-primary/10">
+   421→          <CardContent className="p-3 sm:p-6">
+   422→            <AnimatePresence mode="wait">
+   423→              {/* STEP 1: Personal Info + Document + Address */}
+   424→              {currentStep === 1 && (
+   425→                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 sm:space-y-6">
+   426→                  {/* Personal Information */}
+   427→                  <div>
+   428→                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
+   429→                      <User className="w-4 h-4 text-primary" />
+   430→                      {t('kycPersonalInfo', language)}
+   431→                    </h3>
+   432→                    <div className="space-y-3">
+   433→                      {/* Full Name */}
+   434→                      <div className="space-y-1.5">
+   435→                        <Label className={`text-sm ${fontClass}`}>
+   436→                          {t('fullName', language)} <span className="text-destructive">*</span>
+   437→                        </Label>
+   438→                        <div className="relative">
+   439→                          <Input value={kycName} onChange={(e) => !nameLocked && setKycName(e.target.value)} disabled={nameLocked} className={`h-11 ${nameLocked ? 'opacity-70' : ''}`} />
+   440→                          {nameLocked && <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />}
+   441→                        </div>
+   442→                        {nameLocked ? (
+   443→                          <p className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" />{t('kycChangedOnce', language)}</p>
+   444→                        ) : (
+   445→                          <p className="text-xs text-amber-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{t('kycNameChangeWarning', language)}</p>
+   446→                        )}
+   447→                      </div>
+   448→
+   449→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   450→                        {/* DOB */}
+   451→                        <div className="space-y-1.5">
+   452→                          <Label className={`text-sm ${fontClass}`}>
+   453→                            {t('dateOfBirth', language)} <span className="text-destructive">*</span>
+   454→                          </Label>
+   455→                          <Input type="date" value={kycDob} onChange={(e) => !dobLocked && setKycDob(e.target.value)} disabled={dobLocked} className={`h-11 ${dobLocked ? 'opacity-70' : ''}`} />
+   456→                          {dobLocked && <p className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" />{t('kycChangedOnce', language)}</p>}
+   457→                          {!dobLocked && <p className="text-xs text-amber-600">{t('kycDobChangeWarning', language)}</p>}
+   458→                        </div>
+   459→
+   460→                        {/* Gender */}
+   461→                        <div className="space-y-1.5">
+   462→                          <Label className={`text-sm ${fontClass}`}>
+   463→                            {t('gender', language)} <span className="text-destructive">*</span>
+   464→                          </Label>
+   465→                          <Select value={kycGender} onValueChange={genderLocked ? undefined : setKycGender} disabled={genderLocked}>
+   466→                            <SelectTrigger className={`h-11 ${genderLocked ? 'opacity-70' : ''}`}><SelectValue /></SelectTrigger>
+   467→                            <SelectContent>
+   468→                              <SelectItem value="male">{t('male', language)}</SelectItem>
+   469→                              <SelectItem value="female">{t('female', language)}</SelectItem>
+   470→                              <SelectItem value="other">{t('other', language)}</SelectItem>
+   471→                            </SelectContent>
+   472→                          </Select>
+   473→                          {genderLocked && <p className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" />{t('kycChangedOnce', language)}</p>}
+   474→                        </div>
+   475→                      </div>
+   476→                    </div>
+   477→                  </div>
+   478→
+   479→                  <Separator />
+   480→
+   481→                  {/* Document Upload */}
+   482→                  <div>
+   483→                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
+   484→                      <FileText className="w-4 h-4 text-primary" />
+   485→                      {t('uploadDocument', language)}
+   486→                    </h3>
+   487→                    <div className="space-y-3">
+   488→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   489→                        {/* Document Type */}
+   490→                        <div className="space-y-1.5">
+   491→                          <Label className={`text-sm ${fontClass}`}>
+   492→                            {t('documentType', language)} <span className="text-destructive">*</span>
+   493→                          </Label>
+   494→                          <Select value={documentType} onValueChange={(v) => { setDocumentType(v); setDocumentNumber(''); }}>
+   495→                            <SelectTrigger className="h-11"><SelectValue placeholder={isBn ? 'নির্বাচন' : 'Select'} /></SelectTrigger>
+   496→                            <SelectContent>
+   497→                              <SelectItem value="nid">{t('nid', language)}</SelectItem>
+   498→                              <SelectItem value="driving_licence">{t('drivingLicence', language)}</SelectItem>
+   499→                              <SelectItem value="passport">{t('passport', language)}</SelectItem>
+   500→                            </SelectContent>
+   501→                          </Select>
+   502→                        </div>
+   503→
+   504→                        {/* Document Number */}
+   505→                        <div className="space-y-1.5">
+   506→                          <Label className={`text-sm ${fontClass}`}>
+   507→                            {getDocNumberLabel()} <span className="text-destructive">*</span>
+   508→                          </Label>
+   509→                          <Input value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} className="h-11" placeholder={
+   510→                            documentType === 'nid' ? '1990123456' :
+   511→                            documentType === 'driving_licence' ? 'DL-12345' :
+   512→                            documentType === 'passport' ? 'AB1234567' : ''
+   513→                          } />
+   514→                          {documentType === 'nid' && documentNumber && !isValidNid(documentNumber) && (
+   515→                            <p className="text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{t('nidDigitsWarning', language)}</p>
+   516→                          )}
+   517→                        </div>
+   518→                      </div>
+   519→
+   520→                      {/* File uploads */}
+   521→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   522→                        {/* Front */}
+   523→                        <div className="space-y-1.5">
+   524→                          <Label className={`text-sm ${fontClass}`}>
+   525→                            {documentType === 'passport' ? t('uploadFrontOnly', language) : t('uploadFront', language)} <span className="text-destructive">*</span>
+   526→                          </Label>
+   527→                          <div className="relative">
+   528→                            {documentFront ? (
+   529→                              <div className="relative rounded-lg overflow-hidden border">
+   530→                                <img src={documentFront} alt="Front" className="w-full h-28 sm:h-32 object-cover" />
+   531→                                <button onClick={() => setDocumentFront('')} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center touch-manipulation">
+   532→                                  <RotateCcw className="w-3.5 h-3.5" />
+   533→                                </button>
+   534→                              </div>
+   535→                            ) : (
+   536→                              <label className="flex flex-col items-center justify-center h-28 sm:h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors min-h-[44px]">
+   537→                                {uploadingFront ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
+   538→                                <span className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>{t('uploadFront', language)}</span>
+   539→                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'front')} />
+   540→                              </label>
+   541→                            )}
+   542→                          </div>
+   543→                        </div>
+   544→
+   545→                        {/* Back (not for passport) */}
+   546→                        {documentType !== 'passport' && (
+   547→                          <div className="space-y-1.5">
+   548→                            <Label className={`text-sm ${fontClass}`}>
+   549→                              {t('uploadBack', language)} <span className="text-destructive">*</span>
+   550→                            </Label>
+   551→                            <div className="relative">
+   552→                              {documentBack ? (
+   553→                                <div className="relative rounded-lg overflow-hidden border">
+   554→                                  <img src={documentBack} alt="Back" className="w-full h-28 sm:h-32 object-cover" />
+   555→                                  <button onClick={() => setDocumentBack('')} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center touch-manipulation">
+   556→                                    <RotateCcw className="w-3.5 h-3.5" />
+   557→                                  </button>
+   558→                                </div>
+   559→                              ) : (
+   560→                                <label className="flex flex-col items-center justify-center h-28 sm:h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors min-h-[44px]">
+   561→                                  {uploadingBack ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
+   562→                                  <span className={`text-xs text-muted-foreground mt-1 ${fontClass}`}>{t('uploadBack', language)}</span>
+   563→                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'back')} />
+   564→                                </label>
+   565→                              )}
+   566→                            </div>
+   567→                          </div>
+   568→                        )}
+   569→
+   570→                        {documentType === 'passport' && (
+   571→                          <div className="flex items-center justify-center h-28 sm:h-32 rounded-lg border bg-muted/30">
+   572→                            <p className={`text-xs text-muted-foreground text-center px-4 ${fontClass}`}>
+   573→                              {isBn ? 'পাসপোর্টের শুধু সামনের দিক প্রয়োজন' : 'Passport requires front side only'}
+   574→                            </p>
+   575→                          </div>
+   576→                        )}
+   577→                      </div>
+   578→                    </div>
+   579→                  </div>
+   580→
+   581→                  <Separator />
+   582→
+   583→                  {/* Present Address */}
+   584→                  <div>
+   585→                    <h3 className={`text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2 ${fontClass}`}>
+   586→                      <MapPin className="w-4 h-4 text-primary" />
+   587→                      {t('presentAddress', language)}
+   588→                    </h3>
+   589→                    <div className="space-y-3">
+   590→                      <div className="space-y-1.5">
+   591→                        <Label className={`text-sm ${fontClass}`}>{t('houseRoadVillage', language)} <span className="text-destructive">*</span></Label>
+   592→                        <Input value={houseRoadVillage} onChange={(e) => setHouseRoadVillage(e.target.value)} className="h-11" placeholder={isBn ? 'বাড়ি/রাস্তা/গ্রাম' : 'House/Road/Village'} />
+   593→                      </div>
+   594→                      <div className="space-y-1.5">
+   595→                        <Label className={`text-sm ${fontClass}`}>{t('upazilaThana', language)} <span className="text-destructive">*</span></Label>
+   596→                        <Input value={upazilaThana} onChange={(e) => setUpazilaThana(e.target.value)} className="h-11" placeholder={isBn ? 'উপজেলা/থানা' : 'Upazila/Thana'} />
+   597→                      </div>
+   598→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   599→                        <div className="space-y-1.5">
+   600→                          <Label className={`text-sm ${fontClass}`}>{t('division', language)} <span className="text-destructive">*</span></Label>
+   601→                          <Select value={division} onValueChange={(v) => { setDivision(v); setDistrict(''); }}>
+   602→                            <SelectTrigger className="h-11"><SelectValue placeholder={t('selectDivision', language)} /></SelectTrigger>
+   603→                            <SelectContent>
+   604→                              {BD_DIVISIONS.map(d => <SelectItem key={d.id} value={d.id}>{isBn ? d.labelBn : d.label}</SelectItem>)}
+   605→                            </SelectContent>
+   606→                          </Select>
+   607→                        </div>
+   608→                        <div className="space-y-1.5">
+   609→                          <Label className={`text-sm ${fontClass}`}>{t('district', language)} <span className="text-destructive">*</span></Label>
+   610→                          <Select value={district} onValueChange={setDistrict} disabled={!division}>
+   611→                            <SelectTrigger className="h-11"><SelectValue placeholder={t('selectDistrict', language)} /></SelectTrigger>
+   612→                            <SelectContent>
+   613→                              {districts.map(d => <SelectItem key={d.label} value={d.label}>{isBn ? d.labelBn : d.label}</SelectItem>)}
+   614→                            </SelectContent>
+   615→                          </Select>
+   616→                        </div>
+   617→                      </div>
+   618→                      <div className="space-y-1.5">
+   619→                        <Label className={`text-sm ${fontClass}`}>{t('postalCode', language)}</Label>
+   620→                        <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="h-11" placeholder="1200" />
+   621→                      </div>
+   622→                    </div>
+   623→                  </div>
+   624→                </motion.div>
+   625→              )}
+   626→
+   627→              {/* STEP 2: Selfie + GPS */}
+   628→              {currentStep === 2 && (
+   629→                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 sm:space-y-5">
+   630→                  {/* GPS Status */}
+   631→                  <div className={`flex items-start gap-2 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm ${fontClass} ${
+   632→                    gpsStatus === 'granted' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' :
+   633→                    gpsStatus === 'denied' ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
+   634→                    'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+   635→                  }`}>
+   636→                    <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+   637→                    <div className="min-w-0">
+   638→                      {gpsStatus === 'granted' && (isBn ? `জিপিএস সক্রিয়: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}` : `GPS active: ${gpsLatitude?.toFixed(4)}, ${gpsLongitude?.toFixed(4)}`)}
+   639→                      {gpsStatus === 'denied' && (isBn ? 'জিপিএস অ্যাক্সেস অস্বীকৃত। অনুগ্রহ করে ব্রাউজার সেটিংসে অনুমতি দিন।' : 'GPS access denied. Please enable in browser settings.')}
+   640→                      {gpsStatus === 'pending' && (isBn ? 'জিপিএস অনুমতির অপেক্ষায়...' : 'Waiting for GPS permission...')}
+   641→                    </div>
+   642→                  </div>
+   643→
+   644→                  {/* Instructions */}
+   645→                  <div className="bg-primary/5 rounded-lg sm:rounded-xl p-3 sm:p-4">
+   646→                    <h4 className={`text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2 flex items-center gap-2 ${fontClass}`}>
+   647→                      <Sun className="w-4 h-4 text-primary" />
+   648→                      {t('selfieInstructions', language)}
+   649→                    </h4>
+   650→                    <ul className={`space-y-1 text-xs text-muted-foreground ${fontClass}`}>
+   651→                      <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" />{t('mustBeInLight', language)}</li>
+   652→                      <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" />{t('gpsLocationOn', language)}</li>
+   653→                    </ul>
+   654→                  </div>
+   655→
+   656→                  {/* Pose selector */}
+   657→                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+   658→                    {[
+   659→                      { key: 'front' as const, label: isBn ? 'সামনে' : 'Front', captured: !!selfiePhoto, icon: User },
+   660→                      { key: 'right' as const, label: t('faceRight', language), captured: !!selfieRight, icon: Eye },
+   661→                      { key: 'left' as const, label: t('faceLeft', language), captured: !!selfieLeft, icon: EyeOff },
+   662→                      { key: 'smile' as const, label: t('faceSmile', language), captured: !!selfieSmile, icon: Camera },
+   663→                      { key: 'blink' as const, label: t('eyeBlink', language), captured: !!selfieBlink, icon: Camera },
+   664→                    ].map(pose => (
+   665→                      <button
+   666→                        key={pose.key}
+   667→                        onClick={() => setCurrentPose(pose.key)}
+   668→                        className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] sm:min-h-0 touch-manipulation ${
+   669→                          currentPose === pose.key
+   670→                            ? 'bg-primary text-primary-foreground shadow-md'
+   671→                            : pose.captured
+   672→                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+   673→                            : 'bg-muted text-muted-foreground'
+   674→                        } ${fontClass}`}
+   675→                      >
+   676→                        {pose.captured && <Check className="w-3 h-3" />}
+   677→                        {pose.label}
+   678→                      </button>
+   679→                    ))}
+   680→                  </div>
+   681→
+   682→                  {/* Camera area */}
+   683→                  <div className="relative rounded-lg sm:rounded-xl overflow-hidden border bg-black aspect-[4/3]">
+   684→                    {/* Show captured photo preview or live camera */}
+   685→                    {(() => {
+   686→                      const currentPhoto = currentPose === 'front' ? selfiePhoto :
+   687→                        currentPose === 'right' ? selfieRight :
+   688→                        currentPose === 'left' ? selfieLeft :
+   689→                        currentPose === 'smile' ? selfieSmile : selfieBlink;
+   690→
+   691→                      if (currentPhoto && !cameraActive) {
+   692→                        return (
+   693→                          <div className="relative w-full h-full">
+   694→                            <img src={currentPhoto} alt="Captured" className="w-full h-full object-cover" />
+   695→                            <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+   696→                              <Button size="sm" variant="secondary" onClick={startCamera} className="min-h-[36px]">
+   697→                                <RotateCcw className="w-3 h-3 mr-1" />{t('retake', language)}
+   698→                              </Button>
+   699→                            </div>
+   700→                          </div>
+   701→                        );
+   702→                      }
+   703→
+   704→                      return (
+   705→                        <>
+   706→                          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+   707→                          <canvas ref={canvasRef} className="hidden" />
+   708→
+   709→                          {/* Pose instruction overlay */}
+   710→                          {cameraActive && (
+   711→                            <div className="absolute inset-0 pointer-events-none">
+   712→                              {/* Face guide oval */}
+   713→                              <div className="absolute inset-0 flex items-center justify-center">
+   714→                                <div className="w-36 h-48 sm:w-48 sm:h-64 border-2 border-white/40 rounded-full" />
+   715→                              </div>
+   716→                              {/* Pose label */}
+   717→                              <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 bg-black/60 text-white px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs">
+   718→                                {currentPose === 'front' && (isBn ? 'সোজা তাকান' : 'Look straight')}
+   719→                                {currentPose === 'right' && t('faceRight', language)}
+   720→                                {currentPose === 'left' && t('faceLeft', language)}
+   721→                                {currentPose === 'smile' && t('faceSmile', language)}
+   722→                                {currentPose === 'blink' && t('eyeBlink', language)}
+   723→                              </div>
+   724→                            </div>
+   725→                          )}
+   726→
+   727→                          {!cameraActive && !currentPhoto && (
+   728→                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+   729→                              <Camera className="w-12 h-12 text-white/50" />
+   730→                              <Button size="sm" onClick={startCamera}>
+   731→                                <Camera className="w-4 h-4 mr-2" />
+   732→                                {isBn ? 'ক্যামেরা চালু করুন' : 'Start Camera'}
+   733→                              </Button>
+   734→                            </div>
+   735→                          )}
+   736→
+   737→                          {/* Capture button */}
+   738→                          {cameraActive && (
+   739→                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+   740→                              <Button
+   741→                                size="lg"
+   742→                                onClick={handleCapture}
+   743→                                disabled={capturing}
+   744→                                className="rounded-full w-14 h-14 bg-white text-black hover:bg-white/90 shadow-lg"
+   745→                              >
+   746→                                {capturing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
+   747→                              </Button>
+   748→                            </div>
+   749→                          )}
+   750→                        </>
+   751→                      );
+   752→                    })()}
+   753→                  </div>
+   754→
+   755→                  {/* Captured photos grid */}
+   756→                  <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2">
+   757→                    {[
+   758→                      { src: selfiePhoto, label: isBn ? 'সামনে' : 'Front', required: true },
+   759→                      { src: selfieRight, label: t('faceRight', language), required: false },
+   760→                      { src: selfieLeft, label: t('faceLeft', language), required: false },
+   761→                      { src: selfieSmile, label: t('faceSmile', language), required: false },
+   762→                      { src: selfieBlink, label: t('eyeBlink', language), required: false },
+   763→                    ].map((item, idx) => (
+   764→                      <div key={idx} className={`shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 ${
+   765→                        item.src ? 'border-emerald-500' : 'border-muted'
+   766→                      } relative`}>
+   767→                        {item.src ? (
+   768→                          <img src={item.src} alt={item.label} className="w-full h-full object-cover" />
+   769→                        ) : (
+   770→                          <div className="w-full h-full bg-muted flex items-center justify-center">
+   771→                            <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+   772→                          </div>
+   773→                        )}
+   774→                        {item.required && !item.src && (
+   775→                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+   776→                        )}
+   777→                      </div>
+   778→                    ))}
+   779→                  </div>
+   780→                </motion.div>
+   781→              )}
+   782→            </AnimatePresence>
+   783→
+   784→            {/* Error */}
+   785→            {error && (
+   786→              <div className="mt-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+   787→                <AlertCircle className="w-4 h-4 shrink-0" />
+   788→                <span className={fontClass}>{error}</span>
+   789→              </div>
+   790→            )}
+   791→
+   792→            {/* Action buttons */}
+   793→            <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+   794→              {currentStep > 1 && (
+   795→                <Button variant="outline" onClick={() => setCurrentStep((prev) => (prev - 1) as Step)} className={`min-h-[44px] ${fontClass}`}>
+   796→                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />{t('back', language)}
+   797→                </Button>
+   798→              )}
+   799→
+   800→              {currentStep < 2 ? (
+   801→                <Button
+   802→                  onClick={() => {
+   803→                    setError('');
+   804→                    if (!isStep1Valid()) {
+   805→                      setError(isBn ? 'সকল প্রয়োজনীয় তথ্য পূরণ করুন' : 'Please fill in all required fields');
+   806→                      return;
+   807→                    }
+   808→                    setCurrentStep(2);
+   809→                  }}
+   810→                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+   811→                  disabled={!isStep1Valid()}
+   812→                >
+   813→                  {t('next', language)}<ArrowRight className="w-4 h-4 ml-1 sm:ml-2" />
+   814→                </Button>
+   815→              ) : (
+   816→                <Button
+   817→                  onClick={handleSubmit}
+   818→                  disabled={!isStep2Valid() || loading}
+   819→                  className="flex-1 min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+   820→                >
+   821→                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+   822→                  {t('submit', language)}
+   823→                </Button>
+   824→              )}
+   825→            </div>
+   826→          </CardContent>
+   827→        </Card>
+   828→      </div>
+   829→    </div>
+   830→  );
+   831→}
+   832→

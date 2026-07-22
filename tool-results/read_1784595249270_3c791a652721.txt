@@ -1,0 +1,478 @@
+     1→     1→---
+     2→     2→Task ID: 6
+     3→     3→Agent: Main Agent
+     4→     4→Task: Add missing navigation routes, enhance DashboardPage sub-tabs, improve placeholder pages, clean up
+     5→     5→
+     6→     6→Work Log:
+     7→     7→- Updated navigation.ts: Added routes for wallet-balance, wallet-payout, withdraw-history, transactions, reviews, address, message (all with username support)
+     8→     8→- Enhanced DashboardPage.tsx: Replaced tabs layout with sidebar navigation (desktop) + horizontal scroll (mobile) with 13 nav items
+     9→     9→- Added dedicated sub-page content components: OverviewContent, TicketsContent, OrdersContent, WalletContent, WalletBalanceContent, WalletPayoutContent, WithdrawHistoryContent, TransactionsContent, ReviewsContent, AddressContent, MessageContent, ProfileContent, SettingsContent
+    10→    10→- Each sub-page has proper demo data and bilingual support
+    11→    11→- Updated Header.tsx: Auto-inject username for user panel routes in handleNavigate()
+    12→    12→- Added cookiesPolicy translation to i18n.ts (en/bn)
+    13→    13→- Added cookies-policy to Footer legal links
+    14→    14→- Enhanced checkout page with payment method selection, escrow notice, price summary
+    15→    15→- Enhanced order status pages (successful, failed, cancelled, pending) with icons, bilingual text, action buttons
+    16→    16→- Enhanced auth pages: forget-password (email input + sent confirmation), reset-password (OTP + new password), verify-otp (6-digit OTP input)
+    17→    17→- Updated next.config.ts: Added allowedDevOrigins for dev mode
+    18→    18→- Cleaned up: QA screenshots (qa-*.png, mobile-*.png), tool-results/, agent-ctx/, download/, public/uploads/*.png
+    19→    19→- Lint: 0 errors, 0 warnings
+    20→    20→- Route verification: All 25+ routes return HTTP 200
+    21→    21→
+    22→    22→Stage Summary:
+    23→    23→- All user panel URLs now follow /en/{username}/sub-page pattern (wallet/balance, wallet/payout-method, withdraw-history, etc.)
+    24→    24→- DashboardPage has comprehensive sidebar navigation with 13 tabs
+    25→    25→- All placeholder pages replaced with proper bilingual content
+    26→    26→- Navigation auto-injects username for user panel routes
+    27→    27→- Search page already uses responsive 4/3/2/1 column grid (verified)
+    28→    28→- Project cleaned of temporary files and screenshots
+    29→    29→
+    30→    30→---
+    31→    31→Task ID: 8
+    32→    32→Agent: Layout Migration Agent
+    33→    33→Task: Migrate layout components (AppShell, Header, Footer) from zustand store navigation to URL-based routing
+    34→    34→
+    35→    35→Work Log:
+    36→    36→- AppShell.tsx: Replaced `useAppStore()` with `usePathname()` from next/navigation. Changed scroll-to-top effect dependency from `[currentPage]` to `[pathname]`. Removed `useAppStore` import, added `usePathname` import.
+    37→    37→- Header.tsx: Replaced `useAppStore` with `useNav()` from `@/lib/use-nav`, `usePathname()` and `useRouter()` from `next/navigation`, and `getPagePath` from `@/lib/navigation`. Removed `Page` type alias (was derived from useAppStore). Replaced `isActive` from simple `currentPage === page` to pathname-based comparison using `getPagePath()`, with special handling for transport pages (bus/train/flight/launch/search) that use `pathname.startsWith(`/${language}/buy-tickets`)`. Replaced `toggleLanguage` with `switchLanguage` that also navigates to the new language URL via `router.push()`. Updated Buy Tickets dropdown trigger active state from `['bus','train','flight','launch'].includes(currentPage)` to `pathname.startsWith(`/${language}/buy-tickets`)`. Removed `useAppStore` import. All UI/styling unchanged.
+    38→    38→- Footer.tsx: Replaced `useAppStore()` with `useNav()` from `@/lib/use-nav`. Removed `useAppStore` import, added `useNav` import. `handleNavigate` continues to work since `useNav().navigate` has the same signature.
+    39→    39→- Lint: 0 errors, 0 warnings
+    40→    40→
+    41→    41→Stage Summary:
+    42→    42→- All 3 layout components migrated from zustand store navigation to URL-based routing
+    43→    43→- No `useAppStore` references remain in any layout component
+    44→    44→- Header active link highlighting now uses pathname comparison via `getPagePath()` instead of store-based `currentPage`
+    45→    45→- Language switching now also navigates to the equivalent URL in the new language
+    46→    46→- All UI/styling preserved exactly as before
+    47→    47→
+    48→    48→---
+    49→    49→Task ID: 7
+    50→    50→Agent: Navigation Migration Agent
+    51→    51→Task: Migrate page components from zustand store navigation to URL-based routing with useNav hook
+    52→    52→
+    53→    53→Work Log:
+    54→    54→- Updated 8 component files to replace useAppStore navigation with useNav() hook and URL-based params
+    55→    55→- SearchPage.tsx: Replaced `useAppStore()` with `useNav()` + `useSearchParams()`. Initial filter values now read from URL query params (`from`, `to`, `transport`) instead of `pageParams`
+    56→    56→- TicketDetailsPage.tsx: Added `ticketId` optional prop, replaced `pageParams.id` with `ticketId` prop throughout (fetchTicket, useCallback deps), imported `useNav`
+    57→    57→- LoginPage.tsx: Replaced `useAppStore().navigate` with `useNav().navigate`, removed `useAppStore` import
+    58→    58→- RegisterPage.tsx: Replaced `useAppStore().navigate` with `useNav().navigate`, removed `useAppStore` import
+    59→    59→- SellTicketPage.tsx: Replaced `useAppStore().navigate` with `useNav().navigate`, removed `useAppStore` import
+    60→    60→- KycPage.tsx: Replaced `useAppStore().navigate` with `useNav().navigate`, removed `useAppStore` import
+    61→    61→- DashboardPage.tsx: Added `{ tab, username }` props, replaced `useAppStore().navigate` with `useNav().navigate`, changed `<Tabs defaultValue="overview">` to `<Tabs defaultValue={tab}>`
+    62→    62→- InfoPage.tsx: Added `{ section, slug }` props, replaced `useAppStore().currentPage` with `section` prop, changed `sections[currentPage]` to `sections[section]`, replaced `switch(currentPage)` with `switch(section)`, removed unused `useNav` import
+    63→    63→- AdminPage.tsx: No changes needed (does not use useAppStore for navigation)
+    64→    64→- Lint: 0 errors, 0 warnings
+    65→    65→
+    66→    66→Stage Summary:
+    67→    67→- All 8 page components successfully migrated from zustand store navigation to URL-based routing
+    68→    68→- No `useAppStore` references remain in any page component
+    69→    69→- navigate() function signature unchanged: `navigate('page-name', { param: 'value' })`
+    70→    70→- useAuthStore and useLanguageStore imports preserved in all files
+    71→    71→- TicketDetailsPage accepts optional ticketId prop for URL-based and programmatic usage
+    72→    72→- DashboardPage accepts optional tab prop to default to specific tab via URL
+    73→    73→- InfoPage accepts section and slug props instead of reading from store
+    74→    74→
+    75→    75→---
+    76→    76→Task ID: 2
+    77→    77→Agent: Main Agent
+    78→    78→Task: Redesign Sell Ticket Page UI per user requirements
+    79→    79→
+    80→    80→Work Log:
+    81→    81→- Rewrote SellTicketPage.tsx completely with all requested UI changes
+    82→    82→- Transport Type: Changed from dropdown to horizontal 4-column button tabs (Bus|Train|Flight|Launch) with icons, gradient active states, and smooth transitions
+    83→    83→- Ticket Type: Changed from dropdown to horizontal 2-column button tabs (Online Copy|Counter Copy) with icons
+    84→    84→- Upload: Full-width drag & drop zone with CloudUpload icon, dashed border, "browse files" link, drag event handlers (onDrop, onDragOver, onDragLeave), and uploaded file preview with remove button
+    85→    85→- From & To: Side-by-side layout using grid-cols-[1fr_auto_1fr] with ArrowLeftRight icon in circular badge between them
+    86→    86→- Departure Date & Time: Side-by-side in 2-column grid
+    87→    87→- Price Panel: Redesigned with 4-line breakdown:
+    88→    88→  1. Ticket Price → ৳amount
+    89→    89→  2. Platform Fee 2% (min ৳20) → -৳fee
+    90→    90→  3. Buyer will pay to you (seller) total → ৳total
+    91→    91→  4. You will receive (after fee deduction) → ৳sellerReceives
+    92→    92→- District Dropdown: Sorted A-Z using localeCompare, all 64 unique districts
+    93→    93→- Same District Validation: Disabled option in From if selected in To (and vice versa) with "(origin)"/"(destination)" labels, plus warning message
+    94→    94→- Updated constants.ts: Added .sort() to ALL_BD_DISTRICTS
+    95→    95→- Lint: 0 errors, 0 warnings
+    96→    96→- Browser verification: 8/8 checks PASS
+    97→    97→
+    98→    98→Stage Summary:
+    99→    99→- All 8 UI changes implemented and verified via Agent Browser
+   100→   100→- Transport tabs, ticket type tabs, drag-drop upload, side-by-side layouts, pricing panel, A-Z districts, same-district validation all working
+   101→   101→---
+   102→   102→Task ID: 1
+   103→   103→Agent: main
+   104→   104→Task: QC desktop responsive + add BRTA notice + demo data + update online copy delivery text
+   105→   105→
+   106→   106→Work Log:
+   107→   107→- Read full SellTicketPage.tsx (1744 lines) to understand structure
+   108→   108→- Added BRTA Regulations Notice as amber/yellow banner below page title with Scale icon
+   109→   109→- Added DEMO_FORM constant with realistic demo data (Green Line bus, Dhaka→Chittagong, ৳800)
+   110→   110→- Added "Demo Data" button in header next to Preview toggle
+   111→   111→- Updated Online Copy Delivery text in both the delivery info card and preview card to mention "email or download from their dashboard → My Orders"
+   112→   112→- Widened container from max-w-4xl to max-w-5xl for better desktop spacing
+   113→   113→- Widened preview sidebar from w-80 to w-[340px] xl:w-[360px] for better desktop readability
+   114→   114→- Added Scale icon import from lucide-react
+   115→   115→- Ran lint - no errors
+   116→   116→- Verified with agent browser - all features working correctly
+   117→   117→
+   118→   118→Stage Summary:
+   119→   119→- BRTA notice renders as amber banner with bilingual text
+   120→   120→- Demo Data button fills form with realistic bus ticket data
+   121→   121→- Desktop layout: form (608px) + sidebar (360px) at xl breakpoint
+   122→   122→- Online copy delivery mentions both email AND dashboard → My Orders
+   123→   123→- All existing features (price breakdown, validation) still working
+   124→   124→
+   125→   125→---
+   126→   126→Task ID: 2
+   127→   127→Agent: main
+   128→   128→Task: Update SearchPage and TicketDetailsPage with sell ticket info + date/time formatting + buyer price display
+   129→   129→
+   130→   130→Work Log:
+   131→   131→- Added formatDepartureDate() and formatDepartureTime() utility functions to constants.ts
+   132→   132→  - Date: "2025-03-22" → "22-March-2025" (en) / "২২-মার্চ-২০২৫" (bn)
+   133→   133→  - Time: "22:00" → "10:00 PM" (en) / "১০:০০ পিএম" (bn)
+   134→   134→- Completely rewrote SearchPage.tsx with:
+   135→   135→  - ALL_BD_DISTRICTS instead of BD_CITIES for filter dropdowns
+   136→   136→  - Ticket cards showing ticket type badges (Online Copy / Counter Copy)
+   137→   137→  - Transport company, seat class (labels not IDs), seat number
+   138→   138→  - Buyer price: online copy = selling price, counter copy = platform fee only
+   139→   139→  - Date in DD-MonthName-YYYY format, Time in 12h AM/PM format
+   140→   140→  - Route displayed with ArrowRight icon between from→to
+   141→   141→  - Animated card transitions
+   142→   142→- Updated TicketDetailsPage.tsx with:
+   143→   143→  - Date/time formatting using new utilities in 3 locations
+   144→   144→  - Online Copy delivery info card (email + dashboard → My Orders)
+   145→   145→  - Original ticket price shown in price breakdown
+   146→   146→  - Seat class labels from BUS_CLASSES (not raw IDs)
+   147→   147→  - Deck type labels (Upper Deck / Lower Deck)
+   148→   148→  - Courier company labels from COURIER_COMPANIES
+   149→   149→  - Delivery speed labels from DELIVERY_SPEEDS
+   150→   150→- Ran lint - no errors
+   151→   151→- Verified with agent browser - all features working correctly
+   152→   152→
+   153→   153→Stage Summary:
+   154→   154→- SearchPage now shows rich ticket cards matching sell ticket page data
+   155→   155→- TicketDetailsPage shows properly formatted dates and times
+   156→   156→- All labels use human-readable text instead of raw IDs
+   157→   157→- Online Copy delivery mentions both email AND dashboard download
+   158→   158→- Original price shown alongside selling price
+   159→   159→- Counter copy correctly shows "fee only" label
+   160→   160→---
+   161→   161→Task ID: 3
+   162→   162→Agent: Main Agent
+   163→   163→Task: Redesign TicketDetailsPage with 2-column layout
+   164→   164→
+   165→   165→Work Log:
+   166→   166→- Completely rewrote TicketDetailsPage.tsx with 2-column desktop layout
+   167→   167→- Container widened from max-w-3xl to max-w-5xl
+   168→   168→- Grid layout: lg:grid-cols-3 with left lg:col-span-2 and right col-span-1
+   169→   169→- LEFT column contains:
+   170→   170→  1. Ticket Information (header card with transport icon, route, company, date/time badges, ticket type badge)
+   171→   171→  2. Ticket Image/PDF & PNR Number (blurred until paid)
+   172→   172→  3. Route Details (from/to with boarding/dropping points)
+   173→   173→  4. Seat Information (class, deck, seat number, type, coach)
+   174→   174→  5. Delivery Information (online copy: email+dashboard download; counter copy: in-person/courier)
+   175→   175→  6. Description & Seller Notes
+   176→   176→- RIGHT column contains:
+   177→   177→  1. Price Breakdown (sticky, includes escrow protection info, purchase button/confirm dialog)
+   178→   178→  2. Seller Information (verified badge, name revealed after payment)
+   179→   179→- Added BRTA Regulations Notice at top of page
+   180→   180→- Date format: Date-MonthName-Year (e.g., "28-March-2025")
+   181→   181→- Time format: 12-hour AM/PM (e.g., "10:00 PM")
+   182→   182→- Added Scale, Download, Mail icon imports for BRTA notice and delivery info
+   183→   183→- Online Copy delivery now shows separate email + dashboard download items with icons
+   184→   184→- Post-purchase view also uses 2-column layout
+   185→   185→- Lint: 0 errors, 0 warnings
+   186→   186→- Agent Browser verification: all 7 checks PASS
+   187→   187→
+   188→   188→Stage Summary:
+   189→   189→- 2-column layout working with 2:1 ratio on desktop, single column on mobile
+   190→   190→- All sections correctly placed per user specification
+   191→   191→- BRTA notice, date/time formatting, delivery info all consistent with sell ticket page
+   192→   192→- Price card is sticky on right side with purchase CTA
+   193→   193→---
+   194→   194→Task ID: 4
+   195→   195→Agent: Main Agent
+   196→   196→Task: Redesign search page ticket cards with new 6-row layout
+   197→   197→
+   198→   198→Work Log:
+   199→   199→- Completely rewrote SearchPage.tsx ticket cards with 6-row layout matching user specification
+   200→   200→- Changed from 3-column grid (sm:grid-cols-2 lg:grid-cols-3) to single-column vertical stack (space-y-3)
+   201→   201→- Row 1: Transport Type badge (color-coded) | Ticket Type badge (Online/Counter Copy) | Save Price badge (green, conditional)
+   202→   202→- Row 2: From → To (font-bold text-lg)
+   203→   203→- Row 3: Transport Company Name (muted, truncated)
+   204→   204→- Row 4: Departure Date (Date-MonthName-Year) | Departure Time (12h AM/PM) with icons
+   205→   205→- Row 5: Class badge (armchair icon) | Seat badge (conditional, only if seatClass/seatNumber exist)
+   206→   206→- Row 6: Bottom bar with bg-muted/30 and border-t: Original Price (strikethrough if discount) | Selling Price (bold primary) | "View Ticket" button (gradient)
+   207→   207→- Added getSaveInfo() helper to calculate saved amount and percentage
+   208→   208→- Added Save badge: green "Save ৳X (Y%)" with Tag icon (only shown when originalPrice > price)
+   209→   209→- Added Tag and ChevronRight icon imports
+   210→   210→- Updated seed data: 5 of 12 tickets now have originalPrice > price for discount visibility
+   211→   211→- Lint: 0 errors, 0 warnings
+   212→   212→- Agent Browser verification: all checks pass (vertical stack, 6-row layout, Save badges, strikethrough prices, View Ticket button)
+   213→   213→
+   214→   214→Stage Summary:
+   215→   215→- Ticket cards now match the exact 6-row layout specified by user
+   216→   216→- 5 tickets show discount badges: Green Line (20%), Shohagh (21%), Biman (18%), US-Bangla (12%), Sundarban (22%)
+   217→   217→- Strikethrough original price shown next to bold selling price for discounted tickets
+   218→   218→- Cards are stacked vertically in a single column list
+   219→   219→
+   220→   220→---
+   221→   221→Task ID: 2-4
+   222→   222→Agent: Routing Agent
+   223→   223→Task: Implement URL-based routing with i18n language prefix for Next.js App Router
+   224→   224→
+   225→   225→Work Log:
+   226→   226→- Created src/middleware.ts: Lang prefix detection, root "/" → /en redirect, valid lang pass-through, invalid lang redirect
+   227→   227→- Created src/lib/navigation.ts: localizedPath() and getPagePath() functions for all 30+ page routes with lang prefix
+   228→   228→- Created src/lib/use-nav.ts: useNav() hook combining useRouter + useLanguageStore for programmatic navigation
+   229→   229→- Created src/app/[lang]/layout.tsx: Client layout with lang validation, language store sync, auth page detection (no header/footer), AppShell wrapper
+   230→   230→- Created src/app/[lang]/page.tsx: Home page with lazy-loaded HomePage component + Suspense
+   231→   231→- Created 3 public route pages: buy-tickets, sell-tickets, ticket/[id]
+   232→   232→- Created 14 info pages: how-it-works, safety-guidelines, faqs, blog, blog/[slug], about-us, contact-us, verify-ticket, support, payment-policy, refund-policy, terms-of-service, privacy-policy, cookies-policy
+   233→   233→- Created 4 order pages: order/successful, order/cancelled, order/failed, order/pending
+   234→   234→- Created 5 auth pages: account/login, account/register, account/forget-password, account/reset-password, account/verify-otp
+   235→   235→- Created checkout page
+   236→   236→- Created 13 user panel pages: [username]/page, dashboard, my-tickets, my-orders, transactions, my-reviews, message, wallet, wallet/balance, wallet/payout-method, withdraw-history, address, kyc-verification
+   237→   237→- Created 2 not-found pages: app/not-found.tsx (redirect), app/[lang]/not-found.tsx (bilingual 404)
+   238→   238→- Total: 46 new files created
+   239→   239→- Lint: 0 errors, 0 warnings
+   240→   240→
+   241→   241→Stage Summary:
+   242→   242→- Full URL-based routing with /en and /bn language prefixes implemented
+   243→   243→- Middleware redirects root "/" → /en and prepends default lang to un-prefixed routes
+   244→   244→- All page components connected to existing page components (SearchPage, SellTicketPage, TicketDetailsPage, InfoPage, DashboardPage, LoginPage, RegisterPage, KycPage)
+   245→   245→- Auth pages render without AppShell (no header/footer)
+   246→   246→- Placeholder pages for coming-soon features (checkout, order status, password reset, OTP)
+   247→   247→- Bilingual 404 page with Bangla support
+   248→   248→---
+   249→   249→Task ID: 5
+   250→   250→Agent: Main Agent
+   251→   251→Task: Implement URL-based routing system + search page grid layout
+   252→   252→
+   253→   253→Work Log:
+   254→   254→- Fixed search page grid: changed from space-y-3 to grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4
+   255→   255→- Created src/middleware.ts for / → /en/ redirect and lang prefix validation
+   256→   256→- Created src/lib/navigation.ts with getPagePath() mapping all zustand page names to URL paths
+   257→   257→- Created src/lib/use-nav.ts with useNav() hook wrapping Next.js router + language store
+   258→   258→- Created src/app/[lang]/layout.tsx with lang validation, store sync, auth page detection
+   259→   259→- Created src/app/[lang]/page.tsx (Home) with lazy-loaded HomePage component
+   260→   260→- Created 46+ route page files under src/app/[lang]/:
+   261→   261→  - Public: buy-tickets, sell-tickets, ticket/[id], how-it-works, safety-guidelines, faqs, blog, blog/[slug], about-us, contact-us, verify-ticket, support, payment-policy, refund-policy, terms-of-service, privacy-policy, cookies-policy, checkout
+   262→   262→  - Order: order/successful, order/cancelled, order/failed, order/pending
+   263→   263→  - Auth: account/login, account/register, account/forget-password, account/reset-password, account/verify-otp
+   264→   264→  - User panel: [username]/, [username]/dashboard, my-tickets, my-orders, transactions, my-reviews, message, wallet, wallet/balance, wallet/payout-method, withdraw-history, address, kyc-verification
+   265→   265→- Created src/components/pages/HomePage.tsx (extracted from old page.tsx)
+   266→   266→- Updated all page components to use useNav() instead of useAppStore().navigate:
+   267→   267→  - SearchPage: uses useSearchParams() instead of pageParams
+   268→   268→  - TicketDetailsPage: accepts ticketId prop instead of pageParams.id
+   269→   269→  - InfoPage: accepts section prop instead of reading currentPage
+   270→   270→  - DashboardPage: accepts tab and username props
+   271→   271→  - LoginPage, RegisterPage, SellTicketPage, KycPage: use useNav()
+   272→   272→- Updated Header.tsx: useNav() + usePathname() for active state detection + language switch with URL update
+   273→   273→- Updated Footer.tsx: useNav() instead of useAppStore().navigate
+   274→   274→- Updated AppShell.tsx: usePathname() instead of currentPage for scroll-to-top
+   275→   275→- Updated store.ts: removed currentPage, pageParams, navigate from useAppStore (kept sidebarOpen, mobileMenuOpen)
+   276→   276→- Updated root page.tsx: simple redirect to /en/
+   277→   277→- Added Suspense boundary to buy-tickets/page.tsx for useSearchParams()
+   278→   278→- Lint: 0 errors, 0 warnings
+   279→   279→- Route verification: /en → 200, /en/buy-tickets → 200, /en/sell-tickets → 200
+   280→   280→
+   281→   281→Stage Summary:
+   282→   282→- Complete URL-based routing system implemented with /en/ and /bn/ language prefixes
+   283→   283→- All public, auth, and user panel routes created as thin wrapper page files
+   284→   284→- Navigation migrated from zustand store to Next.js router via useNav() hook
+   285→   285→- Search page uses responsive 4/3/2/1 column grid
+   286→   286→- Server renders correctly for all tested routes (OOM in sandbox limits sequential testing)
+   287→   287→
+   288→   288→---
+   289→   289→Task ID: 3b
+   290→   290→Agent: Verify API Agent
+   291→   291→Task: Create backend API for ticket verification by PNR
+   292→   292→
+   293→   293→Work Log:
+   294→   294→- Reviewed Prisma schema: Ticket model with pnrNumber @unique, seller relation to User
+   295→   295→- Reviewed existing API routes for code style consistency (tickets/route.ts, tickets/[id]/route.ts)
+   296→   296→- Created /src/app/api/tickets/verify/route.ts with GET endpoint
+   297→   297→  - Accepts query param `pnr`
+   298→   298→  - Case-insensitive search using Prisma mode: 'insensitive'
+   299→   299→  - Returns ticket verification info (ticketId, transportType, transportCompany, routeFrom/To, departureDate/Time, ticketType, seatNumber, seatClass, seatType, coachNumber, status, seller {name, isKycVerified}, isVerified, maskedPnr)
+   300→   300→  - Does NOT expose full PNR number or ticketDocument
+   301→   301→  - isVerified = true when status is 'active' or 'sold'
+   302→   302→  - Includes maskPnr() helper that shows first 3 + last 2 chars with asterisks in between
+   303→   303→  - Returns { found: false, message } when not found
+   304→   304→  - Returns 400 if pnr param is missing
+   305→   305→- Created /src/app/api/tickets/check-pnr/route.ts with GET endpoint
+   306→   306→  - Accepts query param `pnr`
+   307→   307→  - Case-insensitive duplicate check using Prisma findFirst with mode: 'insensitive'
+   308→   308→  - Returns { available: true } if PNR is not taken
+   309→   309→  - Returns { available: false, message: 'PNR number already exists' } if taken
+   310→   310→  - Returns 400 if pnr param is missing
+   311→   311→- Both endpoints are public (no authentication required)
+   312→   312→- Both use try/catch with proper error responses
+   313→   313→- Lint: 0 errors, 0 warnings
+   314→   314→
+   315→   315→Stage Summary:
+   316→   316→- Verify endpoint returns ticket info (minus sensitive data) by PNR lookup with masked PNR display
+   317→   317→- Check-PNR endpoint returns availability status for sell form real-time validation
+   318→   318→- Both endpoints follow existing codebase patterns and error handling conventions
+   319→   319→
+   320→   320→---
+   321→   321→Task ID: 4
+   322→   322→Agent: PNR Check Agent
+   323→   323→Task: Add Real-time PNR Uniqueness Check to SellTicketPage
+   324→   324→
+   325→   325→Work Log:
+   326→   326→- Added XCircle icon import to lucide-react imports in SellTicketPage.tsx (CheckCircle2 and Loader2 were already imported)
+   327→   327→- Added 3 state variables: pnrChecking (boolean), pnrAvailable (boolean | null), pnrError (string), plus pnrCheckTimeout ref
+   328→   328→- Added debounced useEffect that watches form.pnrNumber with 500ms delay:
+   329→   329→  - Resets state when pnrNumber < 3 chars or empty
+   330→   330→  - Calls /api/tickets/check-pnr?pnr=XXX endpoint
+   331→   331→  - Sets pnrAvailable=true on available, pnrAvailable=false with bilingual error on taken
+   332→   332→  - Properly cleans up timeout on unmount and re-runs
+   333→   333→- Updated PNR input field with visual feedback:
+   334→   334→  - Green border (border-emerald-500) when PNR available
+   335→   335→  - Red border (border-red-500) when PNR taken
+   336→   336→  - Loader2 spinner + "Checking..." while API call in progress
+   337→   337→  - CheckCircle2 icon + "PNR available" in green when available
+   338→   338→  - XCircle icon + error message in red when taken
+   339→   339→  - All feedback text is bilingual (isBn check)
+   340→   340→- Updated validate() function: added check after pnrNumber required check that returns error if pnrAvailable === false
+   341→   341→- Updated POST API route (tickets/route.ts): added server-side PNR uniqueness check before db.ticket.create() that returns 409 if duplicate found
+   342→   342→- Lint: 0 errors, 0 warnings
+   343→   343→
+   344→   344→Stage Summary:
+   345→   345→- Real-time PNR uniqueness checking works with 500ms debounce
+   346→   346→- Visual feedback shows checking/available/taken states with colored icons and borders
+   347→   347→- Bilingual support for all feedback messages (en/bn)
+   348→   348→- Server-side safeguard prevents duplicate PNR numbers even if client check is bypassed
+   349→   349→- Debounce cleanup properly handles unmount and rapid input changes
+   350→   350→
+   351→   351→---
+   352→   352→Task ID: 5
+   353→   353→Agent: Main Agent
+   354→   354→Task: Create VerifyTicketPage Component + Update Route + Add i18n
+   355→   355→
+   356→   356→Work Log:
+   357→   357→- Created /src/components/pages/VerifyTicketPage.tsx with full verify ticket UI:
+   358→   358→  - Header section with ShieldCheck icon and bilingual title/description
+   359→   359→  - Input section: large PNR input with Search button, Enter key support, loading spinner
+   360→   360→  - Result section with 3 states via AnimatePresence:
+   361→   361→    - Not Found: Red error card with XCircle icon and bilingual message
+   362→   362→    - Verified (active/sold): Green success card with CheckCircle2, showing ticket ID, transport type+company (color-coded icon), route (From → To with ArrowRight), departure date/time (formatDepartureDate/formatDepartureTime), ticket type, seat info (if available), seller verification badge, status badge
+   363→   363→    - Expired/Cancelled: Amber warning card with AlertTriangle icon, showing ticket ID, transport, route, date/time, status badge
+   364→   364→  - Info section at bottom: PNR uniqueness info and escrow protection notice with Info icon
+   365→   365→  - Uses motion from framer-motion for smooth animations
+   366→   366→  - Uses TRANSPORT_TYPES, TICKET_STATUS, formatDepartureDate, formatDepartureTime from constants
+   367→   367→  - Responsive design: max-w-2xl centered, single column
+   368→   368→- Updated /src/app/api/tickets/verify/route.ts: GET endpoint accepting ?pnr= query param, finds ticket by pnrNumber, returns verification-safe fields (no pnrNumber or ticketDocument exposed), includes seller with isKycVerified
+   369→   369→- Updated /src/app/[lang]/verify-ticket/page.tsx: Replaced InfoPage with VerifyTicketPage component
+   370→   370→- Added 8 i18n translation keys to TranslationKeys type, en, and bn objects:
+   371→   371→  - verifyTicket, verifyTicketDesc, enterPnrNumber, ticketNotFound, ticketNotFoundDesc
+   372→   372→  - ticketVerified, ticketExpired, pnrUniqueInfo, escrowProtected
+   373→   373→- Lint: 0 errors, 0 warnings
+   374→   374→
+   375→   375→Stage Summary:
+   376→   376→- VerifyTicketPage fully functional with bilingual support (en/bn)
+   377→   377→- 3 result states: not found (red), verified (green), expired/cancelled (amber)
+   378→   378→- API endpoint returns ticket verification data without exposing sensitive fields
+   379→   379→- All 8 translation keys added to both en and bn dictionaries
+   380→   380→- Route page correctly renders VerifyTicketPage component
+   381→   381→
+   382→   382→---
+   383→   383→Task ID: 9-10
+   384→   384→Agent: Main Agent
+   385→   385→Task: Create Verify Ticket feature, PNR uniqueness enforcement, QC all features, cleanup
+   386→   386→
+   387→   387→Work Log:
+   388→   388→- Made pnrNumber field @unique in Prisma schema (was String? now String? @unique)
+   389→   389→- Ran db:push to apply schema changes
+   390→   390→- Created /api/tickets/verify/route.ts: GET endpoint that searches by PNR number OR ticket ID (ETR-XXXXXXXX), returns verification info without sensitive data
+   391→   391→- Created /api/tickets/check-pnr/route.ts: GET endpoint that checks PNR availability for sell form (fixed SQLite compatibility - uses findUnique instead of mode:'insensitive')
+   392→   392→- Added server-side PNR uniqueness check to /api/tickets POST endpoint (returns 409 if PNR already exists)
+   393→   393→- Created VerifyTicketPage.tsx component with:
+   394→   394→  - Shield icon header with bilingual title
+   395→   395→  - PNR/Ticket ID input with Search button
+   396→   396→  - Three result states: Not Found (red), Verified (green), Expired/Cancelled (amber)
+   397→   397→  - Verified state shows: Ticket ID, transport, route, date/time, ticket type, seat info, seller verification
+   398→   398→  - Info section about PNR uniqueness and escrow protection
+   399→   399→  - Framer Motion animations
+   400→   400→- Updated verify-ticket route page to use VerifyTicketPage instead of InfoPage
+   401→   401→- Added 8 i18n translation keys for verify ticket feature (en + bn)
+   402→   402→- Added PNR uniqueness check to SellTicketPage with:
+   403→   403→  - Debounced (500ms) real-time check against /api/tickets/check-pnr
+   404→   404→  - Visual feedback: spinner while checking, green checkmark if available, red X if taken
+   405→   405→  - Border color changes: green if available, red if taken
+   406→   406→  - Validation blocks submission if PNR is already in use
+   407→   407→- Reseeded database with fresh data (unique PNR numbers for online_copy tickets)
+   408→   408→- Cleaned up temp files (tool-results/, agent-ctx/)
+   409→   409→- Lint: 0 errors, 0 warnings
+   410→   410→- API verification: all endpoints working correctly via curl
+   411→   411→  - GET /api/tickets/check-pnr?pnr=NEWPNR123 → {"available":true}
+   412→   412→  - GET /api/tickets/check-pnr?pnr=PNR-6ANYF3YX → {"available":false,"message":"PNR number already exists"}
+   413→   413→  - GET /api/tickets/verify?pnr=PNR-6ANYF3YX → {"found":true,"isVerified":true,"ticket":{...}}
+   414→   414→  - GET /api/tickets/verify?pnr=ETR-00000001 → {"found":true,"isVerified":true,"ticket":{...}}
+   415→   415→  - GET /api/tickets/verify?pnr=INVALID → {"found":false,"message":"..."}
+   416→   416→- Page verification: all key pages return 200 (Home, Verify Ticket, Buy Tickets, Sell Tickets)
+   417→   417→
+   418→   418→Stage Summary:
+   419→   419→- Verify Ticket feature fully implemented at /en/verify-ticket with PNR/Ticket ID search
+   420→   420→- PNR uniqueness enforced at 3 levels: database (@unique constraint), server-side (API check), client-side (debounced real-time check)
+   421→   421→- SellTicketPage shows live PNR availability feedback
+   422→   422→- All API endpoints working correctly
+   423→   423→- Server instability in sandbox due to process killing (not a code issue)
+   424→   424→
+   425→   425→---
+   426→   426→Task ID: 7
+   427→   427→Agent: Main Agent
+   428→   428→Task: Fix server crash permanently, fix z.ai logo only showing, make website super fast
+   429→   429→
+   430→   430→Work Log:
+   431→   431→- Diagnosed server crash: Next.js dev server using ~1.3GB RAM, process being killed between bash sessions
+   432→   432→- Created auto-restart mechanism using start-stop-daemon (run-server.sh wrapper with while loop)
+   433→   433→- Fixed server persistence: Using start-stop-daemon with --background --make-pidfile for proper daemon process
+   434→   434→- Added NODE_OPTIONS="--max-old-space-size=1536" for memory management
+   435→   435→- Removed framer-motion from Header.tsx, Footer.tsx, and HomePage.tsx (biggest impact change)
+   436→   436→- Replaced all motion components with CSS animations (animate-slide-up, animate-fade-in, etc.)
+   437→   437→- Used dynamic imports for AppShell, Header, Footer (ssr: false) to reduce initial compilation memory
+   438→   438→- Removed Prisma query logging (log: ['query'] → no logging) to reduce CPU/memory overhead
+   439→   439→- Removed `output: "standalone"` from next.config.ts (not needed for dev mode)
+   440→   440→- Added loading.tsx for /app/[lang]/ route with app branding (not z.ai logo)
+   441→   441→- Added loading.tsx for /app/ root route
+   442→   442→- Added error.tsx for /app/[lang]/ route with error boundary
+   443→   443→- Updated package.json dev script with NODE_OPTIONS memory limit
+   444→   444→- Fixed lint error in Header.tsx (setState in useEffect)
+   445→   445→- Verified all pages work: homepage, verify-ticket, language switching, navigation
+   446→   446→
+   447→   447→Stage Summary:
+   448→   448→- Server crash: FIXED - Using start-stop-daemon for persistent background process with auto-restart
+   449→   449→- z.ai logo: FIXED - Custom loading.tsx shows "Eid Ticket Resell" branding instead
+   450→   450→- Speed: Subsequent page loads reduced from 6-7s to 60-160ms (first compile ~5s unavoidable in dev)
+   451→   451→- Key optimization: Removing framer-motion from Header/Footer/HomePage eliminated massive JS bundle
+   452→   452→- Server memory: Stable at ~26-32% (1.0-1.3GB) after warm-up
+   453→   453→
+   454→   454→---
+   455→   455→Task ID: 3-5
+   456→   456→Agent: oneid-backend
+   457→   457→Task: Create OneID service layer and API routes
+   458→   458→
+   459→   459→Work Log:
+   460→   460→- Created /home/z/my-project/src/lib/oneid.ts — OneID service class with token caching, retry on 401, and all 6 API methods (getServiceToken, createUnclaimedBinding, verifyTotp, sendPushNotification, checkPushStatus, deleteBinding)
+   461→   461→- Created /home/z/my-project/src/app/api/oneid/setup/route.ts — POST endpoint for MFA setup (creates unclaimed binding, stores bind_id temporarily)
+   462→   462→- Created /home/z/my-project/src/app/api/oneid/verify-totp/route.ts — POST endpoint for TOTP verification with dual purpose (setup enables MFA, login verifies MFA)
+   463→   463→- Created /home/z/my-project/src/app/api/oneid/push/send/route.ts — POST endpoint to send push notification during login MFA
+   464→   464→- Created /home/z/my-project/src/app/api/oneid/push/status/route.ts — GET endpoint to poll push notification status with activity logging
+   465→   465→- Created /home/z/my-project/src/app/api/oneid/disable/route.ts — POST endpoint to disable MFA (requires TOTP verification, deletes OneID binding)
+   466→   466→- Updated /home/z/my-project/src/app/api/auth/login/route.ts — Added MFA check after successful password and OTP login; returns mfaRequired+mfaToken when OneID MFA enabled; added oneidMfaEnabled to user response
+   467→   467→- Updated /home/z/my-project/src/app/api/auth/me/route.ts — Added oneidMfaEnabled, oneidHasBinding (boolean), oneidLastVerifiedAt to user response
+   468→   468→- Updated /home/z/my-project/src/app/api/auth/register/route.ts — Added oneidMfaEnabled: false to registration response
+   469→   469→- Lint: 0 errors, 0 warnings
+   470→   470→
+   471→   471→Stage Summary:
+   472→   472→- Complete OneID MFA backend service layer with token caching and auto-retry on 401
+   473→   473→- 5 new API routes under /api/oneid/ covering full MFA lifecycle: setup → verify → push → status → disable
+   474→   474→- Login flow now intercepts with MFA challenge when oneidMfaEnabled is true
+   475→   475→- All API routes use proper auth verification (Bearer token via verifyToken)
+   476→   476→- Activity logging for all MFA-related actions
+   477→   477→- Graceful error handling when OneID service is not configured (returns 503)
+   478→   478→
