@@ -1,0 +1,755 @@
+     1→'use client';
+     2→import { useState } from 'react';
+     3→import { useLanguageStore } from '@/lib/store';
+     4→import { t } from '@/lib/i18n';
+     5→import { Card, CardContent } from '@/components/ui/card';
+     6→import { Button } from '@/components/ui/button';
+     7→import { Input } from '@/components/ui/input';
+     8→import { Textarea } from '@/components/ui/textarea';
+     9→import { Label } from '@/components/ui/label';
+    10→import {
+    11→  Accordion,
+    12→  AccordionContent,
+    13→  AccordionItem,
+    14→  AccordionTrigger,
+    15→} from '@/components/ui/accordion';
+    16→import {
+    17→  Mail,
+    18→  Phone,
+    19→  MapPin,
+    20→  Send,
+    21→  MessageCircle,
+    22→  Bell,
+    23→  Shield,
+    24→  CreditCard,
+    25→  RefreshCw,
+    26→  ShieldCheck,
+    27→  BookOpen,
+    28→  FileText,
+    29→  Cookie,
+    30→  AlertTriangle,
+    31→  Users,
+    32→  TicketCheck,
+    33→  MapPinned,
+    34→  Headset,
+    35→} from 'lucide-react';
+    36→
+    37→const sections: Record<string, { title: string; titleBn: string; icon: React.ElementType }> = {
+    38→  about: { title: 'About Us', titleBn: 'আমাদের সম্পর্কে', icon: ShieldCheck },
+    39→  contact: { title: 'Contact Us', titleBn: 'যোগাযোগ', icon: Mail },
+    40→  'how-it-works': { title: 'How It Works', titleBn: 'কিভাবে কাজ করে', icon: BookOpen },
+    41→  faq: { title: 'FAQs', titleBn: 'সাধারণ জিজ্ঞাসা', icon: MessageCircle },
+    42→  blog: { title: 'Blog', titleBn: 'ব্লগ', icon: FileText },
+    43→  support: { title: 'Support', titleBn: 'সাহায্য', icon: Headset },
+    44→  chat: { title: 'Chat', titleBn: 'চ্যাট', icon: MessageCircle },
+    45→  notifications: { title: 'Notifications', titleBn: 'বিজ্ঞপ্তি', icon: Bell },
+    46→  terms: { title: 'Terms of Service', titleBn: 'সেবার শর্তাবলী', icon: FileText },
+    47→  privacy: { title: 'Privacy Policy', titleBn: 'গোপনীয়তা নীতি', icon: Shield },
+    48→  refund: { title: 'Refund Policy', titleBn: 'ফেরত নীতি', icon: RefreshCw },
+    49→  'payment-policy': { title: 'Payment Policy', titleBn: 'পেমেন্ট নীতি', icon: CreditCard },
+    50→  'cookies-policy': { title: 'Cookies Policy', titleBn: 'কুকিজ নীতি', icon: Cookie },
+    51→  'safety-guidelines': { title: 'Safety Guidelines', titleBn: 'নিরাপত্তা নির্দেশিকা', icon: Shield },
+    52→};
+    53→
+    54→/* ─── Page Header ─── */
+    55→function PageHeader({
+    56→  icon: Icon,
+    57→  title,
+    58→  isBn,
+    59→}: {
+    60→  icon: React.ElementType;
+    61→  title: string;
+    62→  isBn: boolean;
+    63→}) {
+    64→  return (
+    65→    <div className="flex flex-col items-center gap-3 mb-8">
+    66→      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+    67→        <Icon className="w-5 h-5 text-primary" />
+    68→      </div>
+    69→      <h1 className={`text-2xl font-bold text-foreground ${isBn ? 'font-bangla' : ''}`}>
+    70→        {title}
+    71→      </h1>
+    72→    </div>
+    73→  );
+    74→}
+    75→
+    76→/* ─── About Section ─── */
+    77→function AboutSection({ isBn }: { isBn: boolean }) {
+    78→  const cls = isBn ? 'font-bangla' : '';
+    79→  const stats = [
+    80→    { value: '10,000+', label: isBn ? 'টিকেট বিক্রি' : 'Tickets Sold', icon: TicketCheck },
+    81→    { value: '5,000+', label: isBn ? 'ব্যবহারকারী' : 'Users', icon: Users },
+    82→    { value: '500+', label: isBn ? 'যাচাইকৃত বিক্রেতা' : 'Verified Sellers', icon: ShieldCheck },
+    83→    { value: '64+', label: isBn ? 'শহর' : 'Cities', icon: MapPinned },
+    84→  ];
+    85→
+    86→  return (
+    87→    <div className="space-y-6">
+    88→      <p className={`text-sm leading-relaxed text-muted-foreground ${cls}`}>
+    89→        {isBn
+    90→          ? 'ঈদ টিকেট রিসেল বাংলাদেশের সবচেয়ে বিশ্বস্ত টিকেট মার্কেটপ্লেস। আমরা বাস, ট্রেন, ফ্লাইট ও লঞ্চ টিকেট নিরাপদে কেনাবেচার প্ল্যাটফর্ম প্রদান করি। আমাদের এসক্রো পেমেন্ট সিস্টেম নিশ্চিত করে যে প্রতিটি লেনদেন নিরাপদ এবং স্বচ্ছ।'
+    91→          : 'Eid Ticket Resell is Bangladesh\'s most trusted ticket marketplace. We provide a secure platform for buying and selling Bus, Train, Flight & Launch tickets. Our escrow payment system ensures every transaction is safe and transparent.'}
+    92→      </p>
+    93→      <div className="grid grid-cols-2 gap-3">
+    94→        {stats.map((s, i) => (
+    95→          <Card key={i} className="border-border/50 shadow-none">
+    96→            <CardContent className="p-4 flex items-center gap-3">
+    97→              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+    98→                <s.icon className="w-4 h-4 text-primary" />
+    99→              </div>
+   100→              <div className="min-w-0">
+   101→                <p className={`text-xl font-bold text-primary ${cls}`}>{s.value}</p>
+   102→                <p className={`text-xs text-muted-foreground ${cls}`}>{s.label}</p>
+   103→              </div>
+   104→            </CardContent>
+   105→          </Card>
+   106→        ))}
+   107→      </div>
+   108→    </div>
+   109→  );
+   110→}
+   111→
+   112→/* ─── Contact Section ─── */
+   113→function ContactSection({ isBn, language }: { isBn: boolean; language: string }) {
+   114→  const cls = isBn ? 'font-bangla' : '';
+   115→  const contactItems = [
+   116→    { icon: Mail, text: 'support@eidticketresell.com' },
+   117→    { icon: Phone, text: '+880 1234-567890' },
+   118→    { icon: MapPin, text: isBn ? 'ঢাকা, বাংলাদেশ' : 'Dhaka, Bangladesh' },
+   119→  ];
+   120→
+   121→  return (
+   122→    <div className="space-y-6">
+   123→      <div className="space-y-3">
+   124→        {contactItems.map((item, i) => (
+   125→          <div key={i} className="flex items-center gap-3 text-sm">
+   126→            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+   127→              <item.icon className="w-4 h-4 text-primary" />
+   128→            </div>
+   129→            <span className={`text-muted-foreground ${cls}`}>{item.text}</span>
+   130→          </div>
+   131→        ))}
+   132→      </div>
+   133→      <div className="border-t pt-6 space-y-4">
+   134→        <div className="space-y-1.5">
+   135→          <Label className={cls}>{t('name', language)}</Label>
+   136→          <Input className="h-11" placeholder={isBn ? 'আপনার নাম' : 'Your name'} />
+   137→        </div>
+   138→        <div className="space-y-1.5">
+   139→          <Label className={cls}>{t('email', language)}</Label>
+   140→          <Input type="email" className="h-11" placeholder={isBn ? 'আপনার ইমেইল' : 'Your email'} />
+   141→        </div>
+   142→        <div className="space-y-1.5">
+   143→          <Label className={cls}>{t('description', language)}</Label>
+   144→          <Textarea rows={4} placeholder={isBn ? 'আপনার বার্তা লিখুন' : 'Write your message'} />
+   145→        </div>
+   146→        <Button className="bg-primary hover:bg-primary/90 text-white h-11 px-6">
+   147→          <span className={cls}>{t('sendMessage', language)}</span>
+   148→          <Send className="w-4 h-4 ml-2" />
+   149→        </Button>
+   150→      </div>
+   151→    </div>
+   152→  );
+   153→}
+   154→
+   155→/* ─── How It Works Section ─── */
+   156→function HowItWorksSection({ isBn, language }: { isBn: boolean; language: string }) {
+   157→  const cls = isBn ? 'font-bangla' : '';
+   158→  const steps = [
+   159→    { n: '1', title: t('step1Title', language), desc: t('step1Desc', language) },
+   160→    { n: '2', title: t('step2Title', language), desc: t('step2Desc', language) },
+   161→    { n: '3', title: t('step3Title', language), desc: t('step3Desc', language) },
+   162→    { n: '4', title: t('step4Title', language), desc: t('step4Desc', language) },
+   163→  ];
+   164→
+   165→  return (
+   166→    <div className="space-y-3">
+   167→      {steps.map((s, i) => (
+   168→        <Card key={i} className="border-border/50 shadow-none">
+   169→          <CardContent className="p-4 flex items-start gap-4">
+   170→            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold shrink-0">
+   171→              {s.n}
+   172→            </div>
+   173→            <div className="min-w-0">
+   174→              <p className={`font-medium ${cls}`}>{s.title}</p>
+   175→              <p className={`text-sm text-muted-foreground mt-0.5 ${cls}`}>{s.desc}</p>
+   176→            </div>
+   177→          </CardContent>
+   178→        </Card>
+   179→      ))}
+   180→    </div>
+   181→  );
+   182→}
+   183→
+   184→/* ─── FAQ Section ─── */
+   185→function FAQSection({ isBn }: { isBn: boolean }) {
+   186→  const cls = isBn ? 'font-bangla' : '';
+   187→  const faqs = [
+   188→    {
+   189→      q: isBn ? 'কিভাবে টিকেট কিনব?' : 'How to buy tickets?',
+   190→      a: isBn
+   191→        ? 'সার্চ করুন, টিকেট নির্বাচন করুন, পেমেন্ট করুন এবং টিকেট পান। আমাদের প্ল্যাটফর্মে টিকেট খুঁজুন, আপনার পছন্দের টিকেট নির্বাচন করুন, নিরাপদে পেমেন্ট সম্পন্ন করুন এবং তাৎক্ষণিক টিকেট পান।'
+   192→        : 'Search for tickets, select your preferred ticket, pay securely through our escrow system, and receive your ticket instantly. The entire process is safe and transparent.',
+   193→    },
+   194→    {
+   195→      q: isBn ? 'পেমেন্ট কতটা নিরাপদ?' : 'How secure is payment?',
+   196→      a: isBn
+   197→        ? 'আপনার পেমেন্ট এসক্রোতে রাখা হয় যতক্ষণ যাত্রা সম্পন্ন না হয়। ক্রেতার পেমেন্ট বিক্রেতার কাছে যায় না যতক্ষণ না যাত্রা সফলভাবে সম্পন্ন হয়।'
+   198→        : 'Your payment is held in escrow until the journey is complete. The seller only receives payment after you confirm the journey was successful, ensuring full protection for buyers.',
+   199→    },
+   200→    {
+   201→      q: isBn ? 'টিকেট বিক্রি করতে কি লাগে?' : 'What do I need to sell tickets?',
+   202→      a: isBn
+   203→        ? 'KYC যাচাই সম্পন্ন করুন এবং টিকেট তালিকাভুক্ত করুন। আপনার পরিচয় যাচাইয়ের পর আপনি সহজেই টিকেট তালিকাভুক্ত করতে পারবেন।'
+   204→        : 'Complete KYC verification and list your tickets. Once your identity is verified, you can easily list tickets for sale and receive payments securely through our platform.',
+   205→    },
+   206→    {
+   207→      q: isBn ? 'ফেরত নীতি কি?' : 'What is the refund policy?',
+   208→      a: isBn
+   209→        ? 'যাত্রা বাতিল হলে সম্পূর্ণ ফেরত পাবেন। যদি পরিবহন সংস্থা যাত্রা বাতিল করে বা টিকেট ভুল হয়, আপনি সম্পূর্ণ ফেরত পাবেন।'
+   210→        : 'Full refund if the journey is cancelled. If the transport operator cancels the trip or the ticket is invalid, you will receive a complete refund through our dispute resolution process.',
+   211→    },
+   212→    {
+   213→      q: isBn ? 'টিকেটের দাম কিভাবে নির্ধারিত হয়?' : 'How are ticket prices determined?',
+   214→      a: isBn
+   215→        ? 'বিক্রেতা টিকেটের দাম নির্ধারণ করেন। মূল দামের উপর প্ল্যাটফর্ম ফি যোগ হয়।'
+   216→        : 'Sellers set the ticket price. A small platform fee is added on top of the listed price to cover our escrow and verification services.',
+   217→    },
+   218→  ];
+   219→
+   220→  return (
+   221→    <Accordion type="single" collapsible className="w-full">
+   222→      {faqs.map((f, i) => (
+   223→        <AccordionItem key={i} value={`q${i}`} className="border-border/50">
+   224→          <AccordionTrigger className={`font-medium hover:no-underline ${cls}`}>
+   225→            {f.q}
+   226→          </AccordionTrigger>
+   227→          <AccordionContent className={`text-sm text-muted-foreground ${cls}`}>
+   228→            {f.a}
+   229→          </AccordionContent>
+   230→        </AccordionItem>
+   231→      ))}
+   232→    </Accordion>
+   233→  );
+   234→}
+   235→
+   236→/* ─── Blog Section ─── */
+   237→function BlogSection({ isBn }: { isBn: boolean }) {
+   238→  const cls = isBn ? 'font-bangla' : '';
+   239→  const posts = [
+   240→    {
+   241→      title: isBn ? 'ঈদ ভ্রমণ টিপস' : 'Eid Travel Tips',
+   242→      desc: isBn
+   243→        ? 'ঈদে নিরাপদ ভ্রমণের সেরা টিপস এবং পরামর্শ'
+   244→        : 'Best tips and advice for safe and comfortable travel during Eid season',
+   245→      date: isBn ? '১৫ মার্চ ২০২৫' : 'Mar 15, 2025',
+   246→    },
+   247→    {
+   248→      title: isBn ? 'সাশ্রয়ী টিকেট' : 'Budget Tickets Guide',
+   249→      desc: isBn
+   250→        ? 'কম খরচে টিকেট খোঁজার উপায় এবং কৌশল'
+   251→        : 'How to find affordable tickets and save money on your journey',
+   252→      date: isBn ? '১০ মার্চ ২০২৫' : 'Mar 10, 2025',
+   253→    },
+   254→    {
+   255→      title: isBn ? 'বিক্রেতা গাইড' : 'Seller Guide',
+   256→      desc: isBn
+   257→        ? 'টিকেট বিক্রির সম্পূর্ণ গাইড এবং সেরা অনুশীলন'
+   258→        : 'Complete guide to selling tickets and best practices for sellers',
+   259→      date: isBn ? '৫ মার্চ ২০২৫' : 'Mar 5, 2025',
+   260→    },
+   261→    {
+   262→      title: isBn ? 'এসক্রো পেমেন্ট ব্যবস্থা' : 'Understanding Escrow Payments',
+   263→      desc: isBn
+   264→        ? 'কিভাবে এসক্রো পেমেন্ট আপনার লেনদেন নিরাপদ রাখে'
+   265→        : 'How escrow payments protect both buyers and sellers in every transaction',
+   266→      date: isBn ? '১ মার্চ ২০২৫' : 'Mar 1, 2025',
+   267→    },
+   268→  ];
+   269→
+   270→  return (
+   271→    <div className="space-y-3">
+   272→      {posts.map((b, i) => (
+   273→        <Card
+   274→          key={i}
+   275→          className="cursor-pointer border-border/50 shadow-none hover:shadow-sm hover:border-primary/20 transition-all duration-200"
+   276→        >
+   277→          <CardContent className="p-4">
+   278→            <div className="flex items-start justify-between gap-3">
+   279→              <div className="min-w-0">
+   280→                <h3 className={`font-medium ${cls}`}>{b.title}</h3>
+   281→                <p className={`text-sm text-muted-foreground mt-1 ${cls}`}>{b.desc}</p>
+   282→              </div>
+   283→              <span className={`text-xs text-muted-foreground whitespace-nowrap ${cls}`}>
+   284→                {b.date}
+   285→              </span>
+   286→            </div>
+   287→          </CardContent>
+   288→        </Card>
+   289→      ))}
+   290→    </div>
+   291→  );
+   292→}
+   293→
+   294→/* ─── Support Section ─── */
+   295→function SupportSection({ isBn, language }: { isBn: boolean; language: string }) {
+   296→  const cls = isBn ? 'font-bangla' : '';
+   297→  const contactCards = [
+   298→    {
+   299→      icon: Phone,
+   300→      title: isBn ? 'ফোন' : 'Phone',
+   301→      detail: '+880 1234-567890',
+   302→      detailBn: '+৮৮০ ১২৩৪-৫৬৭৮৯০',
+   303→    },
+   304→    {
+   305→      icon: Mail,
+   306→      title: t('email', language),
+   307→      detail: 'support@eidticketresell.com',
+   308→      detailBn: 'support@eidticketresell.com',
+   309→    },
+   310→  ];
+   311→
+   312→  return (
+   313→    <div className="space-y-6">
+   314→      <p className={`text-sm leading-relaxed text-muted-foreground ${cls}`}>
+   315→        {isBn
+   316→          ? 'আমাদের সাহায্য দল ২৪/৭ উপলব্ধ। যেকোনো প্রশ্ন বা সমস্যায় আমাদের সাথে যোগাযোগ করুন।'
+   317→          : 'Our support team is available 24/7 to help you with any questions or issues. Reach out to us through any of the channels below.'}
+   318→      </p>
+   319→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   320→        {contactCards.map((c, i) => (
+   321→          <Card key={i} className="border-border/50 shadow-none">
+   322→            <CardContent className="p-4 flex items-center gap-3">
+   323→              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+   324→                <c.icon className="w-5 h-5 text-primary" />
+   325→              </div>
+   326→              <div className="min-w-0">
+   327→                <p className={`font-medium text-sm ${cls}`}>{c.title}</p>
+   328→                <p className="text-sm text-muted-foreground">{isBn ? c.detailBn : c.detail}</p>
+   329→              </div>
+   330→            </CardContent>
+   331→          </Card>
+   332→        ))}
+   333→      </div>
+   334→    </div>
+   335→  );
+   336→}
+   337→
+   338→/* ─── Chat Section ─── */
+   339→function ChatSection({ isBn, language }: { isBn: boolean; language: string }) {
+   340→  const cls = isBn ? 'font-bangla' : '';
+   341→  const [msg, setMsg] = useState('');
+   342→  const [messages, setMessages] = useState<Array<{ text: string; sent: boolean }>>([]);
+   343→
+   344→  const sendMessage = () => {
+   345→    if (!msg.trim()) return;
+   346→    setMessages((prev) => [...prev, { text: msg, sent: true }]);
+   347→    setMsg('');
+   348→  };
+   349→
+   350→  return (
+   351→    <div className="space-y-3">
+   352→      <div className="min-h-[240px] max-h-80 overflow-y-auto space-y-2 p-4 bg-muted/30 rounded-lg">
+   353→        {messages.length === 0 && (
+   354→          <p className={`text-center text-sm text-muted-foreground py-8 ${cls}`}>
+   355→            {isBn ? 'কোনো বার্তা নেই। নিচে বার্তা লিখুন।' : 'No messages yet. Start a conversation below.'}
+   356→          </p>
+   357→        )}
+   358→        {messages.map((m, i) => (
+   359→          <div key={i} className={`flex ${m.sent ? 'justify-end' : 'justify-start'}`}>
+   360→            <div
+   361→              className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
+   362→                m.sent
+   363→                  ? 'bg-primary text-primary-foreground rounded-br-sm'
+   364→                  : 'bg-muted rounded-bl-sm'
+   365→              } ${cls}`}
+   366→            >
+   367→              {m.text}
+   368→            </div>
+   369→          </div>
+   370→        ))}
+   371→      </div>
+   372→      <div className="flex gap-2">
+   373→        <Input
+   374→          value={msg}
+   375→          onChange={(e) => setMsg(e.target.value)}
+   376→          placeholder={t('typeMessage', language)}
+   377→          className="h-11"
+   378→          onKeyDown={(e) => {
+   379→            if (e.key === 'Enter') sendMessage();
+   380→          }}
+   381→        />
+   382→        <Button onClick={sendMessage} className="bg-primary hover:bg-primary/90 text-white h-11 px-4">
+   383→          <Send className="w-4 h-4" />
+   384→        </Button>
+   385→      </div>
+   386→    </div>
+   387→  );
+   388→}
+   389→
+   390→/* ─── Notifications Section ─── */
+   391→function NotificationsSection({ isBn }: { isBn: boolean }) {
+   392→  const cls = isBn ? 'font-bangla' : '';
+   393→  const notifications = [
+   394→    { text: isBn ? 'আপনার টিকেট বিক্রি হয়েছে' : 'Your ticket has been sold', time: '2m ago', read: false },
+   395→    { text: isBn ? 'পেমেন্ট প্রাপ্ত' : 'Payment received', time: '1h ago', read: false },
+   396→    { text: isBn ? 'KYC অনুমোদিত' : 'KYC Approved', time: '1d ago', read: true },
+   397→    { text: isBn ? 'নতুন টিকেট উপলব্ধ' : 'New tickets available', time: '2d ago', read: true },
+   398→    { text: isBn ? 'প্ল্যাটফর্ম আপডেট' : 'Platform update available', time: '3d ago', read: true },
+   399→  ];
+   400→
+   401→  return (
+   402→    <div className="space-y-2">
+   403→      {notifications.map((n, i) => (
+   404→        <Card
+   405→          key={i}
+   406→          className={`border-border/50 shadow-none transition-all duration-200 ${
+   407→            !n.read ? 'border-primary/20 bg-primary/[0.02]' : ''
+   408→          }`}
+   409→        >
+   410→          <CardContent className="p-3 flex items-center gap-3">
+   411→            {!n.read && <div className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+   412→            <div className="flex-1 min-w-0">
+   413→              <p className={`text-sm font-medium ${cls}`}>{n.text}</p>
+   414→              <p className="text-xs text-muted-foreground">{n.time}</p>
+   415→            </div>
+   416→          </CardContent>
+   417→        </Card>
+   418→      ))}
+   419→    </div>
+   420→  );
+   421→}
+   422→
+   423→/* ─── Terms of Service ─── */
+   424→function TermsSection({ isBn }: { isBn: boolean }) {
+   425→  const cls = isBn ? 'font-bangla' : '';
+   426→  return (
+   427→    <div className={`space-y-4 text-sm leading-relaxed ${cls}`}>
+   428→      <h2 className="text-base font-semibold text-foreground">{isBn ? '১. সাধারণ শর্তাবলী' : '1. General Terms'}</h2>
+   429→      <p className="text-muted-foreground">
+   430→        {isBn
+   431→          ? 'এই শর্তাবলী "ঈদ টিকেট রিসেল" প্ল্যাটফর্মের সকল ব্যবহারকারীর জন্য প্রযোজ্য। প্ল্যাটফর্ম ব্যবহারের মাধ্যমে আপনি এই শর্তাবলীতে সম্মতি দেন। আমরা যেকোনো সময় শর্তাবলী পরিবর্তন করার অধিকার সংরক্ষণ করি।'
+   432→          : 'These Terms of Service apply to all users of the "Eid Ticket Resell" platform. By using the platform, you agree to these terms. We reserve the right to modify these terms at any time, and continued use constitutes acceptance of any changes.'}
+   433→      </p>
+   434→
+   435→      <h2 className="text-base font-semibold text-foreground">{isBn ? '২. ব্যবহারকারীর দায়িত্ব' : '2. User Responsibilities'}</h2>
+   436→      <p className="text-muted-foreground">
+   437→        {isBn
+   438→          ? 'ব্যবহারকারী সকল প্রদত্ত তথ্যের সত্যতার জন্য দায়ী। জাল টিকেট বিক্রি বা প্রতারণামূলক কার্যকলাপ কঠোরভাবে নিষিদ্ধ এবং আইনি ব্যবস্থার কারণ হতে পারে। ব্যবহারকারীকে অবশ্যই KYC যাচাই সম্পন্ন করতে হবে।'
+   439→          : 'Users are responsible for the accuracy of all information provided. Selling counterfeit tickets or engaging in fraudulent activity is strictly prohibited and may result in legal action. Users must complete KYC verification before selling tickets.'}
+   440→      </p>
+   441→
+   442→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৩. লেনদেন নীতি' : '3. Transaction Policy'}</h2>
+   443→      <p className="text-muted-foreground">
+   444→        {isBn
+   445→          ? 'সকল লেনদেন এসক্রো সুরক্ষায় সম্পন্ন হয়। ক্রেতার পেমেন্ট যাত্রা সম্পন্ন না হওয়া পর্যন্ত ধরে রাখা হয়। বিক্রেতা যাত্রা সফল হলে পেমেন্ট পান। বিরোধের ক্ষেত্রে আমাদের সমাধান প্রক্রিয়া প্রযোজ্য।'
+   446→          : 'All transactions are completed under escrow protection. Buyer payments are held until the journey is completed. Sellers receive payment only after successful journey completion. Our dispute resolution process applies in case of conflicts.'}
+   447→      </p>
+   448→
+   449→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৪. সীমিত দায়বদ্ধতা' : '4. Limitation of Liability'}</h2>
+   450→      <p className="text-muted-foreground">
+   451→        {isBn
+   452→          ? 'প্ল্যাটফর্ম টিকেটের বৈধতা বা পরিবহন সেবার গুণমানের জন্য দায়ী নয়। আমরা কেবল লেনদেনের মধ্যস্থতাকারী হিসেবে কাজ করি। পরিবহন সংস্থার সেবা সম্পর্কিত যেকোনো সমস্যা সরাসরি তাদের সাথে সমাধান করতে হবে।'
+   453→          : 'The platform is not liable for ticket validity or transport service quality. We act solely as a transaction intermediary. Any issues with transport operator services must be resolved directly with the operator.'}
+   454→      </p>
+   455→    </div>
+   456→  );
+   457→}
+   458→
+   459→/* ─── Privacy Policy ─── */
+   460→function PrivacySection({ isBn }: { isBn: boolean }) {
+   461→  const cls = isBn ? 'font-bangla' : '';
+   462→  return (
+   463→    <div className={`space-y-4 text-sm leading-relaxed ${cls}`}>
+   464→      <h2 className="text-base font-semibold text-foreground">{isBn ? '১. তথ্য সংগ্রহ' : '1. Information Collection'}</h2>
+   465→      <p className="text-muted-foreground">
+   466→        {isBn
+   467→          ? 'আমরা আপনার নাম, ইমেইল, ফোন নম্বর, এবং পরিচয় নথি সংগ্রহ করি। এই তথ্য KYC যাচাই এবং লেনদেন প্রক্রিয়ার জন্য প্রয়োজন। আমরা আপনার সম্মতি ছাড়া তৃতীয় পক্ষের সাথে তথ্য শেয়ার করি না।'
+   468→          : 'We collect your name, email, phone number, and identity documents. This information is required for KYC verification and transaction processing. We do not share your information with third parties without your consent.'}
+   469→      </p>
+   470→
+   471→      <h2 className="text-base font-semibold text-foreground">{isBn ? '২. তথ্য ব্যবহার' : '2. Information Usage'}</h2>
+   472→      <p className="text-muted-foreground">
+   473→        {isBn
+   474→          ? 'আপনার তথ্য অ্যাকাউন্ট পরিচালনা, লেনদেন প্রক্রিয়াকরণ, যোগাযোগ, এবং সেবার উন্নতির জন্য ব্যবহৃত হয়। আমরা আপনার তথ্য বিপণন উদ্দেশ্যে বিক্রি করি না।'
+   475→          : 'Your information is used for account management, transaction processing, communication, and service improvement. We do not sell your information for marketing purposes.'}
+   476→      </p>
+   477→
+   478→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৩. তথ্য সুরক্ষা' : '3. Data Security'}</h2>
+   479→      <p className="text-muted-foreground">
+   480→        {isBn
+   481→          ? 'আমরা শিল্প-মানের এনক্রিপশন এবং সুরক্ষা ব্যবস্থা ব্যবহার করি। আপনার পেমেন্ট তথ্য সুরক্ষিত পেমেন্ট গেটওয়ের মাধ্যমে প্রক্রিয়া করা হয়। তবে ইন্টারনেটে কোনো সিস্টেম সম্পূর্ণ ঝুঁকিমুক্ত নয়।'
+   482→          : 'We employ industry-standard encryption and security measures. Your payment information is processed through secure payment gateways. However, no system on the internet is completely risk-free.'}
+   483→      </p>
+   484→
+   485→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৪. আপনার অধিকার' : '4. Your Rights'}</h2>
+   486→      <p className="text-muted-foreground">
+   487→        {isBn
+   488→          ? 'আপনি আপনার তথ্য দেখতে, সংশোধন করতে, এবং মুছে ফেলার অধিকার রাখেন। অ্যাকাউন্ট মুছে ফেলার অনুরোধ করতে আমাদের সাহায্য দলের সাথে যোগাযোগ করুন।'
+   489→          : 'You have the right to view, correct, and delete your personal information. Contact our support team to request account deletion or data export.'}
+   490→      </p>
+   491→    </div>
+   492→  );
+   493→}
+   494→
+   495→/* ─── Refund Policy ─── */
+   496→function RefundSection({ isBn }: { isBn: boolean }) {
+   497→  const cls = isBn ? 'font-bangla' : '';
+   498→  return (
+   499→    <div className={`space-y-4 text-sm leading-relaxed ${cls}`}>
+   500→      <h2 className="text-base font-semibold text-foreground">{isBn ? '১. ফেরতের যোগ্যতা' : '1. Refund Eligibility'}</h2>
+   501→      <p className="text-muted-foreground">
+   502→        {isBn
+   503→          ? 'যাত্রা বাতিল হলে, টিকেট ভুল হলে, বা পরিবহন সংস্থা সেবা প্রদানে ব্যর্থ হলে সম্পূর্ণ ফেরত প্রযোজ্য। ক্রেতার ইচ্ছামূলক বাতিলের ক্ষেত্রে ফেরত শর্ত ভিন্ন হতে পারে।'
+   504→          : 'Full refunds are applicable when the journey is cancelled, the ticket is invalid, or the transport operator fails to provide the service. Refund conditions may differ for voluntary buyer cancellations.'}
+   505→      </p>
+   506→
+   507→      <h2 className="text-base font-semibold text-foreground">{isBn ? '২. ফেরত প্রক্রিয়া' : '2. Refund Process'}</h2>
+   508→      <p className="text-muted-foreground">
+   509→        {isBn
+   510→          ? 'ফেরত অনুরোধ জমা দেওয়ার পর আমরা ২৪-৪৮ ঘণ্টার মধ্যে যাচাই করি। অনুমোদিত ফেরত ৩-৫ কার্যদিবসের মধ্যে মূল পেমেন্ট পদ্ধতিতে ফেরত দেওয়া হয়।'
+   511→          : 'After submitting a refund request, we verify it within 24-48 hours. Approved refunds are returned to the original payment method within 3-5 business days.'}
+   512→      </p>
+   513→
+   514→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৩. আংশিক ফেরত' : '3. Partial Refunds'}</h2>
+   515→      <p className="text-muted-foreground">
+   516→        {isBn
+   517→          ? 'কিছু ক্ষেত্রে আংশিক ফেরত প্রযোজ্য হতে পারে, যেমন যাত্রায় বিলম্ব বা সেবার অসম্পূর্ণতা। আংশিক ফেরতের পরিমাণ পরিস্থিতি অনুযায়ী নির্ধারিত হয়।'
+   518→          : 'Partial refunds may apply in cases such as journey delays or incomplete service. The refund amount is determined based on the specific circumstances of each case.'}
+   519→      </p>
+   520→
+   521→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৪. বিরোধ সমাধান' : '4. Dispute Resolution'}</h2>
+   522→      <p className="text-muted-foreground">
+   523→        {isBn
+   524→          ? 'ফেরত সংক্রান্ত বিরোধে আমাদের সমাধান দল ৭ কার্যদিবসের মধ্যে সিদ্ধান্ত দেয়। উভয় পক্ষের যুক্তি শোনার পর ন্যায্য সিদ্ধান্ত নেওয়া হয়।'
+   525→          : 'For refund-related disputes, our resolution team makes a decision within 7 business days. A fair decision is reached after hearing arguments from both parties.'}
+   526→      </p>
+   527→    </div>
+   528→  );
+   529→}
+   530→
+   531→/* ─── Payment Policy ─── */
+   532→function PaymentPolicySection({ isBn }: { isBn: boolean }) {
+   533→  const cls = isBn ? 'font-bangla' : '';
+   534→  return (
+   535→    <div className={`space-y-4 text-sm leading-relaxed ${cls}`}>
+   536→      <h2 className="text-base font-semibold text-foreground">{isBn ? '১. গ্রহণযোগ্য পেমেন্ট পদ্ধতি' : '1. Accepted Payment Methods'}</h2>
+   537→      <p className="text-muted-foreground">
+   538→        {isBn
+   539→          ? 'আমরা bKash, Nagad, Rocket, এবং SSLCommerz এর মাধ্যমে পেমেন্ট গ্রহণ করি। সকল পেমেন্ট এনক্রিপ্টেড এবং সুরক্ষিত চ্যানেলের মাধ্যমে প্রক্রিয়া করা হয়।'
+   540→          : 'We accept payments through bKash, Nagad, Rocket, and SSLCommerz. All payments are processed through encrypted and secure channels.'}
+   541→      </p>
+   542→
+   543→      <h2 className="text-base font-semibold text-foreground">{isBn ? '২. এসক্রো ব্যবস্থা' : '2. Escrow System'}</h2>
+   544→      <p className="text-muted-foreground">
+   545→        {isBn
+   546→          ? 'ক্রেতার পেমেন্ট প্ল্যাটফর্মের এসক্রো অ্যাকাউন্টে ধরে রাখা হয়। যাত্রা সফলভাবে সম্পন্ন হলে বিক্রেতা পেমেন্ট পান। এই ব্যবস্থা ক্রেতা ও বিক্রেতা উভয়ের সুরক্ষা নিশ্চিত করে।'
+   547→          : 'Buyer payments are held in the platform\'s escrow account. Sellers receive payment only after the journey is successfully completed. This system ensures protection for both buyers and sellers.'}
+   548→      </p>
+   549→
+   550→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৩. প্ল্যাটফর্ম ফি' : '3. Platform Fee'}</h2>
+   551→      <p className="text-muted-foreground">
+   552→        {isBn
+   553→          ? 'প্রতিটি সফল লেনদেনে একটি ছোট প্ল্যাটফর্ম ফি প্রযোজ্য। এই ফি এসক্রো সুরক্ষা, যাচাই সেবা, এবং প্ল্যাটফর্ম রক্ষণাবেক্ষণের জন্য ব্যবহৃত হয়। ফি কাঠামো স্বচ্ছ এবং লেনদেনের আগে প্রদর্শিত হয়।'
+   554→          : 'A small platform fee applies to each successful transaction. This fee covers escrow protection, verification services, and platform maintenance. The fee structure is transparent and displayed before completing a transaction.'}
+   555→      </p>
+   556→
+   557→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৪. পেমেন্ট সুরক্ষা' : '4. Payment Security'}</h2>
+   558→      <p className="text-muted-foreground">
+   559→        {isBn
+   560→          ? 'সকল আর্থিক লেনদেন SSL এনক্রিপশনের মাধ্যমে সুরক্ষিত। আমরা PCI DSS মান অনুসরণ করি। কার্ডের তথ্য আমাদের সার্ভারে সংরক্ষণ করা হয় না।'
+   561→          : 'All financial transactions are protected through SSL encryption. We follow PCI DSS standards. Card information is never stored on our servers.'}
+   562→      </p>
+   563→    </div>
+   564→  );
+   565→}
+   566→
+   567→/* ─── Cookies Policy ─── */
+   568→function CookiesPolicySection({ isBn }: { isBn: boolean }) {
+   569→  const cls = isBn ? 'font-bangla' : '';
+   570→  return (
+   571→    <div className={`space-y-4 text-sm leading-relaxed ${cls}`}>
+   572→      <h2 className="text-base font-semibold text-foreground">{isBn ? '১. কুকিজ কি?' : '1. What Are Cookies?'}</h2>
+   573→      <p className="text-muted-foreground">
+   574→        {isBn
+   575→          ? 'কুকিজ হল ছোট টেক্সট ফাইল যা আপনার ব্রাউজারে সংরক্ষিত হয়। এগুলো আপনার পছন্দ মনে রাখতে এবং আপনার অভিজ্ঞতা উন্নত করতে সাহায্য করে।'
+   576→          : 'Cookies are small text files stored on your browser. They help remember your preferences and improve your experience on our platform.'}
+   577→      </p>
+   578→
+   579→      <h2 className="text-base font-semibold text-foreground">{isBn ? '২. আমরা কি কুকিজ ব্যবহার করি' : '2. How We Use Cookies'}</h2>
+   580→      <p className="text-muted-foreground">
+   581→        {isBn
+   582→          ? 'আমরা অধিবেশন কুকিজ (লগইন স্থিতি বজায় রাখতে), পছন্দ কুকিজ (ভাষা ও থিম মনে রাখতে), এবং বিশ্লেষণ কুকিজ (প্ল্যাটফর্মের কর্মক্ষমতা পরিমাপে) ব্যবহার করি।'
+   583→          : 'We use session cookies (to maintain login status), preference cookies (to remember language and theme), and analytics cookies (to measure platform performance).'}
+   584→      </p>
+   585→
+   586→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৩. কুকিজ পরিচালনা' : '3. Managing Cookies'}</h2>
+   587→      <p className="text-muted-foreground">
+   588→        {isBn
+   589→          ? 'আপনি ব্রাউজার সেটিংস থেকে কুকিজ নিষ্ক্রিয় করতে পারেন। তবে কিছু কুকিজ নিষ্ক্রিয় করলে প্ল্যাটফর্মের কিছু বৈশিষ্ট্য সঠিকভাবে কাজ না করতে পারে।'
+   590→          : 'You can disable cookies through your browser settings. However, disabling certain cookies may affect some platform features from working properly.'}
+   591→      </p>
+   592→
+   593→      <h2 className="text-base font-semibold text-foreground">{isBn ? '৪. তৃতীয় পক্ষের কুকিজ' : '4. Third-Party Cookies'}</h2>
+   594→      <p className="text-muted-foreground">
+   595→        {isBn
+   596→          ? 'আমরা বিশ্লেষণ ও পেমেন্ট প্রক্রিয়াকরণের জন্য তৃতীয় পক্ষের কুকিজ ব্যবহার করতে পারি। এই কুকিজ তাদের নিজস্ব গোপনীয়তা নীতির অধীন।'
+   597→          : 'We may use third-party cookies for analytics and payment processing. These cookies are subject to their own privacy policies.'}
+   598→      </p>
+   599→    </div>
+   600→  );
+   601→}
+   602→
+   603→/* ─── Safety Guidelines ─── */
+   604→function SafetyGuidelinesSection({ isBn }: { isBn: boolean }) {
+   605→  const cls = isBn ? 'font-bangla' : '';
+   606→  const tips = [
+   607→    {
+   608→      icon: ShieldCheck,
+   609→      title: isBn ? 'যাচাইকৃত বিক্রেতা থেকে কিনুন' : 'Buy from Verified Sellers',
+   610→      desc: isBn
+   611→        ? 'সবুজ যাচাই ব্যাজসহ বিক্রেতাদের থেকে টিকেট কিনুন। যাচাইকৃত বিক্রেতারা KYC প্রক্রিয়া সম্পন্ন করেছেন।'
+   612→        : 'Always buy tickets from sellers with the green verification badge. Verified sellers have completed our KYC process.',
+   613→    },
+   614→    {
+   615→      icon: CreditCard,
+   616→      title: isBn ? 'প্ল্যাটফর্মের মাধ্যমে পেমেন্ট করুন' : 'Pay Through the Platform',
+   617→      desc: isBn
+   618→        ? 'কখনো সরাসরি বিক্রেতাকে পেমেন্ট করবেন না। প্ল্যাটফর্মের এসক্রো পেমেন্ট আপনার অর্থ সুরক্ষিত রাখে।'
+   619→        : 'Never pay sellers directly outside the platform. Our escrow payment system protects your money until the journey is complete.',
+   620→    },
+   621→    {
+   622→      icon: AlertTriangle,
+   623→      title: isBn ? 'সন্দেহজনক অফার এড়িয়ে চলুন' : 'Avoid Suspicious Offers',
+   624→      desc: isBn
+   625→        ? 'অস্বাভাবিক কম দাম বা জরুরি বিক্রির অফার সন্দেহজনক হতে পারে। বাজার মূল্যের চেয়ে অনেক কম দামে সতর্ক থাকুন।'
+   626→        : 'Unusually low prices or urgent sale offers may be suspicious. Be cautious of prices significantly below market value.',
+   627→    },
+   628→    {
+   629→      icon: Shield,
+   630→      title: isBn ? 'টিকেট যাচাই করুন' : 'Verify Your Ticket',
+   631→      desc: isBn
+   632→        ? 'টিকেট কেনার পর অবিলম্বে যাচাই করুন। আমাদের যাচাই সিস্টেম ব্যবহার করে টিকেটের বৈধতা নিশ্চিত করুন।'
+   633→        : 'Verify your ticket immediately after purchase. Use our verification system to confirm ticket validity before your journey.',
+   634→    },
+   635→    {
+   636→      icon: FileText,
+   637→      title: isBn ? 'লেনদেনের রেকর্ড রাখুন' : 'Keep Transaction Records',
+   638→      desc: isBn
+   639→        ? 'সকল লেনদেনের রসিদ ও যোগাযোগের রেকর্ড সংরক্ষণ করুন। বিরোধের ক্ষেত্রে এই রেকর্ড সহায়ক।'
+   640→        : 'Save receipts and communication records for all transactions. These records are helpful in case of disputes.',
+   641→    },
+   642→    {
+   643→      icon: MessageCircle,
+   644→      title: isBn ? 'সমস্যায় রিপোর্ট করুন' : 'Report Issues',
+   645→      desc: isBn
+   646→        ? 'কোনো সন্দেহজনক কার্যকলাপ বা সমস্যা দেখলে অবিলম্বে রিপোর্ট করুন। আমাদের সাহায্য দল ২৪/৭ উপলব্ধ।'
+   647→        : 'Report any suspicious activity or issues immediately. Our support team is available 24/7 to assist you.',
+   648→    },
+   649→  ];
+   650→
+   651→  return (
+   652→    <div className="space-y-3">
+   653→      <p className={`text-sm leading-relaxed text-muted-foreground mb-4 ${cls}`}>
+   654→        {isBn
+   655→          ? 'আপনার নিরাপত্তা আমাদের অগ্রাধিকার। নিরাপদ লেনদেনের জন্য এই নির্দেশিকাগুলো অনুসরণ করুন।'
+   656→          : 'Your safety is our priority. Follow these guidelines for secure transactions on our platform.'}
+   657→      </p>
+   658→      {tips.map((tip, i) => (
+   659→        <Card key={i} className="border-border/50 shadow-none">
+   660→          <CardContent className="p-4 flex items-start gap-3">
+   661→            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+   662→              <tip.icon className="w-4 h-4 text-primary" />
+   663→            </div>
+   664→            <div className="min-w-0">
+   665→              <p className={`font-medium text-sm ${cls}`}>{tip.title}</p>
+   666→              <p className={`text-sm text-muted-foreground mt-0.5 ${cls}`}>{tip.desc}</p>
+   667→            </div>
+   668→          </CardContent>
+   669→        </Card>
+   670→      ))}
+   671→    </div>
+   672→  );
+   673→}
+   674→
+   675→/* ─── Default Legal Content ─── */
+   676→function DefaultContent({ title, isBn }: { title: string; isBn: boolean }) {
+   677→  const cls = isBn ? 'font-bangla' : '';
+   678→  return (
+   679→    <div className={`space-y-4 text-sm leading-relaxed ${cls}`}>
+   680→      <p className="text-muted-foreground">
+   681→        {isBn
+   682→          ? `${title} পৃষ্ঠার বিষয়বস্তু এখানে প্রদর্শিত হবে। এই নীতি সকল ব্যবহারকারীর জন্য প্রযোজ্য এবং প্ল্যাটফর্ম ব্যবহারের শর্ত ও নিয়মাবলী নির্ধারণ করে।`
+   683→          : `Content for the ${title} page will be displayed here. This policy applies to all users and establishes the terms and conditions for platform use.`}
+   684→      </p>
+   685→      <p className="text-muted-foreground">
+   686→        {isBn
+   687→          ? 'সকল লেনদেন এসক্রো সুরক্ষায় সম্পন্ন হয় এবং ক্রেতা-বিক্রেতা উভয়ের অধিকার সংরক্ষিত থাকে।'
+   688→          : 'All transactions are completed under escrow protection, with rights reserved for both buyers and sellers.'}
+   689→      </p>
+   690→    </div>
+   691→  );
+   692→}
+   693→
+   694→/* ─── Main Component ─── */
+   695→export default function InfoPage({ section, slug }: { section: string; slug?: string }) {
+   696→  const { language } = useLanguageStore();
+   697→  const sectionInfo = sections[section];
+   698→  const isBn = language === 'bn';
+   699→
+   700→  if (!sectionInfo) {
+   701→    return (
+   702→      <div className="max-w-3xl mx-auto px-4 py-8 lg:py-12">
+   703→        <p className={`text-center text-muted-foreground py-20 ${isBn ? 'font-bangla' : ''}`}>
+   704→          {t('noData', language)}
+   705→        </p>
+   706→      </div>
+   707→    );
+   708→  }
+   709→
+   710→  const Icon = sectionInfo.icon;
+   711→  const title = isBn ? sectionInfo.titleBn : sectionInfo.title;
+   712→
+   713→  const renderContent = () => {
+   714→    switch (section) {
+   715→      case 'about':
+   716→        return <AboutSection isBn={isBn} />;
+   717→      case 'contact':
+   718→        return <ContactSection isBn={isBn} language={language} />;
+   719→      case 'how-it-works':
+   720→        return <HowItWorksSection isBn={isBn} language={language} />;
+   721→      case 'faq':
+   722→        return <FAQSection isBn={isBn} />;
+   723→      case 'blog':
+   724→        return <BlogSection isBn={isBn} />;
+   725→      case 'support':
+   726→        return <SupportSection isBn={isBn} language={language} />;
+   727→      case 'chat':
+   728→        return <ChatSection isBn={isBn} language={language} />;
+   729→      case 'notifications':
+   730→        return <NotificationsSection isBn={isBn} />;
+   731→      case 'terms':
+   732→        return <TermsSection isBn={isBn} />;
+   733→      case 'privacy':
+   734→        return <PrivacySection isBn={isBn} />;
+   735→      case 'refund':
+   736→        return <RefundSection isBn={isBn} />;
+   737→      case 'payment-policy':
+   738→        return <PaymentPolicySection isBn={isBn} />;
+   739→      case 'cookies-policy':
+   740→        return <CookiesPolicySection isBn={isBn} />;
+   741→      case 'safety-guidelines':
+   742→        return <SafetyGuidelinesSection isBn={isBn} />;
+   743→      default:
+   744→        return <DefaultContent title={title} isBn={isBn} />;
+   745→    }
+   746→  };
+   747→
+   748→  return (
+   749→    <div className="max-w-3xl mx-auto px-4 py-8 lg:py-12">
+   750→      <PageHeader icon={Icon} title={title} isBn={isBn} />
+   751→      {renderContent()}
+   752→    </div>
+   753→  );
+   754→}
+   755→

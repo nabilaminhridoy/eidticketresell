@@ -1,0 +1,615 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect } from 'react';
+     4→import { useTheme } from 'next-themes';
+     5→import {
+     6→  Moon, Sun, Monitor, Globe, Menu, ChevronDown,
+     7→  Bus, TrainFront, Plane, Ship, Ticket, LogOut,
+     8→  User, Wallet, Settings, Shield, Bell, LayoutDashboard,
+     9→  MoonStar
+    10→} from 'lucide-react';
+    11→import { Button } from '@/components/ui/button';
+    12→import {
+    13→  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    14→  DropdownMenuSeparator, DropdownMenuTrigger,
+    15→  DropdownMenuLabel
+    16→} from '@/components/ui/dropdown-menu';
+    17→import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+    18→import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+    19→import { Badge } from '@/components/ui/badge';
+    20→import { Separator } from '@/components/ui/separator';
+    21→import { useAuthStore, useLanguageStore } from '@/lib/store';
+    22→import { useNav } from '@/lib/use-nav';
+    23→import { usePathname, useRouter } from 'next/navigation';
+    24→import { getPagePath } from '@/lib/navigation';
+    25→import { t } from '@/lib/i18n';
+    26→import type { Language } from '@/lib/i18n';
+    27→
+    28→const transportItems = [
+    29→  { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const },
+    30→  { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const },
+    31→  { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const },
+    32→  { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const },
+    33→];
+    34→
+    35→export default function Header() {
+    36→  const [scrolled, setScrolled] = useState(false);
+    37→  const [mobileOpen, setMobileOpen] = useState(false);
+    38→  const { theme, setTheme } = useTheme();
+    39→  const { navigate } = useNav();
+    40→  const pathname = usePathname();
+    41→  const router = useRouter();
+    42→  const { language, setLanguage } = useLanguageStore();
+    43→  const { user, isAuthenticated, logout } = useAuthStore();
+    44→
+    45→  useEffect(() => {
+    46→    const handleScroll = () => setScrolled(window.scrollY > 10);
+    47→    window.addEventListener('scroll', handleScroll, { passive: true });
+    48→    return () => window.removeEventListener('scroll', handleScroll);
+    49→  }, []);
+    50→
+    51→  // Track previous pathname to close mobile menu on navigation
+    52→  const [prevPath, setPrevPath] = useState(pathname);
+    53→  if (prevPath !== pathname) {
+    54→    setPrevPath(pathname);
+    55→    setMobileOpen(false);
+    56→  }
+    57→
+    58→  const switchLanguage = () => {
+    59→    const newLang = language === 'en' ? 'bn' : 'en';
+    60→    setLanguage(newLang);
+    61→    const pathWithoutLang = pathname.replace(/^\/(en|bn)/, '');
+    62→    router.push(`/${newLang}${pathWithoutLang || '/'}`);
+    63→  };
+    64→
+    65→  const handleNavigate = (page: string) => {
+    66→    navigate(page as Parameters<typeof navigate>[0]);
+    67→  };
+    68→
+    69→  const getInitials = (name: string) => {
+    70→    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    71→  };
+    72→
+    73→  const isActive = (page: string) => {
+    74→    const targetPath = getPagePath(language, page);
+    75→    if (['search', 'bus', 'train', 'flight', 'launch'].includes(page)) {
+    76→      return pathname.startsWith(`/${language}/buy-tickets`);
+    77→    }
+    78→    return pathname === targetPath;
+    79→  };
+    80→
+    81→  return (
+    82→    <header
+    83→      className={`sticky top-0 z-50 w-full transition-all duration-300 animate-slide-down ${
+    84→        scrolled
+    85→          ? 'glass shadow-lg border-b border-border/50'
+    86→          : 'bg-background/95 backdrop-blur-sm border-b border-border/30'
+    87→      }`}
+    88→    >
+    89→      <div className="container mx-auto flex h-16 items-center justify-between px-3 sm:px-4 lg:px-8 overflow-hidden">
+    90→        {/* Logo */}
+    91→        <button
+    92→          onClick={() => handleNavigate('home')}
+    93→          className="flex items-center gap-2 group min-w-0 shrink-0 sm:shrink hover:scale-[1.02] active:scale-[0.98] transition-transform"
+    94→        >
+    95→          <div className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-md group-hover:shadow-primary/30 transition-shadow shrink-0">
+    96→            <MoonStar className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
+    97→          </div>
+    98→          <div className="flex flex-col min-w-0">
+    99→            <span className={`text-sm sm:text-lg font-bold leading-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+   100→              {t('appName', language)}
+   101→            </span>
+   102→            <span className={`text-[9px] sm:text-[10px] text-muted-foreground leading-tight truncate hidden sm:block ${language === 'bn' ? 'font-bangla' : ''}`}>
+   103→              {t('appSlogan', language)}
+   104→            </span>
+   105→          </div>
+   106→        </button>
+   107→
+   108→        {/* Desktop Navigation */}
+   109→        <nav className="hidden lg:flex items-center gap-1">
+   110→          <NavButton
+   111→            active={isActive('home')}
+   112→            onClick={() => handleNavigate('home')}
+   113→            label={t('home', language)}
+   114→            lang={language}
+   115→          />
+   116→
+   117→          {/* Buy Tickets Dropdown */}
+   118→          <DropdownMenu>
+   119→            <DropdownMenuTrigger asChild>
+   120→              <button
+   121→                className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+   122→                  pathname.startsWith(`/${language}/buy-tickets`)
+   123→                    ? 'bg-accent text-accent-foreground'
+   124→                    : 'text-muted-foreground'
+   125→                } ${language === 'bn' ? 'font-bangla' : ''}`}
+   126→              >
+   127→                <Ticket className="w-4 h-4" />
+   128→                {t('buyTickets', language)}
+   129→                <ChevronDown className="w-3 h-3 opacity-50" />
+   130→              </button>
+   131→            </DropdownMenuTrigger>
+   132→            <DropdownMenuContent align="center" className="w-52">
+   133→              <DropdownMenuLabel className={language === 'bn' ? 'font-bangla' : ''}>
+   134→                {t('transport', language)}
+   135→              </DropdownMenuLabel>
+   136→              <DropdownMenuSeparator />
+   137→              {transportItems.map((item) => (
+   138→                <DropdownMenuItem
+   139→                  key={item.id}
+   140→                  onClick={() => handleNavigate(item.id)}
+   141→                  className={`cursor-pointer gap-3 ${language === 'bn' ? 'font-bangla' : ''}`}
+   142→                >
+   143→                  <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
+   144→                    <item.icon className="w-4 h-4 text-primary" />
+   145→                  </div>
+   146→                  <div className="flex flex-col">
+   147→                    <span className="font-medium">{t(item.labelKey, language)}</span>
+   148→                    <span className="text-xs text-muted-foreground">
+   149→                      {language === 'bn'
+   150→                        ? `${t(item.labelKey, language)} টিকেট`
+   151→                        : `${t(item.labelKey, language)} Tickets`}
+   152→                    </span>
+   153→                  </div>
+   154→                </DropdownMenuItem>
+   155→              ))}
+   156→            </DropdownMenuContent>
+   157→          </DropdownMenu>
+   158→
+   159→          <NavButton
+   160→            active={isActive('sell-ticket') || isActive('create-ticket')}
+   161→            onClick={() => handleNavigate('sell-ticket')}
+   162→            label={t('sellTickets', language)}
+   163→            lang={language}
+   164→          />
+   165→
+   166→          <NavButton
+   167→            active={isActive('how-it-works')}
+   168→            onClick={() => handleNavigate('how-it-works')}
+   169→            label={t('howItWorks', language)}
+   170→            lang={language}
+   171→          />
+   172→
+   173→          <NavButton
+   174→            active={isActive('faq')}
+   175→            onClick={() => handleNavigate('faq')}
+   176→            label={t('faq', language)}
+   177→            lang={language}
+   178→          />
+   179→        </nav>
+   180→
+   181→        {/* Right Side Actions */}
+   182→        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+   183→          {/* Language Switcher */}
+   184→          <Button
+   185→            variant="ghost"
+   186→            size="sm"
+   187→            onClick={switchLanguage}
+   188→            className="gap-1.5 text-sm font-medium min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 active:scale-95 transition-transform"
+   189→          >
+   190→            <Globe className="w-4 h-4 text-primary" />
+   191→            <span className="hidden sm:inline">{language === 'en' ? 'বাংলা' : 'EN'}</span>
+   192→          </Button>
+   193→
+   194→          {/* Theme Toggle */}
+   195→          <DropdownMenu>
+   196→            <DropdownMenuTrigger asChild>
+   197→              <Button variant="ghost" size="icon" className="relative min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
+   198→                <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+   199→                <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+   200→                <span className="sr-only">Toggle theme</span>
+   201→              </Button>
+   202→            </DropdownMenuTrigger>
+   203→            <DropdownMenuContent align="end">
+   204→              <DropdownMenuItem onClick={() => setTheme('light')} className={language === 'bn' ? 'font-bangla' : ''}>
+   205→                <Sun className="w-4 h-4 mr-2" />
+   206→                {t('lightMode', language)}
+   207→                {theme === 'light' && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
+   208→              </DropdownMenuItem>
+   209→              <DropdownMenuItem onClick={() => setTheme('dark')} className={language === 'bn' ? 'font-bangla' : ''}>
+   210→                <Moon className="w-4 h-4 mr-2" />
+   211→                {t('darkMode', language)}
+   212→                {theme === 'dark' && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
+   213→              </DropdownMenuItem>
+   214→              <DropdownMenuItem onClick={() => setTheme('system')} className={language === 'bn' ? 'font-bangla' : ''}>
+   215→                <Monitor className="w-4 h-4 mr-2" />
+   216→                {t('systemMode', language)}
+   217→                {theme === 'system' && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
+   218→              </DropdownMenuItem>
+   219→            </DropdownMenuContent>
+   220→          </DropdownMenu>
+   221→
+   222→          {/* Auth Buttons or User Menu */}
+   223→          {isAuthenticated && user ? (
+   224→            <DropdownMenu>
+   225→              <DropdownMenuTrigger asChild>
+   226→                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+   227→                  <Avatar className="h-8 w-8 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+   228→                    <AvatarImage src={user.avatar} alt={user.name} />
+   229→                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+   230→                      {getInitials(user.name)}
+   231→                    </AvatarFallback>
+   232→                  </Avatar>
+   233→                  {user.isKycVerified && (
+   234→                    <div className="absolute -bottom-0.5 -right-0.5">
+   235→                      <Shield className="w-3.5 h-3.5 text-primary fill-primary" />
+   236→                    </div>
+   237→                  )}
+   238→                </Button>
+   239→              </DropdownMenuTrigger>
+   240→              <DropdownMenuContent className="w-56" align="end" forceMount>
+   241→                <DropdownMenuLabel className="font-normal">
+   242→                  <div className="flex flex-col space-y-1">
+   243→                    <p className="text-sm font-medium leading-none">{user.name}</p>
+   244→                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+   245→                    {user.isKycVerified && (
+   246→                      <Badge variant="secondary" className="w-fit mt-1 gap-1">
+   247→                        <Shield className="w-3 h-3" />
+   248→                        {t('verified', language)}
+   249→                      </Badge>
+   250→                    )}
+   251→                  </div>
+   252→                </DropdownMenuLabel>
+   253→                <DropdownMenuSeparator />
+   254→                <DropdownMenuItem onClick={() => handleNavigate('profile')} className={language === 'bn' ? 'font-bangla' : ''}>
+   255→                  <User className="w-4 h-4 mr-2" />
+   256→                  {t('profile', language)}
+   257→                </DropdownMenuItem>
+   258→                <DropdownMenuItem onClick={() => handleNavigate('settings')} className={language === 'bn' ? 'font-bangla' : ''}>
+   259→                  <Settings className="w-4 h-4 mr-2" />
+   260→                  {t('settings', language)}
+   261→                </DropdownMenuItem>
+   262→                <DropdownMenuItem onClick={() => handleNavigate('wallet')} className={language === 'bn' ? 'font-bangla' : ''}>
+   263→                  <Wallet className="w-4 h-4 mr-2" />
+   264→                  {t('wallet', language)}
+   265→                </DropdownMenuItem>
+   266→                <DropdownMenuItem onClick={() => handleNavigate('my-tickets')} className={language === 'bn' ? 'font-bangla' : ''}>
+   267→                  <Ticket className="w-4 h-4 mr-2" />
+   268→                  {t('myTickets', language)}
+   269→                </DropdownMenuItem>
+   270→                <DropdownMenuItem onClick={() => handleNavigate('my-orders')} className={language === 'bn' ? 'font-bangla' : ''}>
+   271→                  <LayoutDashboard className="w-4 h-4 mr-2" />
+   272→                  {t('myOrders', language)}
+   273→                </DropdownMenuItem>
+   274→                <DropdownMenuItem onClick={() => handleNavigate('notifications')} className={language === 'bn' ? 'font-bangla' : ''}>
+   275→                  <Bell className="w-4 h-4 mr-2" />
+   276→                  {t('notifications', language)}
+   277→                </DropdownMenuItem>
+   278→                {!user.isKycVerified && (
+   279→                  <DropdownMenuItem onClick={() => handleNavigate('kyc')} className={language === 'bn' ? 'font-bangla' : ''}>
+   280→                    <Shield className="w-4 h-4 mr-2" />
+   281→                    {t('kycVerification', language)}
+   282→                  </DropdownMenuItem>
+   283→                )}
+   284→                <DropdownMenuSeparator />
+   285→                <DropdownMenuItem
+   286→                  onClick={() => {
+   287→                    logout();
+   288→                    handleNavigate('home');
+   289→                  }}
+   290→                  className="text-destructive focus:text-destructive"
+   291→                >
+   292→                  <LogOut className="w-4 h-4 mr-2" />
+   293→                  {t('logout', language)}
+   294→                </DropdownMenuItem>
+   295→              </DropdownMenuContent>
+   296→            </DropdownMenu>
+   297→          ) : (
+   298→            <div className="hidden sm:flex items-center gap-2">
+   299→              <Button
+   300→                variant="ghost"
+   301→                size="sm"
+   302→                onClick={() => handleNavigate('login')}
+   303→                className={language === 'bn' ? 'font-bangla' : ''}
+   304→              >
+   305→                {t('login', language)}
+   306→              </Button>
+   307→              <Button
+   308→                size="sm"
+   309→                onClick={() => handleNavigate('register')}
+   310→                className="bg-gradient-to-r from-primary to-primary/90 shadow-md hover:shadow-primary/25 transition-shadow"
+   311→              >
+   312→                {t('register', language)}
+   313→              </Button>
+   314→            </div>
+   315→          )}
+   316→
+   317→          {/* Mobile Menu */}
+   318→          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+   319→            <SheetTrigger asChild>
+   320→              <Button variant="ghost" size="icon" className="lg:hidden min-h-[44px] min-w-[44px]">
+   321→                <Menu className="w-5 h-5" />
+   322→                <span className="sr-only">Open menu</span>
+   323→              </Button>
+   324→            </SheetTrigger>
+   325→            <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 overflow-y-auto">
+   326→              <SheetHeader className="p-5 pb-3">
+   327→                <SheetTitle className="flex items-center gap-2">
+   328→                  <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80">
+   329→                    <MoonStar className="w-5 h-5 text-primary-foreground" />
+   330→                  </div>
+   331→                  <span className={`text-lg bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent ${language === 'bn' ? 'font-bangla' : ''}`}>
+   332→                    {t('appName', language)}
+   333→                  </span>
+   334→                </SheetTitle>
+   335→              </SheetHeader>
+   336→
+   337→              <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto custom-scrollbar">
+   338→                {/* Mobile User Info */}
+   339→                {isAuthenticated && user && (
+   340→                  <div className="px-5 py-4 border-b">
+   341→                    <div className="flex items-center gap-3">
+   342→                      <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+   343→                        <AvatarImage src={user.avatar} alt={user.name} />
+   344→                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+   345→                          {getInitials(user.name)}
+   346→                        </AvatarFallback>
+   347→                      </Avatar>
+   348→                      <div className="flex-1 min-w-0">
+   349→                        <p className="text-sm font-medium truncate">{user.name}</p>
+   350→                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+   351→                      </div>
+   352→                      {user.isKycVerified && (
+   353→                        <Badge variant="secondary" className="gap-1 shrink-0">
+   354→                          <Shield className="w-3 h-3" />
+   355→                          {t('verified', language)}
+   356→                        </Badge>
+   357→                      )}
+   358→                    </div>
+   359→                  </div>
+   360→                )}
+   361→
+   362→                {/* Mobile Nav Links */}
+   363→                <nav className="flex flex-col px-3 py-2">
+   364→                  <MobileNavItem
+   365→                    icon={<Ticket className="w-5 h-5" />}
+   366→                    label={t('home', language)}
+   367→                    active={isActive('home')}
+   368→                    onClick={() => handleNavigate('home')}
+   369→                    lang={language}
+   370→                  />
+   371→
+   372→                  {/* Buy Tickets Section */}
+   373→                  <div className="px-2 py-2 mt-1">
+   374→                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
+   375→                      {t('buyTickets', language)}
+   376→                    </p>
+   377→                  </div>
+   378→                  {transportItems.map((item) => (
+   379→                    <MobileNavItem
+   380→                      key={item.id}
+   381→                      icon={<item.icon className="w-5 h-5" />}
+   382→                      label={`${t(item.labelKey, language)} ${t('tickets', language)}`}
+   383→                      active={isActive(item.id)}
+   384→                      onClick={() => handleNavigate(item.id)}
+   385→                      lang={language}
+   386→                    />
+   387→                  ))}
+   388→
+   389→                  <div className="px-2 py-2 mt-1">
+   390→                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
+   391→                      {t('sellTickets', language)}
+   392→                    </p>
+   393→                  </div>
+   394→                  <MobileNavItem
+   395→                    icon={<Ticket className="w-5 h-5" />}
+   396→                    label={t('sellTickets', language)}
+   397→                    active={isActive('sell-ticket') || isActive('create-ticket')}
+   398→                    onClick={() => handleNavigate('sell-ticket')}
+   399→                    lang={language}
+   400→                  />
+   401→
+   402→                  <div className="px-2 py-2 mt-1">
+   403→                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider`}>
+   404→                      Info
+   405→                    </p>
+   406→                  </div>
+   407→                  <MobileNavItem
+   408→                    icon={<Ticket className="w-5 h-5" />}
+   409→                    label={t('howItWorks', language)}
+   410→                    active={isActive('how-it-works')}
+   411→                    onClick={() => handleNavigate('how-it-works')}
+   412→                    lang={language}
+   413→                  />
+   414→                  <MobileNavItem
+   415→                    icon={<Ticket className="w-5 h-5" />}
+   416→                    label={t('faq', language)}
+   417→                    active={isActive('faq')}
+   418→                    onClick={() => handleNavigate('faq')}
+   419→                    lang={language}
+   420→                  />
+   421→                  <MobileNavItem
+   422→                    icon={<Ticket className="w-5 h-5" />}
+   423→                    label={t('support', language)}
+   424→                    active={isActive('support')}
+   425→                    onClick={() => handleNavigate('support')}
+   426→                    lang={language}
+   427→                  />
+   428→                </nav>
+   429→
+   430→                {/* Mobile Auth / User Actions */}
+   431→                <Separator className="my-1" />
+   432→                {isAuthenticated && user ? (
+   433→                  <nav className="flex flex-col px-3 py-2">
+   434→                    <MobileNavItem
+   435→                      icon={<User className="w-5 h-5" />}
+   436→                      label={t('profile', language)}
+   437→                      active={isActive('profile')}
+   438→                      onClick={() => handleNavigate('profile')}
+   439→                      lang={language}
+   440→                    />
+   441→                    <MobileNavItem
+   442→                      icon={<Wallet className="w-5 h-5" />}
+   443→                      label={t('wallet', language)}
+   444→                      active={isActive('wallet')}
+   445→                      onClick={() => handleNavigate('wallet')}
+   446→                      lang={language}
+   447→                    />
+   448→                    <MobileNavItem
+   449→                      icon={<Ticket className="w-5 h-5" />}
+   450→                      label={t('myTickets', language)}
+   451→                      active={isActive('my-tickets')}
+   452→                      onClick={() => handleNavigate('my-tickets')}
+   453→                      lang={language}
+   454→                    />
+   455→                    <MobileNavItem
+   456→                      icon={<LayoutDashboard className="w-5 h-5" />}
+   457→                      label={t('myOrders', language)}
+   458→                      active={isActive('my-orders')}
+   459→                      onClick={() => handleNavigate('my-orders')}
+   460→                      lang={language}
+   461→                    />
+   462→                    <MobileNavItem
+   463→                      icon={<Bell className="w-5 h-5" />}
+   464→                      label={t('notifications', language)}
+   465→                      active={isActive('notifications')}
+   466→                      onClick={() => handleNavigate('notifications')}
+   467→                      lang={language}
+   468→                    />
+   469→                    {!user.isKycVerified && (
+   470→                      <MobileNavItem
+   471→                        icon={<Shield className="w-5 h-5" />}
+   472→                        label={t('kycVerification', language)}
+   473→                        active={isActive('kyc')}
+   474→                        onClick={() => handleNavigate('kyc')}
+   475→                        lang={language}
+   476→                      />
+   477→                    )}
+   478→                    <MobileNavItem
+   479→                      icon={<Settings className="w-5 h-5" />}
+   480→                      label={t('settings', language)}
+   481→                      active={isActive('settings')}
+   482→                      onClick={() => handleNavigate('settings')}
+   483→                      lang={language}
+   484→                    />
+   485→                    <Separator className="my-1" />
+   486→                    <MobileNavItem
+   487→                      icon={<LogOut className="w-5 h-5" />}
+   488→                      label={t('logout', language)}
+   489→                      active={false}
+   490→                      onClick={() => {
+   491→                        logout();
+   492→                        handleNavigate('home');
+   493→                      }}
+   494→                      lang={language}
+   495→                      destructive
+   496→                    />
+   497→                  </nav>
+   498→                ) : (
+   499→                  <div className="px-5 py-4 flex flex-col gap-3">
+   500→                    <Button
+   501→                      variant="outline"
+   502→                      className="w-full min-h-[44px]"
+   503→                      onClick={() => handleNavigate('login')}
+   504→                    >
+   505→                      {t('login', language)}
+   506→                    </Button>
+   507→                    <Button
+   508→                      className="w-full min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+   509→                      onClick={() => handleNavigate('register')}
+   510→                    >
+   511→                      {t('register', language)}
+   512→                    </Button>
+   513→                  </div>
+   514→                )}
+   515→
+   516→                {/* Mobile Footer Controls */}
+   517→                <div className="mt-auto border-t px-5 py-4 flex items-center justify-between gap-3">
+   518→                  <Button
+   519→                    variant="outline"
+   520→                    size="sm"
+   521→                    onClick={switchLanguage}
+   522→                    className="gap-1.5 min-h-[44px]"
+   523→                  >
+   524→                    <Globe className="w-4 h-4 text-primary" />
+   525→                    {language === 'en' ? 'বাংলা' : 'English'}
+   526→                  </Button>
+   527→                  <div className="flex items-center gap-1">
+   528→                    {(['light', 'dark', 'system'] as const).map((mode) => (
+   529→                      <Button
+   530→                        key={mode}
+   531→                        variant={theme === mode ? 'default' : 'ghost'}
+   532→                        size="icon"
+   533→                        className="h-10 w-10 min-h-[44px] min-w-[44px]"
+   534→                        onClick={() => setTheme(mode)}
+   535→                      >
+   536→                        {mode === 'light' && <Sun className="w-4 h-4" />}
+   537→                        {mode === 'dark' && <Moon className="w-4 h-4" />}
+   538→                        {mode === 'system' && <Monitor className="w-4 h-4" />}
+   539→                      </Button>
+   540→                    ))}
+   541→                  </div>
+   542→                </div>
+   543→              </div>
+   544→            </SheetContent>
+   545→          </Sheet>
+   546→        </div>
+   547→      </div>
+   548→    </header>
+   549→  );
+   550→}
+   551→
+   552→// Desktop Nav Button — pure CSS, no framer-motion
+   553→function NavButton({
+   554→  active,
+   555→  onClick,
+   556→  label,
+   557→  lang,
+   558→}: {
+   559→  active: boolean;
+   560→  onClick: () => void;
+   561→  label: string;
+   562→  lang: Language;
+   563→}) {
+   564→  return (
+   565→    <button
+   566→      onClick={onClick}
+   567→      className={`relative px-3 py-2 rounded-md text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98] ${
+   568→        active
+   569→          ? 'text-primary bg-primary/10'
+   570→          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+   571→      } ${lang === 'bn' ? 'font-bangla' : ''}`}
+   572→    >
+   573→      {label}
+   574→      {active && (
+   575→        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 bg-primary rounded-full" />
+   576→      )}
+   577→    </button>
+   578→  );
+   579→}
+   580→
+   581→// Mobile Nav Item — pure CSS, no framer-motion
+   582→function MobileNavItem({
+   583→  icon,
+   584→  label,
+   585→  active,
+   586→  onClick,
+   587→  lang,
+   588→  destructive = false,
+   589→}: {
+   590→  icon: React.ReactNode;
+   591→  label: string;
+   592→  active: boolean;
+   593→  onClick: () => void;
+   594→  lang: Language;
+   595→  destructive?: boolean;
+   596→}) {
+   597→  return (
+   598→    <button
+   599→      onClick={onClick}
+   600→      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all w-full text-left min-h-[44px] active:scale-[0.98] ${
+   601→        active
+   602→          ? 'bg-primary/10 text-primary'
+   603→          : destructive
+   604→          ? 'text-destructive hover:bg-destructive/10'
+   605→          : 'text-foreground hover:bg-accent'
+   606→      } ${lang === 'bn' ? 'font-bangla' : ''}`}
+   607→    >
+   608→      <span className={active ? 'text-primary' : destructive ? 'text-destructive' : 'text-muted-foreground'}>
+   609→        {icon}
+   610→      </span>
+   611→      {label}
+   612→    </button>
+   613→  );
+   614→}
+   615→

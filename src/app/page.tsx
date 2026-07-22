@@ -127,82 +127,65 @@ function HomePage() {
   };
 
   const transportTypes = [
-    { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, gradient: 'icon-bg-green', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
-    { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const, gradient: 'icon-bg-blue', lightBg: 'bg-blue/10', hoverBorder: 'hover:border-blue/30' },
-    { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const, gradient: 'icon-bg-orange', lightBg: 'bg-orange/10', hoverBorder: 'hover:border-orange/30' },
-    { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, gradient: 'icon-bg-green', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
+    { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, iconBg: 'bg-primary text-primary-foreground', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
+    { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const, iconBg: 'bg-blue text-blue-foreground', lightBg: 'bg-blue/10', hoverBorder: 'hover:border-blue/30' },
+    { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const, iconBg: 'bg-orange text-orange-foreground', lightBg: 'bg-orange/10', hoverBorder: 'hover:border-orange/30' },
+    { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, iconBg: 'bg-primary text-primary-foreground', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
   ];
 
   const features = [
     {
       icon: Shield, title: t('verified', language) + ' ' + t('seller', language),
       desc: language === 'en' ? 'All sellers go through KYC verification for your safety' : 'আপনার নিরাপত্তার জন্য সকল বিক্রেতা কেওয়াইসি যাচাইয় যান',
-      gradient: 'icon-bg-green'
+      iconBg: 'bg-primary text-primary-foreground'
     },
     {
       icon: Star, title: language === 'en' ? 'Escrow Protection' : 'এসক্রো সুরক্ষা',
       desc: language === 'en' ? 'Your payment is held securely until the journey is complete' : 'যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট নিরাপদে রাখা হয়',
-      gradient: 'icon-bg-orange'
+      iconBg: 'bg-orange text-orange-foreground'
     },
     {
       icon: Zap, title: language === 'en' ? 'Instant Delivery' : 'তাৎক্ষণিক ডেলিভারি',
       desc: language === 'en' ? 'Get your tickets delivered instantly to your device' : 'আপনার ডিভাইসে তাৎক্ষণিক টিকেট ডেলিভারি',
-      gradient: 'icon-bg-blue'
+      iconBg: 'bg-blue text-blue-foreground'
     },
     {
       icon: Users, title: language === 'en' ? '24/7 Support' : '২৪/৭ সাহায্য',
       desc: language === 'en' ? 'Our support team is always here to help you' : 'আমাদের সাহায্য দল সবসময় আপনাকে সাহায্য করতে এখানে',
-      gradient: 'icon-bg-green'
+      iconBg: 'bg-primary text-primary-foreground'
     },
   ];
 
   const stats = [
-    { value: '10,000+', label: language === 'en' ? 'Tickets Sold' : 'টিকেট বিক্রি', color: 'text-primary' },
-    { value: '5,000+', label: language === 'en' ? 'Happy Users' : 'সুখী ব্যবহারকারী', color: 'text-orange' },
-    { value: '500+', label: language === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা', color: 'text-blue' },
-    { value: '64+', label: language === 'en' ? 'Cities Covered' : 'শহর কভারেজ', color: 'text-primary' },
+    { value: '10,000+', label: language === 'en' ? 'Tickets Sold' : 'টিকেট বিক্রি', color: 'text-white' },
+    { value: '5,000+', label: language === 'en' ? 'Happy Users' : 'সুখী ব্যবহারকারী', color: 'text-white' },
+    { value: '500+', label: language === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা', color: 'text-white' },
+    { value: '64+', label: language === 'en' ? 'Cities Covered' : 'শহর কভারেজ', color: 'text-white' },
   ];
 
   const steps = [
     {
       step: '01', title: t('step1Title', language), desc: t('step1Desc', language),
-      gradient: 'icon-bg-green', accent: 'bg-primary/10 border-primary/20'
+      iconBg: 'bg-primary text-primary-foreground', accent: 'bg-primary/10 border-primary/20'
     },
     {
       step: '02', title: t('step2Title', language), desc: t('step2Desc', language),
-      gradient: 'icon-bg-orange', accent: 'bg-orange/10 border-orange/20'
+      iconBg: 'bg-orange text-orange-foreground', accent: 'bg-orange/10 border-orange/20'
     },
     {
       step: '03', title: t('step3Title', language), desc: t('step3Desc', language),
-      gradient: 'icon-bg-blue', accent: 'bg-blue/10 border-blue/20'
+      iconBg: 'bg-blue text-blue-foreground', accent: 'bg-blue/10 border-blue/20'
     },
     {
       step: '04', title: t('step4Title', language), desc: t('step4Desc', language),
-      gradient: 'icon-bg-green', accent: 'bg-primary/10 border-primary/20'
+      iconBg: 'bg-primary text-primary-foreground', accent: 'bg-primary/10 border-primary/20'
     },
   ];
 
   return (
     <>
       {/* ========== HERO SECTION ========== */}
-      <section className="relative overflow-hidden bg-gradient-mesh-animated">
-        {/* Animated background decorations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] gradient-orb-green" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] gradient-orb-blue" />
-          <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] gradient-orb-orange" />
-          <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] gradient-orb-green" />
-          <motion.div className="absolute top-20 left-[10%] text-primary/8" animate={{ y: [-10, 10, -10] }} transition={{ duration: 4, repeat: Infinity }}>
-            <Bus className="w-14 h-14" />
-          </motion.div>
-          <motion.div className="absolute top-40 right-[12%] text-orange/8" animate={{ y: [10, -10, 10] }} transition={{ duration: 3.5, repeat: Infinity }}>
-            <Plane className="w-12 h-12" />
-          </motion.div>
-          <motion.div className="absolute bottom-32 left-[18%] text-blue/8" animate={{ y: [-8, 8, -8] }} transition={{ duration: 5, repeat: Infinity }}>
-            <TrainFront className="w-16 h-16" />
-          </motion.div>
-        </div>
-
+      <section className="relative overflow-hidden bg-background">
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-28 relative">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
@@ -211,7 +194,7 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <Badge className="mb-6 px-4 py-1.5 text-sm bg-gradient-to-r from-primary/15 via-orange/10 to-blue/15 text-primary border-primary/20 hover:from-primary/20 hover:via-orange/15 hover:to-blue/20">
+              <Badge className="mb-6 px-4 py-1.5 text-sm bg-primary/15 text-primary border-primary/20 hover:bg-primary/20">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 {language === 'en' ? 'Eid Special 2025' : 'ঈদ স্পেশাল ২০২৫'}
               </Badge>
@@ -224,7 +207,7 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <span className="text-gradient-hero">
+              <span className="text-primary">
                 {t('heroTitle', language)}
               </span>
             </motion.h1>
@@ -246,7 +229,7 @@ function HomePage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="max-w-3xl mx-auto mb-8"
             >
-              <div className="rounded-2xl bg-card/90 backdrop-blur-sm border-2 border-primary/15 shadow-xl shadow-primary/5 p-5 sm:p-6 card-gradient-border">
+              <div className="rounded-2xl bg-card border-2 border-primary/15 shadow-xl shadow-primary/5 p-5 sm:p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Transport Type */}
                   <div className="space-y-2">
@@ -254,7 +237,7 @@ function HomePage() {
                       {t('transportType', language)}
                     </Label>
                     <Select value={transportType} onValueChange={setTransportType}>
-                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ring-gradient-focus ${fontClass}`}>
+                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
                         <div className="flex items-center gap-2">
                           <Bus className="w-4 h-4 text-primary shrink-0" />
                           <SelectValue placeholder={t('selectTransport', language)} />
@@ -279,7 +262,7 @@ function HomePage() {
                       {t('from', language)}
                     </Label>
                     <Select value={fromCity} onValueChange={setFromCity}>
-                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ring-gradient-focus ${fontClass}`}>
+                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-primary shrink-0" />
                           <SelectValue placeholder={t('selectCity', language)} />
@@ -301,7 +284,7 @@ function HomePage() {
                       {t('to', language)}
                     </Label>
                     <Select value={toCity} onValueChange={setToCity}>
-                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ring-gradient-focus ${fontClass}`}>
+                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-orange shrink-0" />
                           <SelectValue placeholder={t('selectCity', language)} />
@@ -338,7 +321,7 @@ function HomePage() {
                         value={journeyDate}
                         onChange={(e) => setJourneyDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
-                        className={`h-11 rounded-xl border-primary/20 bg-background pl-9 ring-gradient-focus ${fontClass}`}
+                        className={`h-11 rounded-xl border-primary/20 bg-background pl-9 ${fontClass}`}
                         placeholder={t('selectDate', language)}
                       />
                     </div>
@@ -350,7 +333,7 @@ function HomePage() {
                   <Button
                     size="lg"
                     onClick={handleSearch}
-                    className="btn-gradient-brand rounded-xl text-base px-10 h-12 shadow-gradient-brand hover:shadow-gradient-spectrum transition-all duration-300 w-full sm:w-auto"
+                    className="rounded-xl text-base px-10 h-12 transition-all duration-300 w-full sm:w-auto"
                   >
                     <Search className="w-5 h-5 mr-2" />
                     {t('searchTickets', language)}
@@ -367,12 +350,12 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <Button size="lg" onClick={() => navigate('search')} className="btn-gradient-brand rounded-xl text-base px-8 h-12 shadow-gradient-brand hover:shadow-gradient-spectrum">
+              <Button size="lg" onClick={() => navigate('search')} className="rounded-xl text-base px-8 h-12">
                 <Ticket className="w-5 h-5 mr-2" />
                 {t('searchTickets', language)}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8 h-12 rounded-xl border-orange/30 hover:bg-gradient-to-r hover:from-orange/10 hover:to-orange/5 hover:text-orange hover:border-orange">
+              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8 h-12 rounded-xl border-orange/30 hover:bg-orange/10 hover:text-orange hover:border-orange">
                 {t('sellTickets', language)}
               </Button>
             </motion.div>
@@ -382,7 +365,7 @@ function HomePage() {
         {/* Wave divider */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0 60L48 55C96 50 192 40 288 35C384 30 480 30 576 33.3C672 36.7 768 43.3 864 45C960 46.7 1056 43.3 1152 38.3C1248 33.3 1344 26.7 1392 23.3L1440 20V60H0Z" className="fill-background" />
+            <path d="M0 60L48 55C96 50 192 40 288 35C384 30 480 30 576 33.3C672 36.7 768 43.3 864 45C960 46.7 1056 43.3 1152 38.3C1248 33.3 1344 26.7 1392 23.3L1440 20V60H0Z" className="fill-muted" />
           </svg>
         </div>
       </section>
@@ -414,11 +397,11 @@ function HomePage() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               <Card
-                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 card-gradient-hover glow-gradient`}
+                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-lg`}
                 onClick={() => navigate('search', { transportType: transport.id })}
               >
                 <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center gap-4">
-                  <div className={`w-16 h-16 rounded-2xl ${transport.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
+                  <div className={`w-16 h-16 rounded-2xl ${transport.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
                     <transport.icon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>
@@ -438,7 +421,7 @@ function HomePage() {
       </section>
 
       {/* ========== HOW IT WORKS ========== */}
-      <section className="bg-section-green">
+      <section className="bg-muted">
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
           <motion.div
             className="text-center mb-12"
@@ -464,9 +447,9 @@ function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
-                <Card className={`h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover ${index === 0 ? 'accent-line-green' : index === 1 ? 'accent-line-orange' : index === 2 ? 'accent-line-blue' : 'accent-line-brand'}`}>
+                <Card className={`h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg ${item.accent}`}>
                   <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl ${item.gradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+                    <div className={`w-14 h-14 rounded-2xl ${item.iconBg} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
                       {item.step}
                     </div>
                     <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{item.title}</h3>
@@ -505,9 +488,9 @@ function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg card-gradient-hover accent-line-brand">
+              <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg">
                 <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                  <div className={`w-14 h-14 rounded-2xl ${feature.gradient} flex items-center justify-center shadow-lg`}>
+                  <div className={`w-14 h-14 rounded-2xl ${feature.iconBg} flex items-center justify-center shadow-lg`}>
                     <feature.icon className="w-7 h-7 text-white" />
                   </div>
                   <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.title}</h3>
@@ -520,9 +503,8 @@ function HomePage() {
       </section>
 
       {/* ========== STATS ========== */}
-      <section className="relative overflow-hidden bg-gradient-hero bg-gradient-animated py-16 lg:py-20">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-        <div className="container mx-auto px-4 lg:px-8 relative">
+      <section className="bg-primary text-primary-foreground py-16 lg:py-20">
+        <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <motion.div
@@ -569,11 +551,11 @@ function HomePage() {
               transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               <Card
-                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300 card-gradient-hover accent-line-green"
+                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300"
                 onClick={() => navigate('search', { from: route.from, to: route.to })}
               >
                 <CardContent className="p-5 flex items-center gap-3">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-gradient-primary group-hover:text-primary-foreground transition-all">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -594,12 +576,7 @@ function HomePage() {
       </section>
 
       {/* ========== CTA ========== */}
-      <section className="relative overflow-hidden bg-gradient-mesh">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-80 h-80 gradient-orb-green" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 gradient-orb-orange" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 gradient-orb-blue" />
-        </div>
+      <section className="bg-muted">
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20 relative">
           <div className="max-w-2xl mx-auto text-center">
             <motion.div
@@ -613,7 +590,7 @@ function HomePage() {
                 {language === 'en' ? 'Start Earning' : 'আয় শুরু করুন'}
               </Badge>
               <h2 className={`text-2xl lg:text-4xl font-bold mb-4 ${language === 'bn' ? 'font-bangla' : ''}`}>
-                <span className="text-gradient-brand">
+                <span className="text-primary">
                   {language === 'en' ? 'Start Selling Your Tickets Today' : 'আজই আপনার টিকেট বিক্রি শুরু করুন'}
                 </span>
               </h2>
@@ -621,7 +598,7 @@ function HomePage() {
                 {language === 'en' ? 'Join thousands of verified sellers and reach millions of travelers across Bangladesh' : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং বাংলাদেশ জুড়ে লক্ষ লক্ষ যাত্রীর কাছে পৌঁছান'}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="lg" onClick={() => navigate('sell-ticket')} className="btn-gradient-orange rounded-xl px-8 h-12 text-base shadow-gradient-orange hover:shadow-gradient-brand">
+                <Button size="lg" onClick={() => navigate('sell-ticket')} className="bg-orange text-orange-foreground hover:bg-orange/90 rounded-xl px-8 h-12 text-base">
                   <Ticket className="w-5 h-5 mr-2" />
                   {t('sellTickets', language)}
                 </Button>

@@ -1,0 +1,624 @@
+     1→     1→'use client';
+     2→     2→import { useState, useEffect } from 'react';
+     3→     3→import { useAuthStore } from '@/lib/store';
+     4→     4→import { useLanguageStore } from '@/lib/store';
+     5→     5→import { useNav } from '@/lib/use-nav';
+     6→     6→import { t } from '@/lib/i18n';
+     7→     7→import { Button } from '@/components/ui/button';
+     8→     8→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+     9→     9→import { Badge } from '@/components/ui/badge';
+    10→    10→import { Input } from '@/components/ui/input';
+    11→    11→import { Label } from '@/components/ui/label';
+    12→    12→import { Switch } from '@/components/ui/switch';
+    13→    13→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    14→    14→import { Separator } from '@/components/ui/separator';
+    15→    15→import {
+    16→    16→  User, Wallet, Ticket, ShoppingBag, ShieldCheck, Settings,
+    17→    17→  ArrowRight, Check, CreditCard, Banknote, ArrowUpRight,
+    18→    18→  ArrowDownLeft, Clock, MapPin, Star, MessageCircle, Home,
+    19→    19→  History, PiggyBank, Landmark, ChevronRight
+    20→    20→} from 'lucide-react';
+    21→    21→
+    22→    22→export default function DashboardPage({ tab = 'overview', username }: { tab?: string; username?: string }) {
+    23→    23→  const { navigate } = useNav();
+    24→    24→  const { user, token, updateUser, logout } = useAuthStore();
+    25→    25→  const { language, setLanguage } = useLanguageStore();
+    26→    26→  const isBn = language === 'bn';
+    27→    27→  const fontClass = isBn ? 'font-bangla' : '';
+    28→    28→  const [tickets, setTickets] = useState<Array<{id:string;from:string;to:string;price:number;status:string;departureDate:string}>>([]);
+    29→    29→  const [orders, setOrders] = useState<Array<{id:string;status:string;totalAmount:number;createdAt:string}>>([]);
+    30→    30→  const [walletData, setWalletData] = useState({ balance: 0, pending: 0, escrow: 0, totalEarnings: 0 });
+    31→    31→
+    32→    32→  const un = username || user?.username || '';
+    33→    33→
+    34→    34→  useEffect(() => {
+    35→    35→    if (!token) { navigate('login'); return; }
+    36→    36→    const headers = { Authorization: `Bearer ${token}` };
+    37→    37→    fetch('/api/tickets/mine', { headers }).then((r) => r.json()).then((d) => setTickets(Array.isArray(d) ? d : d.tickets || [])).catch(() => {});
+    38→    38→    fetch('/api/orders/mine', { headers }).then((r) => r.json()).then((d) => setOrders(Array.isArray(d) ? d : d.orders || [])).catch(() => {});
+    39→    39→    fetch('/api/wallet', { headers }).then((r) => r.json()).then((d) => setWalletData(d.wallet || d)).catch(() => {});
+    40→    40→  }, [token, navigate]);
+    41→    41→
+    42→    42→  if (!user) return null;
+    43→    43→
+    44→    44→  // ── Sub-navigation items for the user panel ──
+    45→    45→  const navItems = [
+    46→    46→    { key: 'overview', label: isBn ? 'সারসংক্ষেপ' : 'Overview', icon: User },
+    47→    47→    { key: 'tickets', label: t('myTickets', language), icon: Ticket },
+    48→    48→    { key: 'orders', label: t('myOrders', language), icon: ShoppingBag },
+    49→    49→    { key: 'wallet', label: t('wallet', language), icon: Wallet },
+    50→    50→    { key: 'wallet-balance', label: isBn ? 'ওয়ালেট ব্যালেন্স' : 'Wallet Balance', icon: PiggyBank },
+    51→    51→    { key: 'wallet-payout', label: isBn ? 'পেআউট পদ্ধতি' : 'Payout Method', icon: Landmark },
+    52→    52→    { key: 'withdraw-history', label: isBn ? 'উত্তোলন ইতিহাস' : 'Withdraw History', icon: History },
+    53→    53→    { key: 'transactions', label: isBn ? 'লেনদেন' : 'Transactions', icon: CreditCard },
+    54→    54→    { key: 'reviews', label: isBn ? 'আমার রিভিউ' : 'My Reviews', icon: Star },
+    55→    55→    { key: 'address', label: isBn ? 'ঠিকানা' : 'Address', icon: Home },
+    56→    56→    { key: 'message', label: isBn ? 'বার্তা' : 'Messages', icon: MessageCircle },
+    57→    57→    { key: 'kyc', label: t('kyc', language), icon: ShieldCheck },
+    58→    58→    { key: 'settings', label: t('settings', language), icon: Settings },
+    59→    59→  ];
+    60→    60→
+    61→    61→  const activeNav = navItems.find((n) => n.key === tab) || navItems[0];
+    62→    62→
+    63→    63→  return (
+    64→    64→    <div className="container mx-auto px-3 sm:px-4 py-6 max-w-5xl">
+    65→    65→      {/* Breadcrumb */}
+    66→    66→      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+    67→    67→        <button onClick={() => navigate('home')} className={`hover:text-primary transition-colors ${fontClass}`}>
+    68→    68→          {isBn ? 'হোম' : 'Home'}
+    69→    69→        </button>
+    70→    70→        <ChevronRight className="w-3 h-3" />
+    71→    71→        <span className={`text-foreground font-medium ${fontClass}`}>{activeNav.label}</span>
+    72→    72→      </div>
+    73→    73→
+    74→    74→      {/* User greeting */}
+    75→    75→      <div className="flex items-center gap-3 mb-6">
+    76→    76→        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+    77→    77→          <User className="w-6 h-6 text-primary" />
+    78→    78→        </div>
+    79→    79→        <div>
+    80→    80→          <h1 className={`text-xl font-bold ${fontClass}`}>{user.name}</h1>
+    81→    81→          <p className="text-sm text-muted-foreground">@{un}</p>
+    82→    82→        </div>
+    83→    83→        <Badge variant={user.isKycVerified ? 'default' : 'secondary'} className="ml-2">
+    84→    84→          {user.isKycVerified ? (isBn ? 'যাচাইকৃত' : 'Verified') : (isBn ? 'অযাচাইকৃত' : 'Unverified')}
+    85→    85→        </Badge>
+    86→    86→      </div>
+    87→    87→
+    88→    88→      {/* Side navigation + content layout for desktop */}
+    89→    89→      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
+    90→    90→        {/* Navigation sidebar */}
+    91→    91→        <div className="hidden lg:block">
+    92→    92→          <Card className="border-primary/10 sticky top-24">
+    93→    93→            <CardContent className="p-2">
+    94→    94→              <nav className="space-y-0.5">
+    95→    95→                {navItems.map((item) => {
+    96→    96→                  const isActive = item.key === tab;
+    97→    97→                  return (
+    98→    98→                    <button
+    99→    99→                      key={item.key}
+   100→   100→                      onClick={() => {
+   101→   101→                        if (item.key === 'kyc') navigate('kyc', { username: un });
+   102→   102→                        else if (['wallet-balance', 'wallet-payout', 'withdraw-history', 'transactions', 'reviews', 'address', 'message'].includes(item.key)) {
+   103→   103→                          navigate(item.key as 'wallet-balance' | 'wallet-payout' | 'withdraw-history' | 'transactions' | 'reviews' | 'address' | 'message', { username: un });
+   104→   104→                        } else {
+   105→   105→                          navigate(item.key === 'overview' ? 'dashboard' : item.key === 'tickets' ? 'my-tickets' : item.key === 'orders' ? 'my-orders' : item.key === 'wallet' ? 'wallet' : 'settings', { username: un });
+   106→   106→                        }
+   107→   107→                      }}
+   108→   108→                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all min-h-[44px] ${
+   109→   109→                        isActive
+   110→   110→                          ? 'bg-primary/10 text-primary font-medium'
+   111→   111→                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+   112→   112→                      } ${fontClass}`}
+   113→   113→                    >
+   114→   114→                      <item.icon className="w-4 h-4 shrink-0" />
+   115→   115→                      {item.label}
+   116→   116→                    </button>
+   117→   117→                  );
+   118→   118→                })}
+   119→   119→                <Separator className="my-2" />
+   120→   120→                <button
+   121→   121→                  onClick={logout}
+   122→   122→                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-all min-h-[44px]"
+   123→   123→                >
+   124→   124→                  <ArrowRight className="w-4 h-4 rotate-180 shrink-0" />
+   125→   125→                  {t('logout', language)}
+   126→   126→                </button>
+   127→   127→              </nav>
+   128→   128→            </CardContent>
+   129→   129→          </Card>
+   130→   130→        </div>
+   131→   131→
+   132→   132→        {/* Mobile tab bar */}
+   133→   133→        <div className="lg:hidden overflow-x-auto -mx-3 px-3">
+   134→   134→          <div className="flex gap-2 pb-2 min-w-max">
+   135→   135→            {navItems.map((item) => {
+   136→   136→              const isActive = item.key === tab;
+   137→   137→              return (
+   138→   138→                <button
+   139→   139→                  key={item.key}
+   140→   140→                  onClick={() => {
+   141→   141→                    if (item.key === 'kyc') navigate('kyc', { username: un });
+   142→   142→                    else if (['wallet-balance', 'wallet-payout', 'withdraw-history', 'transactions', 'reviews', 'address', 'message'].includes(item.key)) {
+   143→   143→                      navigate(item.key as 'wallet-balance' | 'wallet-payout' | 'withdraw-history' | 'transactions' | 'reviews' | 'address' | 'message', { username: un });
+   144→   144→                    } else {
+   145→   145→                      navigate(item.key === 'overview' ? 'dashboard' : item.key === 'tickets' ? 'my-tickets' : item.key === 'orders' ? 'my-orders' : item.key === 'wallet' ? 'wallet' : 'settings', { username: un });
+   146→   146→                    }
+   147→   147→                  }}
+   148→   148→                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap min-h-[40px] ${
+   149→   149→                    isActive
+   150→   150→                      ? 'bg-primary/10 text-primary'
+   151→   151→                      : 'bg-muted/50 text-muted-foreground hover:text-foreground'
+   152→   152→                  } ${fontClass}`}
+   153→   153→                >
+   154→   154→                  <item.icon className="w-3 h-3" />
+   155→   155→                  {item.label}
+   156→   156→                </button>
+   157→   157→              );
+   158→   158→            })}
+   159→   159→          </div>
+   160→   160→        </div>
+   161→   161→
+   162→   162→        {/* Content area */}
+   163→   163→        <div>
+   164→   164→          {tab === 'overview' && <OverviewContent user={user} un={un} walletData={walletData} tickets={tickets} orders={orders} navigate={navigate} language={language} logout={logout} />}
+   165→   165→          {tab === 'tickets' && <TicketsContent tickets={tickets} navigate={navigate} language={language} un={un} />}
+   166→   166→          {tab === 'orders' && <OrdersContent orders={orders} language={language} />}
+   167→   167→          {tab === 'wallet' && <WalletContent walletData={walletData} navigate={navigate} language={language} un={un} />}
+   168→   168→          {tab === 'wallet-balance' && <WalletBalanceContent walletData={walletData} language={language} />}
+   169→   169→          {tab === 'wallet-payout' && <WalletPayoutContent language={language} />}
+   170→   170→          {tab === 'withdraw-history' && <WithdrawHistoryContent language={language} />}
+   171→   171→          {tab === 'transactions' && <TransactionsContent language={language} />}
+   172→   172→          {tab === 'reviews' && <ReviewsContent language={language} />}
+   173→   173→          {tab === 'address' && <AddressContent language={language} />}
+   174→   174→          {tab === 'message' && <MessageContent language={language} />}
+   175→   175→          {tab === 'profile' && <ProfileContent user={user} navigate={navigate} language={language} un={un} />}
+   176→   176→          {tab === 'chat' && <MessageContent language={language} />}
+   177→   177→          {tab === 'settings' && <SettingsContent user={user} language={language} setLanguage={setLanguage} logout={logout} navigate={navigate} />}
+   178→   178→        </div>
+   179→   179→      </div>
+   180→   180→    </div>
+   181→   181→  );
+   182→   182→}
+   183→   183→
+   184→   184→/* ═══════════════════════════════════════════════════════════
+   185→   185→   Sub-components for each tab
+   186→   186→   ═══════════════════════════════════════════════════════════ */
+   187→   187→
+   188→   188→function OverviewContent({ user, un, walletData, tickets, orders, navigate, language, logout }: {
+   189→   189→  user: { name: string; email: string; isKycVerified: boolean; role: string };
+   190→   190→  un: string; walletData: { balance: number; pending: number; escrow: number; totalEarnings: number };
+   191→   191→  tickets: Array<{id:string;from:string;to:string;price:number;status:string;departureDate:string}>;
+   192→   192→  orders: Array<{id:string;status:string;totalAmount:number;createdAt:string}>;
+   193→   193→  navigate: (page: string, params?: Record<string, string>) => void;
+   194→   194→  language: string; logout: () => void;
+   195→   195→}) {
+   196→   196→  const isBn = language === 'bn';
+   197→   197→  const fontClass = isBn ? 'font-bangla' : '';
+   198→   198→  return (
+   199→   199→    <div className="space-y-4">
+   200→   200→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   201→   201→        <Card className="border-primary/10 cursor-pointer hover:shadow-sm transition-all" onClick={() => navigate('profile', { username: un })}>
+   202→   202→          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{t('profile', language)}</CardTitle></CardHeader>
+   203→   203→          <CardContent>
+   204→   204→            <div className="flex items-center gap-3 mb-3">
+   205→   205→              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /></div>
+   206→   206→              <div className="min-w-0"><p className="font-semibold truncate">{user.name}</p><p className="text-sm text-muted-foreground truncate">{user.email}</p></div>
+   207→   207→            </div>
+   208→   208→            <div className="flex items-center gap-2 flex-wrap"><Badge variant={user.isKycVerified ? 'default' : 'secondary'}>{user.isKycVerified ? t('verified', language) : t('unverified', language)}</Badge><Badge>{user.role}</Badge></div>
+   209→   209→          </CardContent>
+   210→   210→        </Card>
+   211→   211→        <Card className="border-primary/10 cursor-pointer hover:shadow-sm transition-all" onClick={() => navigate('wallet', { username: un })}>
+   212→   212→          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{t('wallet', language)}</CardTitle></CardHeader>
+   213→   213→          <CardContent>
+   214→   214→            <p className="text-2xl font-bold text-primary mb-1">৳{walletData.balance.toLocaleString()}</p>
+   215→   215→            <p className="text-sm text-muted-foreground">{t('availableBalance', language)}</p>
+   216→   216→          </CardContent>
+   217→   217→        </Card>
+   218→   218→        <Card className="border-primary/10 cursor-pointer hover:shadow-sm transition-all" onClick={() => navigate('my-tickets', { username: un })}>
+   219→   219→          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{t('myTickets', language)}</CardTitle></CardHeader>
+   220→   220→          <CardContent><p className="text-2xl font-bold">{tickets.length}</p></CardContent>
+   221→   221→        </Card>
+   222→   222→        <Card className="border-primary/10 cursor-pointer hover:shadow-sm transition-all" onClick={() => navigate('my-orders', { username: un })}>
+   223→   223→          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{t('myOrders', language)}</CardTitle></CardHeader>
+   224→   224→          <CardContent><p className="text-2xl font-bold">{orders.length}</p></CardContent>
+   225→   225→        </Card>
+   226→   226→      </div>
+   227→   227→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   228→   228→        <Button variant="outline" className="min-h-[44px] w-full" onClick={() => navigate('wallet-balance', { username: un })}>
+   229→   229→          <PiggyBank className="w-4 h-4 mr-1.5" />{isBn ? 'ব্যালেন্স' : 'Balance'}
+   230→   230→        </Button>
+   231→   231→        <Button variant="outline" className="min-h-[44px] w-full" onClick={() => navigate('transactions', { username: un })}>
+   232→   232→          <CreditCard className="w-4 h-4 mr-1.5" />{isBn ? 'লেনদেন' : 'Transactions'}
+   233→   233→        </Button>
+   234→   234→        <Button variant="outline" className="min-h-[44px] w-full" onClick={() => navigate('withdraw-history', { username: un })}>
+   235→   235→          <History className="w-4 h-4 mr-1.5" />{isBn ? 'উত্তোলন' : 'Withdraw'}
+   236→   236→        </Button>
+   237→   237→        <Button variant="outline" className="min-h-[44px] w-full" onClick={() => navigate('sell-ticket')}>
+   238→   238→          <Ticket className="w-4 h-4 mr-1.5" />{t('sellTicket', language)}
+   239→   239→        </Button>
+   240→   240→      </div>
+   241→   241→      <div className="flex flex-col sm:flex-row gap-3">
+   242→   242→        <Button variant="outline" className="min-h-[44px] w-full sm:w-auto" onClick={() => navigate('sell-ticket')}>{t('sellTickets', language)}</Button>
+   243→   243→        <Button variant="destructive" className="min-h-[44px] w-full sm:w-auto" onClick={logout}>{t('logout', language)}</Button>
+   244→   244→      </div>
+   245→   245→    </div>
+   246→   246→  );
+   247→   247→}
+   248→   248→
+   249→   249→function TicketsContent({ tickets, navigate, language, un }: {
+   250→   250→  tickets: Array<{id:string;from:string;to:string;price:number;status:string;departureDate:string}>;
+   251→   251→  navigate: (page: string, params?: Record<string, string>) => void;
+   252→   252→  language: string; un: string;
+   253→   253→}) {
+   254→   254→  const isBn = language === 'bn';
+   255→   255→  return (
+   256→   256→    <div>
+   257→   257→      <div className="flex items-center justify-between mb-4 gap-2">
+   258→   258→        <h2 className={`font-bold truncate ${isBn ? 'font-bangla' : ''}`}>{t('myTickets', language)}</h2>
+   259→   259→        <Button size="sm" className="min-h-[44px] shrink-0" onClick={() => navigate('sell-ticket')}>+ {t('sellTicket', language)}</Button>
+   260→   260→      </div>
+   261→   261→      {tickets.length === 0 ? (
+   262→   262→        <div className="text-center py-12 text-muted-foreground">
+   263→   263→          <Ticket className="w-12 h-12 mx-auto mb-3 opacity-30" />
+   264→   264→          <p className={isBn ? 'font-bangla' : ''}>{t('noData', language)}</p>
+   265→   265→        </div>
+   266→   266→      ) : (
+   267→   267→        <div className="space-y-2">{tickets.map((tk) => (
+   268→   268→          <Card key={tk.id} className="cursor-pointer hover:shadow-sm" onClick={() => navigate('ticket-details', { id: tk.id })}>
+   269→   269→            <CardContent className="p-3 sm:p-4 flex items-center justify-between gap-2">
+   270→   270→              <div className="min-w-0"><p className="font-medium truncate">{tk.from} → {tk.to}</p><p className="text-xs text-muted-foreground">{tk.departureDate}</p></div>
+   271→   271→              <div className="flex items-center gap-2 shrink-0"><span className="font-semibold text-primary whitespace-nowrap">৳{tk.price}</span><Badge variant="secondary" className="text-xs">{tk.status}</Badge><ArrowRight className="w-4 h-4 text-muted-foreground" /></div>
+   272→   272→            </CardContent>
+   273→   273→          </Card>
+   274→   274→        ))}</div>
+   275→   275→      )}
+   276→   276→    </div>
+   277→   277→  );
+   278→   278→}
+   279→   279→
+   280→   280→function OrdersContent({ orders, language }: {
+   281→   281→  orders: Array<{id:string;status:string;totalAmount:number;createdAt:string}>;
+   282→   282→  language: string;
+   283→   283→}) {
+   284→   284→  const isBn = language === 'bn';
+   285→   285→  return (
+   286→   286→    <div>
+   287→   287→      <h2 className={`font-bold mb-4 ${isBn ? 'font-bangla' : ''}`}>{t('myOrders', language)}</h2>
+   288→   288→      {orders.length === 0 ? (
+   289→   289→        <div className="text-center py-12 text-muted-foreground">
+   290→   290→          <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-30" />
+   291→   291→          <p className={isBn ? 'font-bangla' : ''}>{t('noData', language)}</p>
+   292→   292→        </div>
+   293→   293→      ) : (
+   294→   294→        <div className="space-y-2">{orders.map((o) => (
+   295→   295→          <Card key={o.id}><CardContent className="p-3 sm:p-4 flex items-center justify-between gap-2">
+   296→   296→            <div className="min-w-0"><p className="font-medium">#{o.id.slice(0,8)}</p><p className="text-xs text-muted-foreground">{o.createdAt}</p></div>
+   297→   297→            <div className="flex items-center gap-2 shrink-0"><span className="font-semibold whitespace-nowrap">৳{o.totalAmount}</span><Badge variant="secondary" className="text-xs">{o.status}</Badge></div>
+   298→   298→          </CardContent></Card>
+   299→   299→        ))}</div>
+   300→   300→      )}
+   301→   301→    </div>
+   302→   302→  );
+   303→   303→}
+   304→   304→
+   305→   305→function WalletContent({ walletData, navigate, language, un }: {
+   306→   306→  walletData: { balance: number; pending: number; escrow: number; totalEarnings: number };
+   307→   307→  navigate: (page: string, params?: Record<string, string>) => void;
+   308→   308→  language: string; un: string;
+   309→   309→}) {
+   310→   310→  const isBn = language === 'bn';
+   311→   311→  const fontClass = isBn ? 'font-bangla' : '';
+   312→   312→  return (
+   313→   313→    <div>
+   314→   314→      <h2 className={`font-bold mb-4 ${fontClass}`}>{t('wallet', language)}</h2>
+   315→   315→      <div className="grid grid-cols-2 gap-3 mb-4">
+   316→   316→        <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('availableBalance', language)}</p><p className="text-lg sm:text-xl font-bold text-primary">৳{walletData.balance.toLocaleString()}</p></CardContent></Card>
+   317→   317→        <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('pendingBalance', language)}</p><p className="text-lg sm:text-xl font-bold">৳{walletData.pending.toLocaleString()}</p></CardContent></Card>
+   318→   318→        <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('escrowBalance', language)}</p><p className="text-lg sm:text-xl font-bold">৳{walletData.escrow.toLocaleString()}</p></CardContent></Card>
+   319→   319→        <Card><CardContent className="p-3 sm:p-4"><p className="text-xs sm:text-sm text-muted-foreground">{t('totalEarnings', language)}</p><p className="text-lg sm:text-xl font-bold">৳{walletData.totalEarnings.toLocaleString()}</p></CardContent></Card>
+   320→   320→      </div>
+   321→   321→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   322→   322→        <Button variant="outline" className="min-h-[44px] w-full" onClick={() => navigate('wallet-balance', { username: un })}>
+   323→   323→          <PiggyBank className="w-4 h-4 mr-1.5" />{isBn ? 'ব্যালেন্স' : 'Balance'}
+   324→   324→        </Button>
+   325→   325→        <Button variant="outline" className="min-h-[44px] w-full" onClick={() => navigate('wallet-payout', { username: un })}>
+   326→   326→          <Landmark className="w-4 h-4 mr-1.5" />{isBn ? 'পেআউট' : 'Payout'}
+   327→   327→        </Button>
+   328→   328→        <Button variant="outline" className="min-h-[44px] w-full" onClick={() => navigate('withdraw-history', { username: un })}>
+   329→   329→          <History className="w-4 h-4 mr-1.5" />{isBn ? 'উত্তোলন' : 'Withdraw'}
+   330→   330→        </Button>
+   331→   331→        <Button className="min-h-[44px] w-full bg-gradient-to-r from-primary to-primary/90">
+   332→   332→          <Banknote className="w-4 h-4 mr-1.5" />{t('withdraw', language)}
+   333→   333→        </Button>
+   334→   334→      </div>
+   335→   335→    </div>
+   336→   336→  );
+   337→   337→}
+   338→   338→
+   339→   339→function WalletBalanceContent({ walletData, language }: { walletData: { balance: number; pending: number; escrow: number; totalEarnings: number }; language: string }) {
+   340→   340→  const isBn = language === 'bn';
+   341→   341→  const fontClass = isBn ? 'font-bangla' : '';
+   342→   342→  return (
+   343→   343→    <div>
+   344→   344→      <h2 className={`font-bold mb-4 ${fontClass}`}>{isBn ? 'ওয়ালেট ব্যালেন্স' : 'Wallet Balance'}</h2>
+   345→   345→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+   346→   346→        <Card className="border-primary/10"><CardContent className="p-4 sm:p-6">
+   347→   347→          <p className={`text-sm text-muted-foreground mb-1 ${fontClass}`}>{t('availableBalance', language)}</p>
+   348→   348→          <p className="text-3xl font-bold text-primary">৳{walletData.balance.toLocaleString()}</p>
+   349→   349→        </CardContent></Card>
+   350→   350→        <Card className="border-primary/10"><CardContent className="p-4 sm:p-6">
+   351→   351→          <p className={`text-sm text-muted-foreground mb-1 ${fontClass}`}>{t('totalEarnings', language)}</p>
+   352→   352→          <p className="text-3xl font-bold">৳{walletData.totalEarnings.toLocaleString()}</p>
+   353→   353→        </CardContent></Card>
+   354→   354→      </div>
+   355→   355→      <Card className="border-primary/10"><CardHeader><CardTitle className={`text-sm ${fontClass}`}>{isBn ? 'ব্যালেন্স বিবরণ' : 'Balance Breakdown'}</CardTitle></CardHeader>
+   356→   356→        <CardContent>
+   357→   357→          <div className="space-y-3">
+   358→   358→            <div className="flex justify-between items-center py-2 border-b"><span className={fontClass}>{t('availableBalance', language)}</span><span className="font-semibold text-primary">৳{walletData.balance.toLocaleString()}</span></div>
+   359→   359→            <div className="flex justify-between items-center py-2 border-b"><span className={fontClass}>{t('pendingBalance', language)}</span><span className="font-semibold">৳{walletData.pending.toLocaleString()}</span></div>
+   360→   360→            <div className="flex justify-between items-center py-2"><span className={fontClass}>{t('escrowBalance', language)}</span><span className="font-semibold">৳{walletData.escrow.toLocaleString()}</span></div>
+   361→   361→          </div>
+   362→   362→        </CardContent>
+   363→   363→      </Card>
+   364→   364→    </div>
+   365→   365→  );
+   366→   366→}
+   367→   367→
+   368→   368→function WalletPayoutContent({ language }: { language: string }) {
+   369→   369→  const isBn = language === 'bn';
+   370→   370→  const fontClass = isBn ? 'font-bangla' : '';
+   371→   371→  return (
+   372→   372→    <div>
+   373→   373→      <h2 className={`font-bold mb-4 ${fontClass}`}>{isBn ? 'পেআউট পদ্ধতি' : 'Payout Method'}</h2>
+   374→   374→      <Card className="border-primary/10"><CardContent className="p-4 sm:p-6 space-y-4">
+   375→   375→        <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'পেআউট পদ্ধতি নির্বাচন' : 'Select Payout Method'}</Label>
+   376→   376→          <Select><SelectTrigger className="h-11 w-full"><SelectValue placeholder={isBn ? 'পদ্ধতি নির্বাচন করুন' : 'Select method'} /></SelectTrigger>
+   377→   377→            <SelectContent>
+   378→   378→              <SelectItem value="bkash">bKash</SelectItem>
+   379→   379→              <SelectItem value="nagad">Nagad</SelectItem>
+   380→   380→              <SelectItem value="rocket">Rocket</SelectItem>
+   381→   381→              <SelectItem value="bank">Bank Transfer</SelectItem>
+   382→   382→            </SelectContent>
+   383→   383→          </Select>
+   384→   384→        </div>
+   385→   385→        <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'অ্যাকাউন্ট নম্বর' : 'Account Number'}</Label><Input className="h-11" placeholder={isBn ? 'অ্যাকাউন্ট নম্বর দিন' : 'Enter account number'} /></div>
+   386→   386→        <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'অ্যাকাউন্টের নাম' : 'Account Name'}</Label><Input className="h-11" placeholder={isBn ? 'নাম দিন' : 'Enter account name'} /></div>
+   387→   387→        <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px] w-full sm:w-auto">{t('save', language)}</Button>
+   388→   388→      </CardContent></Card>
+   389→   389→    </div>
+   390→   390→  );
+   391→   391→}
+   392→   392→
+   393→   393→function WithdrawHistoryContent({ language }: { language: string }) {
+   394→   394→  const isBn = language === 'bn';
+   395→   395→  const fontClass = isBn ? 'font-bangla' : '';
+   396→   396→  const demoHistory = [
+   397→   397→    { id: 'WD-001', amount: 5000, method: 'bKash', status: 'completed', date: '2025-06-10' },
+   398→   398→    { id: 'WD-002', amount: 3000, method: 'Nagad', status: 'pending', date: '2025-06-12' },
+   399→   399→    { id: 'WD-003', amount: 2000, method: 'Bank', status: 'completed', date: '2025-06-08' },
+   400→   400→  ];
+   401→   401→  const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+   402→   402→    completed: { label: isBn ? 'সম্পন্ন' : 'Completed', variant: 'default' },
+   403→   403→    pending: { label: isBn ? 'পেন্ডিং' : 'Pending', variant: 'secondary' },
+   404→   404→    failed: { label: isBn ? 'ব্যর্থ' : 'Failed', variant: 'destructive' },
+   405→   405→  };
+   406→   406→  return (
+   407→   407→    <div>
+   408→   408→      <h2 className={`font-bold mb-4 ${fontClass}`}>{isBn ? 'উত্তোলন ইতিহাস' : 'Withdraw History'}</h2>
+   409→   409→      {demoHistory.length === 0 ? (
+   410→   410→        <div className="text-center py-12 text-muted-foreground">
+   411→   411→          <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
+   412→   412→          <p className={fontClass}>{isBn ? 'কোনো উত্তোলন ইতিহাস নেই' : 'No withdrawal history'}</p>
+   413→   413→        </div>
+   414→   414→      ) : (
+   415→   415→        <div className="space-y-3">{demoHistory.map((w) => (
+   416→   416→          <Card key={w.id} className="border-primary/10">
+   417→   417→            <CardContent className="p-3 sm:p-4 flex items-center justify-between gap-3">
+   418→   418→              <div className="flex items-center gap-3">
+   419→   419→                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+   420→   420→                  <ArrowUpRight className="w-5 h-5 text-primary" />
+   421→   421→                </div>
+   422→   422→                <div>
+   423→   423→                  <p className="font-medium">{w.id}</p>
+   424→   424→                  <p className="text-xs text-muted-foreground">{w.method} · {w.date}</p>
+   425→   425→                </div>
+   426→   426→              </div>
+   427→   427→              <div className="text-right">
+   428→   428→                <p className="font-bold text-primary">৳{w.amount.toLocaleString()}</p>
+   429→   429→                <Badge variant={statusMap[w.status]?.variant || 'secondary'} className="text-[10px]">{statusMap[w.status]?.label || w.status}</Badge>
+   430→   430→              </div>
+   431→   431→            </CardContent>
+   432→   432→          </Card>
+   433→   433→        ))}</div>
+   434→   434→      )}
+   435→   435→    </div>
+   436→   436→  );
+   437→   437→}
+   438→   438→
+   439→   439→function TransactionsContent({ language }: { language: string }) {
+   440→   440→  const isBn = language === 'bn';
+   441→   441→  const fontClass = isBn ? 'font-bangla' : '';
+   442→   442→  const demoTransactions = [
+   443→   443→    { id: 'TXN-001', type: 'credit', amount: 1200, desc: isBn ? 'টিকেট বিক্রি - Green Line' : 'Ticket Sale - Green Line', date: '2025-06-10' },
+   444→   444→    { id: 'TXN-002', type: 'debit', amount: 5000, desc: isBn ? 'উত্তোলন - bKash' : 'Withdrawal - bKash', date: '2025-06-09' },
+   445→   445→    { id: 'TXN-003', type: 'credit', amount: 550, desc: isBn ? 'টিকেট বিক্রি - Shohagh' : 'Ticket Sale - Shohagh', date: '2025-06-08' },
+   446→   446→    { id: 'TXN-004', type: 'credit', amount: 4500, desc: isBn ? 'টিকেট বিক্রি - Biman BD' : 'Ticket Sale - Biman BD', date: '2025-06-07' },
+   447→   447→    { id: 'TXN-005', type: 'debit', amount: 3000, desc: isBn ? 'উত্তোলন - Nagad' : 'Withdrawal - Nagad', date: '2025-06-06' },
+   448→   448→  ];
+   449→   449→  return (
+   450→   450→    <div>
+   451→   451→      <h2 className={`font-bold mb-4 ${fontClass}`}>{isBn ? 'লেনদেন' : 'Transactions'}</h2>
+   452→   452→      {demoTransactions.length === 0 ? (
+   453→   453→        <div className="text-center py-12 text-muted-foreground">
+   454→   454→          <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-30" />
+   455→   455→          <p className={fontClass}>{isBn ? 'কোনো লেনদেন নেই' : 'No transactions'}</p>
+   456→   456→        </div>
+   457→   457→      ) : (
+   458→   458→        <div className="space-y-2">{demoTransactions.map((tx) => (
+   459→   459→          <Card key={tx.id} className="border-primary/10">
+   460→   460→            <CardContent className="p-3 sm:p-4 flex items-center justify-between gap-3">
+   461→   461→              <div className="flex items-center gap-3">
+   462→   462→                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${tx.type === 'credit' ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'}`}>
+   463→   463→                  {tx.type === 'credit' ? <ArrowDownLeft className="w-5 h-5 text-emerald-600" /> : <ArrowUpRight className="w-5 h-5 text-amber-600" />}
+   464→   464→                </div>
+   465→   465→                <div className="min-w-0">
+   466→   466→                  <p className={`font-medium truncate ${fontClass}`}>{tx.desc}</p>
+   467→   467→                  <p className="text-xs text-muted-foreground">{tx.id} · {tx.date}</p>
+   468→   468→                </div>
+   469→   469→              </div>
+   470→   470→              <p className={`font-bold whitespace-nowrap ${tx.type === 'credit' ? 'text-emerald-600' : 'text-amber-600'}`}>
+   471→   471→                {tx.type === 'credit' ? '+' : '-'}৳{tx.amount.toLocaleString()}
+   472→   472→              </p>
+   473→   473→            </CardContent>
+   474→   474→          </Card>
+   475→   475→        ))}</div>
+   476→   476→      )}
+   477→   477→    </div>
+   478→   478→  );
+   479→   479→}
+   480→   480→
+   481→   481→function ReviewsContent({ language }: { language: string }) {
+   482→   482→  const isBn = language === 'bn';
+   483→   483→  const fontClass = isBn ? 'font-bangla' : '';
+   484→   484→  const demoReviews = [
+   485→   485→    { id: '1', buyer: 'Rahim Uddin', rating: 5, comment: isBn ? 'দ্রুত ডেলিভারি, চমৎকার সেবা!' : 'Fast delivery, excellent service!', date: '2025-06-10' },
+   486→   486→    { id: '2', buyer: 'Fatima Akter', rating: 4, comment: isBn ? 'ভালো টিকেট, কিন্তু কিছুটা দেরিতে পেয়েছি' : 'Good ticket, but received slightly late', date: '2025-06-08' },
+   487→   487→    { id: '3', buyer: 'Kamal Hossain', rating: 5, comment: isBn ? 'খুবই সন্তোষজনক!' : 'Very satisfactory!', date: '2025-06-05' },
+   488→   488→  ];
+   489→   489→  return (
+   490→   490→    <div>
+   491→   491→      <h2 className={`font-bold mb-4 ${fontClass}`}>{isBn ? 'আমার রিভিউ' : 'My Reviews'}</h2>
+   492→   492→      {demoReviews.length === 0 ? (
+   493→   493→        <div className="text-center py-12 text-muted-foreground">
+   494→   494→          <Star className="w-12 h-12 mx-auto mb-3 opacity-30" />
+   495→   495→          <p className={fontClass}>{isBn ? 'কোনো রিভিউ নেই' : 'No reviews yet'}</p>
+   496→   496→        </div>
+   497→   497→      ) : (
+   498→   498→        <div className="space-y-3">{demoReviews.map((r) => (
+   499→   499→          <Card key={r.id} className="border-primary/10">
+   500→   500→            <CardContent className="p-3 sm:p-4">
+   501→   501→              <div className="flex items-center justify-between mb-2">
+   502→   502→                <div className="flex items-center gap-2">
+   503→   503→                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-4 h-4 text-primary" /></div>
+   504→   504→                  <span className="font-medium text-sm">{r.buyer}</span>
+   505→   505→                </div>
+   506→   506→                <div className="flex items-center gap-1">{Array.from({ length: 5 }).map((_, i) => (
+   507→   507→                  <Star key={i} className={`w-3.5 h-3.5 ${i < r.rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+   508→   508→                ))}</div>
+   509→   509→              </div>
+   510→   510→              <p className={`text-sm text-muted-foreground ${fontClass}`}>{r.comment}</p>
+   511→   511→              <p className="text-xs text-muted-foreground mt-1">{r.date}</p>
+   512→   512→            </CardContent>
+   513→   513→          </Card>
+   514→   514→        ))}</div>
+   515→   515→      )}
+   516→   516→    </div>
+   517→   517→  );
+   518→   518→}
+   519→   519→
+   520→   520→function AddressContent({ language }: { language: string }) {
+   521→   521→  const isBn = language === 'bn';
+   522→   522→  const fontClass = isBn ? 'font-bangla' : '';
+   523→   523→  return (
+   524→   524→    <div>
+   525→   525→      <h2 className={`font-bold mb-4 ${fontClass}`}>{isBn ? 'ঠিকানা' : 'Address'}</h2>
+   526→   526→      <Card className="border-primary/10"><CardContent className="p-4 sm:p-6 space-y-4">
+   527→   527→        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   528→   528→          <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'বাড়ি/রাস্তা/গ্রাম' : 'House/Road/Village'}</Label><Input className="h-11" placeholder={isBn ? 'বাড়ি নং, রাস্তা, গ্রাম' : 'House no, Road, Village'} /></div>
+   529→   529→          <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'উপজেলা/থানা' : 'Upazila/Thana'}</Label><Input className="h-11" placeholder={isBn ? 'উপজেলা বা থানা' : 'Upazila or Thana'} /></div>
+   530→   530→          <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'জেলা' : 'District'}</Label>
+   531→   531→            <Select><SelectTrigger className="h-11 w-full"><SelectValue placeholder={isBn ? 'জেলা নির্বাচন' : 'Select district'} /></SelectTrigger>
+   532→   532→              <SelectContent><SelectItem value="dhaka">Dhaka</SelectItem><SelectItem value="chittagong">Chittagong</SelectItem><SelectItem value="rajshahi">Rajshahi</SelectItem><SelectItem value="khulna">Khulna</SelectItem></SelectContent>
+   533→   533→            </Select>
+   534→   534→          </div>
+   535→   535→          <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'পোস্ট কোড' : 'Postal Code'}</Label><Input className="h-11" placeholder={isBn ? 'পোস্ট কোড' : 'Postal code'} /></div>
+   536→   536→        </div>
+   537→   537→        <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px] w-full sm:w-auto">{t('save', language)}</Button>
+   538→   538→      </CardContent></Card>
+   539→   539→    </div>
+   540→   540→  );
+   541→   541→}
+   542→   542→
+   543→   543→function MessageContent({ language }: { language: string }) {
+   544→   544→  const isBn = language === 'bn';
+   545→   545→  const fontClass = isBn ? 'font-bangla' : '';
+   546→   546→  const [msg, setMsg] = useState('');
+   547→   547→  const [messages, setMessages] = useState<Array<{text:string;sent:boolean}>>([]);
+   548→   548→  return (
+   549→   549→    <div>
+   550→   550→      <h2 className={`font-bold mb-4 ${fontClass}`}>{isBn ? 'বার্তা' : 'Messages'}</h2>
+   551→   551→      <Card className="border-primary/10"><CardContent className="p-4 sm:p-6">
+   552→   552→        <div className="min-h-[200px] max-h-64 overflow-y-auto space-y-2 p-3 bg-muted/30 rounded-lg mb-3">
+   553→   553→          {messages.length === 0 && <p className={`text-center text-sm text-muted-foreground ${fontClass}`}>{isBn ? 'কোনো বার্তা নেই' : 'No messages yet'}</p>}
+   554→   554→          {messages.map((m, i) => <div key={i} className={`flex ${m.sent ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[80%] px-3 py-1.5 rounded-lg text-sm ${m.sent ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{m.text}</div></div>)}
+   555→   555→        </div>
+   556→   556→        <div className="flex gap-2">
+   557→   557→          <Input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder={t('typeMessage', language)} className="h-11" onKeyDown={(e) => { if (e.key === 'Enter' && msg) { setMessages((p) => [...p, { text: msg, sent: true }]); setMsg(''); } }} />
+   558→   558→          <Button className="min-h-[44px]" onClick={() => { if (msg) { setMessages((p) => [...p, { text: msg, sent: true }]); setMsg(''); } }}><ArrowRight className="w-4 h-4" /></Button>
+   559→   559→        </div>
+   560→   560→      </CardContent></Card>
+   561→   561→    </div>
+   562→   562→  );
+   563→   563→}
+   564→   564→
+   565→   565→function ProfileContent({ user, navigate, language, un }: {
+   566→   566→  user: { name: string; email: string; phone?: string; username: string; isKycVerified: boolean; role: string; gender?: string; dateOfBirth?: string };
+   567→   567→  navigate: (page: string, params?: Record<string, string>) => void;
+   568→   568→  language: string; un: string;
+   569→   569→}) {
+   570→   570→  const isBn = language === 'bn';
+   571→   571→  const fontClass = isBn ? 'font-bangla' : '';
+   572→   572→  return (
+   573→   573→    <div>
+   574→   574→      <h2 className={`font-bold mb-4 ${fontClass}`}>{t('profile', language)}</h2>
+   575→   575→      <Card className="border-primary/10"><CardContent className="p-4 sm:p-6 space-y-4">
+   576→   576→        <div className="flex items-center gap-4 mb-4">
+   577→   577→          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-8 h-8 text-primary" /></div>
+   578→   578→          <div><p className="text-xl font-bold">{user.name}</p><p className="text-sm text-muted-foreground">@{un}</p></div>
+   579→   579→        </div>
+   580→   580→        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   581→   581→          <div className="space-y-1.5"><Label className={fontClass}>{t('name', language)}</Label><Input className="h-11" defaultValue={user.name} /></div>
+   582→   582→          <div className="space-y-1.5"><Label className={fontClass}>{t('email', language)}</Label><Input className="h-11" defaultValue={user.email} /></div>
+   583→   583→          <div className="space-y-1.5"><Label className={fontClass}>{t('phone', language)}</Label><Input className="h-11" defaultValue={user.phone || ''} /></div>
+   584→   584→          <div className="space-y-1.5"><Label className={fontClass}>{isBn ? 'লিঙ্গ' : 'Gender'}</Label><Input className="h-11" defaultValue={user.gender || ''} /></div>
+   585→   585→        </div>
+   586→   586→        <div className="flex items-center gap-2"><Badge variant={user.isKycVerified ? 'default' : 'secondary'}>{user.isKycVerified ? (isBn ? 'কেওয়াইসি যাচাইকৃত' : 'KYC Verified') : (isBn ? 'কেওয়াইসি অযাচাইকৃত' : 'KYC Unverified')}</Badge>
+   587→   587→          {!user.isKycVerified && <Button variant="outline" size="sm" onClick={() => navigate('kyc', { username: un })}><ShieldCheck className="w-3 h-3 mr-1" />{isBn ? 'যাচাই করুন' : 'Verify Now'}</Button>}
+   588→   588→        </div>
+   589→   589→        <Button className="bg-gradient-to-r from-primary to-primary/90 min-h-[44px] w-full sm:w-auto">{t('save', language)}</Button>
+   590→   590→      </CardContent></Card>
+   591→   591→    </div>
+   592→   592→  );
+   593→   593→}
+   594→   594→
+   595→   595→function SettingsContent({ user, language, setLanguage, logout, navigate }: {
+   596→   596→  user: { name: string; email: string; username?: string; oneidMfaEnabled?: boolean }; language: string; setLanguage: (lang: 'en' | 'bn') => void; logout: () => void; navigate: (page: string, params?: Record<string, string>) => void;
+   597→   597→}) {
+   598→   598→  const isBn = language === 'bn';
+   599→   599→  const fontClass = isBn ? 'font-bangla' : '';
+   600→   600→  return (
+   601→   601→    <div>
+   602→   602→      <h2 className={`font-bold mb-4 ${fontClass}`}>{t('settings', language)}</h2>
+   603→   603→      <Card className="border-primary/10"><CardContent className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+   604→   604→        <div className="flex items-center justify-between">
+   605→   605→          <div><p className={`font-medium ${fontClass}`}>{t('language', language)}</p><p className="text-sm text-muted-foreground">{language === 'en' ? 'English' : 'বাংলা'}</p></div>
+   606→   606→          <Select value={language} onValueChange={(v) => setLanguage(v as 'en' | 'bn')}><SelectTrigger className="w-full sm:w-28 h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="bn">বাংলা</SelectItem></SelectContent></Select>
+   607→   607→        </div>
+   608→   608→        <Separator />
+   609→   609→        <div className="flex items-center justify-between">
+   610→   610→          <div><p className={`font-medium ${fontClass}`}>{t('notificationsSettings', language)}</p><p className="text-sm text-muted-foreground">{isBn ? 'পুশ বিজ্ঞপ্তি' : 'Push notifications'}</p></div>
+   611→   611→          <Switch defaultChecked />
+   612→   612→        </div>
+   613→   613→        <Separator />
+   614→   614→        <div className="flex items-center justify-between cursor-pointer" onClick={() => navigate('security', { username: user?.username || '' })}>
+   615→   615→          <div><p className={`font-medium ${fontClass}`}>{t('security', language)}</p><p className="text-sm text-muted-foreground">{isBn ? 'দ্বি-ফ্যাক্টর প্রমাণীকরণ' : 'Two-factor auth'}</p></div>
+   616→   616→          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+   617→   617→        </div>
+   618→   618→        <Separator />
+   619→   619→        <Button variant="destructive" className="min-h-[44px] w-full sm:w-auto" onClick={logout}>{t('logout', language)}</Button>
+   620→   620→      </CardContent></Card>
+   621→   621→    </div>
+   622→   622→  );
+   623→   623→}
+   624→   624→

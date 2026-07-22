@@ -1,0 +1,637 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect } from 'react';
+     4→import { motion } from 'framer-motion';
+     5→import { useTheme } from 'next-themes';
+     6→import {
+     7→  Moon, Sun, Monitor, Globe, Menu, ChevronDown,
+     8→  Bus, TrainFront, Plane, Ship, Ticket, LogOut,
+     9→  User, Wallet, Settings, Shield, Bell, LayoutDashboard,
+    10→  MoonStar
+    11→} from 'lucide-react';
+    12→import { Button } from '@/components/ui/button';
+    13→import {
+    14→  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    15→  DropdownMenuSeparator, DropdownMenuTrigger,
+    16→  DropdownMenuLabel
+    17→} from '@/components/ui/dropdown-menu';
+    18→import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+    19→import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+    20→import { Badge } from '@/components/ui/badge';
+    21→import { Separator } from '@/components/ui/separator';
+    22→import { useAuthStore, useLanguageStore } from '@/lib/store';
+    23→import { useNav } from '@/lib/use-nav';
+    24→import { usePathname, useRouter } from 'next/navigation';
+    25→import { getPagePath } from '@/lib/navigation';
+    26→import { t } from '@/lib/i18n';
+    27→import type { Language } from '@/lib/i18n';
+    28→
+    29→const transportItems = [
+    30→  { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const },
+    31→  { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const },
+    32→  { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const },
+    33→  { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const },
+    34→];
+    35→
+    36→export default function Header() {
+    37→  const [scrolled, setScrolled] = useState(false);
+    38→  const [mobileOpen, setMobileOpen] = useState(false);
+    39→  const { theme, setTheme } = useTheme();
+    40→  const { navigate } = useNav();
+    41→  const pathname = usePathname();
+    42→  const router = useRouter();
+    43→  const { user, isAuthenticated, logout } = useAuthStore();
+    44→  const { language, setLanguage } = useLanguageStore();
+    45→
+    46→  useEffect(() => {
+    47→    const handleScroll = () => {
+    48→      setScrolled(window.scrollY > 10);
+    49→    };
+    50→    window.addEventListener('scroll', handleScroll, { passive: true });
+    51→    return () => window.removeEventListener('scroll', handleScroll);
+    52→  }, []);
+    53→
+    54→  const switchLanguage = () => {
+    55→    const newLang = language === 'en' ? 'bn' : 'en';
+    56→    setLanguage(newLang);
+    57→    const currentPath = pathname.replace(`/${language}`, `/${newLang}`);
+    58→    router.push(currentPath);
+    59→  };
+    60→
+    61→  const handleNavigate = (page: string, params?: Record<string, string>) => {
+    62→    // Auto-inject username for user-panel routes when authenticated
+    63→    const userPanelPages = ['profile', 'dashboard', 'my-tickets', 'my-orders', 'wallet', 'wallet-balance', 'wallet-payout', 'withdraw-history', 'transactions', 'reviews', 'address', 'message', 'kyc', 'settings', 'notifications', 'chat'];
+    64→    if (user?.username && userPanelPages.includes(page) && !params?.username) {
+    65→      navigate(page, { ...params, username: user.username });
+    66→    } else {
+    67→      navigate(page, params);
+    68→    }
+    69→    setMobileOpen(false);
+    70→  };
+    71→
+    72→  const getInitials = (name: string) => {
+    73→    return name
+    74→      .split(' ')
+    75→      .map((n) => n[0])
+    76→      .join('')
+    77→      .toUpperCase()
+    78→      .slice(0, 2);
+    79→  };
+    80→
+    81→  const isActive = (page: string) => {
+    82→    const targetPath = getPagePath(language, page);
+    83→    if (['search', 'bus', 'train', 'flight', 'launch'].includes(page)) {
+    84→      return pathname.startsWith(`/${language}/buy-tickets`);
+    85→    }
+    86→    return pathname === targetPath;
+    87→  };
+    88→
+    89→  return (
+    90→    <motion.header
+    91→      initial={{ y: -20, opacity: 0 }}
+    92→      animate={{ y: 0, opacity: 1 }}
+    93→      transition={{ duration: 0.4, ease: 'easeOut' }}
+    94→      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+    95→        scrolled
+    96→          ? 'glass shadow-lg border-b border-border/50'
+    97→          : 'bg-background/95 backdrop-blur-sm border-b border-border/30'
+    98→      }`}
+    99→    >
+   100→      <div className="container mx-auto flex h-16 items-center justify-between px-3 sm:px-4 lg:px-8 overflow-hidden">
+   101→        {/* Logo */}
+   102→        <motion.button
+   103→          onClick={() => handleNavigate('home')}
+   104→          className="flex items-center gap-2 group min-w-0 shrink-0 sm:shrink"
+   105→          whileHover={{ scale: 1.02 }}
+   106→          whileTap={{ scale: 0.98 }}
+   107→        >
+   108→          <div className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-md group-hover:shadow-primary/30 transition-shadow shrink-0">
+   109→            <MoonStar className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
+   110→          </div>
+   111→          <div className="flex flex-col min-w-0">
+   112→            <span className={`text-sm sm:text-lg font-bold leading-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+   113→              {t('appName', language)}
+   114→            </span>
+   115→            <span className={`text-[9px] sm:text-[10px] text-muted-foreground leading-tight truncate hidden sm:block ${language === 'bn' ? 'font-bangla' : ''}`}>
+   116→              {t('appSlogan', language)}
+   117→            </span>
+   118→          </div>
+   119→        </motion.button>
+   120→
+   121→        {/* Desktop Navigation */}
+   122→        <nav className="hidden lg:flex items-center gap-1">
+   123→          <NavButton
+   124→            active={isActive('home')}
+   125→            onClick={() => handleNavigate('home')}
+   126→            label={t('home', language)}
+   127→            lang={language}
+   128→          />
+   129→
+   130→          {/* Buy Tickets Dropdown */}
+   131→          <DropdownMenu>
+   132→            <DropdownMenuTrigger asChild>
+   133→              <button
+   134→                className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+   135→                  pathname.startsWith(`/${language}/buy-tickets`)
+   136→                    ? 'bg-accent text-accent-foreground'
+   137→                    : 'text-muted-foreground'
+   138→                } ${language === 'bn' ? 'font-bangla' : ''}`}
+   139→              >
+   140→                <Ticket className="w-4 h-4" />
+   141→                {t('buyTickets', language)}
+   142→                <ChevronDown className="w-3 h-3 opacity-50" />
+   143→              </button>
+   144→            </DropdownMenuTrigger>
+   145→            <DropdownMenuContent align="center" className="w-52">
+   146→              <DropdownMenuLabel className={language === 'bn' ? 'font-bangla' : ''}>
+   147→                {t('transport', language)}
+   148→              </DropdownMenuLabel>
+   149→              <DropdownMenuSeparator />
+   150→              {transportItems.map((item) => (
+   151→                <DropdownMenuItem
+   152→                  key={item.id}
+   153→                  onClick={() => handleNavigate(item.id)}
+   154→                  className={`cursor-pointer gap-3 ${language === 'bn' ? 'font-bangla' : ''}`}
+   155→                >
+   156→                  <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
+   157→                    <item.icon className="w-4 h-4 text-primary" />
+   158→                  </div>
+   159→                  <div className="flex flex-col">
+   160→                    <span className="font-medium">{t(item.labelKey, language)}</span>
+   161→                    <span className="text-xs text-muted-foreground">
+   162→                      {language === 'bn'
+   163→                        ? `${t(item.labelKey, language)} টিকেট`
+   164→                        : `${t(item.labelKey, language)} Tickets`}
+   165→                    </span>
+   166→                  </div>
+   167→                </DropdownMenuItem>
+   168→              ))}
+   169→            </DropdownMenuContent>
+   170→          </DropdownMenu>
+   171→
+   172→          <NavButton
+   173→            active={isActive('sell-ticket') || isActive('create-ticket')}
+   174→            onClick={() => handleNavigate('sell-ticket')}
+   175→            label={t('sellTickets', language)}
+   176→            lang={language}
+   177→          />
+   178→
+   179→          <NavButton
+   180→            active={isActive('how-it-works')}
+   181→            onClick={() => handleNavigate('how-it-works')}
+   182→            label={t('howItWorks', language)}
+   183→            lang={language}
+   184→          />
+   185→
+   186→          <NavButton
+   187→            active={isActive('faq')}
+   188→            onClick={() => handleNavigate('faq')}
+   189→            label={t('faq', language)}
+   190→            lang={language}
+   191→          />
+   192→        </nav>
+   193→
+   194→        {/* Right Side Actions */}
+   195→        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+   196→          {/* Language Switcher */}
+   197→          <motion.div whileTap={{ scale: 0.95 }}>
+   198→            <Button
+   199→              variant="ghost"
+   200→              size="sm"
+   201→              onClick={switchLanguage}
+   202→              className="gap-1.5 text-sm font-medium min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
+   203→            >
+   204→              <Globe className="w-4 h-4 text-primary" />
+   205→              <span className="hidden sm:inline">{language === 'en' ? 'বাংলা' : 'EN'}</span>
+   206→            </Button>
+   207→          </motion.div>
+   208→
+   209→          {/* Theme Toggle */}
+   210→          <DropdownMenu>
+   211→            <DropdownMenuTrigger asChild>
+   212→              <Button variant="ghost" size="icon" className="relative min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
+   213→                <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+   214→                <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+   215→                <span className="sr-only">Toggle theme</span>
+   216→              </Button>
+   217→            </DropdownMenuTrigger>
+   218→            <DropdownMenuContent align="end">
+   219→              <DropdownMenuItem onClick={() => setTheme('light')} className={language === 'bn' ? 'font-bangla' : ''}>
+   220→                <Sun className="w-4 h-4 mr-2" />
+   221→                {t('lightMode', language)}
+   222→                {theme === 'light' && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
+   223→              </DropdownMenuItem>
+   224→              <DropdownMenuItem onClick={() => setTheme('dark')} className={language === 'bn' ? 'font-bangla' : ''}>
+   225→                <Moon className="w-4 h-4 mr-2" />
+   226→                {t('darkMode', language)}
+   227→                {theme === 'dark' && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
+   228→              </DropdownMenuItem>
+   229→              <DropdownMenuItem onClick={() => setTheme('system')} className={language === 'bn' ? 'font-bangla' : ''}>
+   230→                <Monitor className="w-4 h-4 mr-2" />
+   231→                {t('systemMode', language)}
+   232→                {theme === 'system' && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
+   233→              </DropdownMenuItem>
+   234→            </DropdownMenuContent>
+   235→          </DropdownMenu>
+   236→
+   237→          {/* Auth Buttons or User Menu */}
+   238→          {isAuthenticated && user ? (
+   239→            <DropdownMenu>
+   240→              <DropdownMenuTrigger asChild>
+   241→                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+   242→                  <Avatar className="h-8 w-8 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+   243→                    <AvatarImage src={user.avatar} alt={user.name} />
+   244→                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+   245→                      {getInitials(user.name)}
+   246→                    </AvatarFallback>
+   247→                  </Avatar>
+   248→                  {user.isKycVerified && (
+   249→                    <div className="absolute -bottom-0.5 -right-0.5">
+   250→                      <Shield className="w-3.5 h-3.5 text-primary fill-primary" />
+   251→                    </div>
+   252→                  )}
+   253→                </Button>
+   254→              </DropdownMenuTrigger>
+   255→              <DropdownMenuContent className="w-56" align="end" forceMount>
+   256→                <DropdownMenuLabel className="font-normal">
+   257→                  <div className="flex flex-col space-y-1">
+   258→                    <p className="text-sm font-medium leading-none">{user.name}</p>
+   259→                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+   260→                    {user.isKycVerified && (
+   261→                      <Badge variant="secondary" className="w-fit mt-1 gap-1">
+   262→                        <Shield className="w-3 h-3" />
+   263→                        {t('verified', language)}
+   264→                      </Badge>
+   265→                    )}
+   266→                  </div>
+   267→                </DropdownMenuLabel>
+   268→                <DropdownMenuSeparator />
+   269→                <DropdownMenuItem onClick={() => handleNavigate('profile')} className={language === 'bn' ? 'font-bangla' : ''}>
+   270→                  <User className="w-4 h-4 mr-2" />
+   271→                  {t('profile', language)}
+   272→                </DropdownMenuItem>
+   273→                <DropdownMenuItem onClick={() => handleNavigate('settings')} className={language === 'bn' ? 'font-bangla' : ''}>
+   274→                  <Settings className="w-4 h-4 mr-2" />
+   275→                  {t('settings', language)}
+   276→                </DropdownMenuItem>
+   277→                <DropdownMenuItem onClick={() => handleNavigate('wallet')} className={language === 'bn' ? 'font-bangla' : ''}>
+   278→                  <Wallet className="w-4 h-4 mr-2" />
+   279→                  {t('wallet', language)}
+   280→                </DropdownMenuItem>
+   281→                <DropdownMenuItem onClick={() => handleNavigate('my-tickets')} className={language === 'bn' ? 'font-bangla' : ''}>
+   282→                  <Ticket className="w-4 h-4 mr-2" />
+   283→                  {t('myTickets', language)}
+   284→                </DropdownMenuItem>
+   285→                <DropdownMenuItem onClick={() => handleNavigate('my-orders')} className={language === 'bn' ? 'font-bangla' : ''}>
+   286→                  <LayoutDashboard className="w-4 h-4 mr-2" />
+   287→                  {t('myOrders', language)}
+   288→                </DropdownMenuItem>
+   289→                <DropdownMenuItem onClick={() => handleNavigate('notifications')} className={language === 'bn' ? 'font-bangla' : ''}>
+   290→                  <Bell className="w-4 h-4 mr-2" />
+   291→                  {t('notifications', language)}
+   292→                </DropdownMenuItem>
+   293→                {!user.isKycVerified && (
+   294→                  <DropdownMenuItem onClick={() => handleNavigate('kyc')} className={language === 'bn' ? 'font-bangla' : ''}>
+   295→                    <Shield className="w-4 h-4 mr-2" />
+   296→                    {t('kycVerification', language)}
+   297→                  </DropdownMenuItem>
+   298→                )}
+   299→                <DropdownMenuSeparator />
+   300→                <DropdownMenuItem
+   301→                  onClick={() => {
+   302→                    logout();
+   303→                    handleNavigate('home');
+   304→                  }}
+   305→                  className="text-destructive focus:text-destructive"
+   306→                >
+   307→                  <LogOut className="w-4 h-4 mr-2" />
+   308→                  {t('logout', language)}
+   309→                </DropdownMenuItem>
+   310→              </DropdownMenuContent>
+   311→            </DropdownMenu>
+   312→          ) : (
+   313→            <div className="hidden sm:flex items-center gap-2">
+   314→              <Button
+   315→                variant="ghost"
+   316→                size="sm"
+   317→                onClick={() => handleNavigate('login')}
+   318→                className={language === 'bn' ? 'font-bangla' : ''}
+   319→              >
+   320→                {t('login', language)}
+   321→              </Button>
+   322→              <Button
+   323→                size="sm"
+   324→                onClick={() => handleNavigate('register')}
+   325→                className="bg-gradient-to-r from-primary to-primary/90 shadow-md hover:shadow-primary/25 transition-shadow"
+   326→              >
+   327→                {t('register', language)}
+   328→              </Button>
+   329→            </div>
+   330→          )}
+   331→
+   332→          {/* Mobile Menu */}
+   333→          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+   334→            <SheetTrigger asChild>
+   335→              <Button variant="ghost" size="icon" className="lg:hidden min-h-[44px] min-w-[44px]">
+   336→                <Menu className="w-5 h-5" />
+   337→                <span className="sr-only">Open menu</span>
+   338→              </Button>
+   339→            </SheetTrigger>
+   340→            <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 overflow-y-auto">
+   341→              <SheetHeader className="p-5 pb-3">
+   342→                <SheetTitle className="flex items-center gap-2">
+   343→                  <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80">
+   344→                    <MoonStar className="w-5 h-5 text-primary-foreground" />
+   345→                  </div>
+   346→                  <span className={`text-lg bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent ${language === 'bn' ? 'font-bangla' : ''}`}>
+   347→                    {t('appName', language)}
+   348→                  </span>
+   349→                </SheetTitle>
+   350→              </SheetHeader>
+   351→
+   352→              <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto custom-scrollbar">
+   353→                {/* Mobile User Info */}
+   354→                {isAuthenticated && user && (
+   355→                  <div className="px-5 py-4 border-b">
+   356→                    <div className="flex items-center gap-3">
+   357→                      <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+   358→                        <AvatarImage src={user.avatar} alt={user.name} />
+   359→                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+   360→                          {getInitials(user.name)}
+   361→                        </AvatarFallback>
+   362→                      </Avatar>
+   363→                      <div className="flex-1 min-w-0">
+   364→                        <p className="text-sm font-medium truncate">{user.name}</p>
+   365→                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+   366→                      </div>
+   367→                      {user.isKycVerified && (
+   368→                        <Badge variant="secondary" className="gap-1 shrink-0">
+   369→                          <Shield className="w-3 h-3" />
+   370→                          {t('verified', language)}
+   371→                        </Badge>
+   372→                      )}
+   373→                    </div>
+   374→                  </div>
+   375→                )}
+   376→
+   377→                {/* Mobile Nav Links */}
+   378→                <nav className="flex flex-col px-3 py-2">
+   379→                  <MobileNavItem
+   380→                    icon={<Ticket className="w-5 h-5" />}
+   381→                    label={t('home', language)}
+   382→                    active={isActive('home')}
+   383→                    onClick={() => handleNavigate('home')}
+   384→                    lang={language}
+   385→                  />
+   386→
+   387→                  {/* Buy Tickets Section */}
+   388→                  <div className="px-2 py-2 mt-1">
+   389→                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
+   390→                      {t('buyTickets', language)}
+   391→                    </p>
+   392→                  </div>
+   393→                  {transportItems.map((item) => (
+   394→                    <MobileNavItem
+   395→                      key={item.id}
+   396→                      icon={<item.icon className="w-5 h-5" />}
+   397→                      label={`${t(item.labelKey, language)} ${t('tickets', language)}`}
+   398→                      active={isActive(item.id)}
+   399→                      onClick={() => handleNavigate(item.id)}
+   400→                      lang={language}
+   401→                    />
+   402→                  ))}
+   403→
+   404→                  <div className="px-2 py-2 mt-1">
+   405→                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
+   406→                      {t('sellTickets', language)}
+   407→                    </p>
+   408→                  </div>
+   409→                  <MobileNavItem
+   410→                    icon={<Ticket className="w-5 h-5" />}
+   411→                    label={t('sellTickets', language)}
+   412→                    active={isActive('sell-ticket') || isActive('create-ticket')}
+   413→                    onClick={() => handleNavigate('sell-ticket')}
+   414→                    lang={language}
+   415→                  />
+   416→
+   417→                  <div className="px-2 py-2 mt-1">
+   418→                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider`}>
+   419→                      Info
+   420→                    </p>
+   421→                  </div>
+   422→                  <MobileNavItem
+   423→                    icon={<Ticket className="w-5 h-5" />}
+   424→                    label={t('howItWorks', language)}
+   425→                    active={isActive('how-it-works')}
+   426→                    onClick={() => handleNavigate('how-it-works')}
+   427→                    lang={language}
+   428→                  />
+   429→                  <MobileNavItem
+   430→                    icon={<Ticket className="w-5 h-5" />}
+   431→                    label={t('faq', language)}
+   432→                    active={isActive('faq')}
+   433→                    onClick={() => handleNavigate('faq')}
+   434→                    lang={language}
+   435→                  />
+   436→                  <MobileNavItem
+   437→                    icon={<Ticket className="w-5 h-5" />}
+   438→                    label={t('support', language)}
+   439→                    active={isActive('support')}
+   440→                    onClick={() => handleNavigate('support')}
+   441→                    lang={language}
+   442→                  />
+   443→                </nav>
+   444→
+   445→                {/* Mobile Auth / User Actions */}
+   446→                <Separator className="my-1" />
+   447→                {isAuthenticated && user ? (
+   448→                  <nav className="flex flex-col px-3 py-2">
+   449→                    <MobileNavItem
+   450→                      icon={<User className="w-5 h-5" />}
+   451→                      label={t('profile', language)}
+   452→                      active={isActive('profile')}
+   453→                      onClick={() => handleNavigate('profile')}
+   454→                      lang={language}
+   455→                    />
+   456→                    <MobileNavItem
+   457→                      icon={<Wallet className="w-5 h-5" />}
+   458→                      label={t('wallet', language)}
+   459→                      active={isActive('wallet')}
+   460→                      onClick={() => handleNavigate('wallet')}
+   461→                      lang={language}
+   462→                    />
+   463→                    <MobileNavItem
+   464→                      icon={<Ticket className="w-5 h-5" />}
+   465→                      label={t('myTickets', language)}
+   466→                      active={isActive('my-tickets')}
+   467→                      onClick={() => handleNavigate('my-tickets')}
+   468→                      lang={language}
+   469→                    />
+   470→                    <MobileNavItem
+   471→                      icon={<LayoutDashboard className="w-5 h-5" />}
+   472→                      label={t('myOrders', language)}
+   473→                      active={isActive('my-orders')}
+   474→                      onClick={() => handleNavigate('my-orders')}
+   475→                      lang={language}
+   476→                    />
+   477→                    <MobileNavItem
+   478→                      icon={<Bell className="w-5 h-5" />}
+   479→                      label={t('notifications', language)}
+   480→                      active={isActive('notifications')}
+   481→                      onClick={() => handleNavigate('notifications')}
+   482→                      lang={language}
+   483→                    />
+   484→                    {!user.isKycVerified && (
+   485→                      <MobileNavItem
+   486→                        icon={<Shield className="w-5 h-5" />}
+   487→                        label={t('kycVerification', language)}
+   488→                        active={isActive('kyc')}
+   489→                        onClick={() => handleNavigate('kyc')}
+   490→                        lang={language}
+   491→                      />
+   492→                    )}
+   493→                    <MobileNavItem
+   494→                      icon={<Settings className="w-5 h-5" />}
+   495→                      label={t('settings', language)}
+   496→                      active={isActive('settings')}
+   497→                      onClick={() => handleNavigate('settings')}
+   498→                      lang={language}
+   499→                    />
+   500→                    <Separator className="my-1" />
+   501→                    <MobileNavItem
+   502→                      icon={<LogOut className="w-5 h-5" />}
+   503→                      label={t('logout', language)}
+   504→                      active={false}
+   505→                      onClick={() => {
+   506→                        logout();
+   507→                        handleNavigate('home');
+   508→                      }}
+   509→                      lang={language}
+   510→                      destructive
+   511→                    />
+   512→                  </nav>
+   513→                ) : (
+   514→                  <div className="px-5 py-4 flex flex-col gap-3">
+   515→                    <Button
+   516→                      variant="outline"
+   517→                      className="w-full min-h-[44px]"
+   518→                      onClick={() => handleNavigate('login')}
+   519→                    >
+   520→                      {t('login', language)}
+   521→                    </Button>
+   522→                    <Button
+   523→                      className="w-full min-h-[44px] bg-gradient-to-r from-primary to-primary/90"
+   524→                      onClick={() => handleNavigate('register')}
+   525→                    >
+   526→                      {t('register', language)}
+   527→                    </Button>
+   528→                  </div>
+   529→                )}
+   530→
+   531→                {/* Mobile Footer Controls */}
+   532→                <div className="mt-auto border-t px-5 py-4 flex items-center justify-between gap-3">
+   533→                  <Button
+   534→                    variant="outline"
+   535→                    size="sm"
+   536→                    onClick={switchLanguage}
+   537→                    className="gap-1.5 min-h-[44px]"
+   538→                  >
+   539→                    <Globe className="w-4 h-4 text-primary" />
+   540→                    {language === 'en' ? 'বাংলা' : 'English'}
+   541→                  </Button>
+   542→                  <div className="flex items-center gap-1">
+   543→                    {(['light', 'dark', 'system'] as const).map((mode) => (
+   544→                      <Button
+   545→                        key={mode}
+   546→                        variant={theme === mode ? 'default' : 'ghost'}
+   547→                        size="icon"
+   548→                        className="h-10 w-10 min-h-[44px] min-w-[44px]"
+   549→                        onClick={() => setTheme(mode)}
+   550→                      >
+   551→                        {mode === 'light' && <Sun className="w-4 h-4" />}
+   552→                        {mode === 'dark' && <Moon className="w-4 h-4" />}
+   553→                        {mode === 'system' && <Monitor className="w-4 h-4" />}
+   554→                      </Button>
+   555→                    ))}
+   556→                  </div>
+   557→                </div>
+   558→              </div>
+   559→            </SheetContent>
+   560→          </Sheet>
+   561→        </div>
+   562→      </div>
+   563→    </motion.header>
+   564→  );
+   565→}
+   566→
+   567→// Desktop Nav Button
+   568→function NavButton({
+   569→  active,
+   570→  onClick,
+   571→  label,
+   572→  lang,
+   573→}: {
+   574→  active: boolean;
+   575→  onClick: () => void;
+   576→  label: string;
+   577→  lang: Language;
+   578→}) {
+   579→  return (
+   580→    <motion.button
+   581→      onClick={onClick}
+   582→      className={`relative px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+   583→        active
+   584→          ? 'text-primary bg-primary/10'
+   585→          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+   586→      } ${lang === 'bn' ? 'font-bangla' : ''}`}
+   587→      whileHover={{ scale: 1.02 }}
+   588→      whileTap={{ scale: 0.98 }}
+   589→    >
+   590→      {label}
+   591→      {active && (
+   592→        <motion.div
+   593→          layoutId="activeNav"
+   594→          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 bg-primary rounded-full"
+   595→          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+   596→        />
+   597→      )}
+   598→    </motion.button>
+   599→  );
+   600→}
+   601→
+   602→// Mobile Nav Item
+   603→function MobileNavItem({
+   604→  icon,
+   605→  label,
+   606→  active,
+   607→  onClick,
+   608→  lang,
+   609→  destructive = false,
+   610→}: {
+   611→  icon: React.ReactNode;
+   612→  label: string;
+   613→  active: boolean;
+   614→  onClick: () => void;
+   615→  lang: Language;
+   616→  destructive?: boolean;
+   617→}) {
+   618→  return (
+   619→    <motion.button
+   620→      onClick={onClick}
+   621→      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors w-full text-left min-h-[44px] ${
+   622→        active
+   623→          ? 'bg-primary/10 text-primary'
+   624→          : destructive
+   625→          ? 'text-destructive hover:bg-destructive/10'
+   626→          : 'text-foreground hover:bg-accent'
+   627→      } ${lang === 'bn' ? 'font-bangla' : ''}`}
+   628→      whileTap={{ scale: 0.98 }}
+   629→    >
+   630→      <span className={active ? 'text-primary' : destructive ? 'text-destructive' : 'text-muted-foreground'}>
+   631→        {icon}
+   632→      </span>
+   633→      {label}
+   634→    </motion.button>
+   635→  );
+   636→}
+   637→

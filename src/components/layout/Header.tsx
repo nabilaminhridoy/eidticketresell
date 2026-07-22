@@ -90,7 +90,7 @@ export default function Header() {
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
-          ? 'glass shadow-lg border-b-0'
+          ? 'bg-background/95 backdrop-blur-md shadow-md border-b border-border'
           : 'bg-background/80 backdrop-blur-md border-b border-border/30'
       }`}
     >
@@ -103,11 +103,11 @@ export default function Header() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-primary shadow-md group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow shrink-0">
+          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-primary shadow-md group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow shrink-0">
             <MoonStar className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className={`text-base font-bold leading-tight text-gradient-spectrum truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
+            <span className={`text-base font-bold leading-tight text-primary truncate ${language === 'bn' ? 'font-bangla' : ''}`}>
               {t('appName', language)}
             </span>
             <span className={`text-[10px] text-muted-foreground leading-tight truncate hidden sm:block ${language === 'bn' ? 'font-bangla' : ''}`}>
@@ -134,8 +134,8 @@ export default function Header() {
               onClick={() => handleNavigate('search')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 ['bus', 'train', 'flight', 'launch', 'search'].includes(currentPage)
-                  ? 'text-primary bg-gradient-to-r from-primary/10 to-primary/5'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground hover-gradient-brand'
+                  ? 'text-primary bg-primary/10'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               } ${language === 'bn' ? 'font-bangla' : ''}`}
             >
               <Ticket className="w-4 h-4" />
@@ -174,10 +174,10 @@ export default function Header() {
                       transition={{ delay: index * 0.05 }}
                     >
                       <div className={`flex items-center justify-center w-10 h-10 rounded-lg shadow-sm ${
-                        index === 0 ? 'icon-bg-green' :
-                        index === 1 ? 'icon-bg-blue' :
-                        index === 2 ? 'icon-bg-orange' :
-                        'icon-bg-green'
+                        index === 0 ? 'bg-primary text-primary-foreground' :
+                        index === 1 ? 'bg-blue text-blue-foreground' :
+                        index === 2 ? 'bg-orange text-orange-foreground' :
+                        'bg-primary text-primary-foreground'
                       }`}>
                         <item.icon className="w-5 h-5" />
                       </div>
@@ -278,7 +278,7 @@ export default function Header() {
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-8 w-8 ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
                     <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs font-semibold">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                       {getInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -316,7 +316,7 @@ export default function Header() {
                   {t('wallet', language)}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleNavigate('my-tickets')} className={language === 'bn' ? 'font-bangla' : ''}>
-                  <Ticket className="w-4 h-4 mr-2 text-green" />
+                  <Ticket className="w-4 h-4 mr-2 text-primary" />
                   {t('myTickets', language)}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleNavigate('my-orders')} className={language === 'bn' ? 'font-bangla' : ''}>
@@ -359,7 +359,7 @@ export default function Header() {
               <Button
                 size="sm"
                 onClick={() => handleNavigate('register')}
-                className="btn-gradient-brand rounded-lg shadow-gradient-brand hover:shadow-gradient-spectrum"
+                className="rounded-lg"
               >
                 {t('register', language)}
               </Button>
@@ -377,10 +377,10 @@ export default function Header() {
             <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0 overflow-y-auto">
               <SheetHeader className="p-5 pb-3 border-b">
                 <SheetTitle className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-primary shadow-md">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary shadow-md">
                     <MoonStar className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <span className={`text-lg text-gradient-spectrum font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
+                  <span className={`text-lg text-primary font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
                     {t('appName', language)}
                   </span>
                 </SheetTitle>
@@ -389,11 +389,11 @@ export default function Header() {
               <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
                 {/* Mobile User Info */}
                 {isAuthenticated && user && (
-                  <div className="px-5 py-4 border-b bg-gradient-to-r from-primary/5 to-orange/5">
+                  <div className="px-5 py-4 border-b bg-primary/5">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 ring-2 ring-primary/20">
                         <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
+                        <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                           {getInitials(user.name)}
                         </AvatarFallback>
                       </Avatar>
@@ -435,7 +435,7 @@ export default function Header() {
                       active={isActive(item.id)}
                       onClick={() => handleNavigate(item.id)}
                       lang={language}
-                      iconBg={index === 0 ? 'icon-bg-green' : index === 1 ? 'icon-bg-blue' : index === 2 ? 'icon-bg-orange' : 'icon-bg-green'}
+                      iconBg={index === 0 ? 'bg-primary text-primary-foreground' : index === 1 ? 'bg-blue text-blue-foreground' : index === 2 ? 'bg-orange text-orange-foreground' : 'bg-primary text-primary-foreground'}
                     />
                   ))}
 
@@ -450,7 +450,7 @@ export default function Header() {
                     active={isActive('sell-ticket') || isActive('create-ticket')}
                     onClick={() => handleNavigate('sell-ticket')}
                     lang={language}
-                    iconBg="icon-bg-orange"
+                    iconBg="bg-orange text-orange-foreground"
                   />
 
                   <div className="px-3 py-2 mt-2">
@@ -498,7 +498,7 @@ export default function Header() {
                       active={isActive('wallet')}
                       onClick={() => handleNavigate('wallet')}
                       lang={language}
-                      iconBg="icon-bg-orange"
+                      iconBg="bg-orange text-orange-foreground"
                     />
                     <MobileNavItem
                       icon={<Ticket className="w-5 h-5" />}
@@ -506,7 +506,7 @@ export default function Header() {
                       active={isActive('my-tickets')}
                       onClick={() => handleNavigate('my-tickets')}
                       lang={language}
-                      iconBg="icon-bg-green"
+                      iconBg="bg-primary text-primary-foreground"
                     />
                     <MobileNavItem
                       icon={<LayoutDashboard className="w-5 h-5" />}
@@ -514,7 +514,7 @@ export default function Header() {
                       active={isActive('my-orders')}
                       onClick={() => handleNavigate('my-orders')}
                       lang={language}
-                      iconBg="icon-bg-blue"
+                      iconBg="bg-blue text-blue-foreground"
                     />
                     <MobileNavItem
                       icon={<Bell className="w-5 h-5" />}
@@ -522,7 +522,7 @@ export default function Header() {
                       active={isActive('notifications')}
                       onClick={() => handleNavigate('notifications')}
                       lang={language}
-                      iconBg="icon-bg-orange"
+                      iconBg="bg-orange text-orange-foreground"
                     />
                     {!user.isKycVerified && (
                       <MobileNavItem
@@ -563,7 +563,7 @@ export default function Header() {
                       {t('login', language)}
                     </Button>
                     <Button
-                      className="w-full min-h-[44px] btn-gradient-primary rounded-lg"
+                      className="w-full min-h-[44px] rounded-lg"
                       onClick={() => handleNavigate('register')}
                     >
                       {t('register', language)}
@@ -606,8 +606,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Gradient divider line under header when scrolled */}
-      {scrolled && <div className="h-1 bg-gradient-spectrum" />}
+      {/* Solid divider line under header when scrolled */}
+      {scrolled && <div className="h-0.5 bg-primary" />}
     </motion.header>
   );
 }
@@ -629,8 +629,8 @@ function NavButton({
       onClick={onClick}
       className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
         active
-          ? 'text-primary bg-gradient-to-r from-primary/10 to-primary/5'
-          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground hover-gradient-brand'
+          ? 'text-primary bg-primary/10'
+          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
       } ${lang === 'bn' ? 'font-bangla' : ''}`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -639,7 +639,7 @@ function NavButton({
       {active && (
         <motion.div
           layoutId="activeNav"
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 bg-gradient-spectrum rounded-full"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 bg-primary rounded-full"
           transition={{ type: 'spring', stiffness: 380, damping: 30 }}
         />
       )}
@@ -670,10 +670,10 @@ function MobileNavItem({
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left min-h-[44px] ${
         active
-          ? 'bg-gradient-to-r from-primary/10 via-orange/5 to-primary/5 text-primary'
+          ? 'bg-primary/10 text-primary'
           : destructive
           ? 'text-destructive hover:bg-destructive/10'
-          : 'text-foreground hover:bg-accent hover-gradient-brand'
+          : 'text-foreground hover:bg-accent'
       } ${lang === 'bn' ? 'font-bangla' : ''}`}
       whileTap={{ scale: 0.98 }}
     >

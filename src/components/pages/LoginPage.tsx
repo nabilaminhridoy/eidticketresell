@@ -145,14 +145,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-mesh p-3 sm:p-4">
-      {/* Animated background decorations */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] gradient-orb-green" />
-        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] gradient-orb-blue" />
-        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] gradient-orb-orange" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
       <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md mx-auto relative">
         {/* Logo */}
         <motion.div
@@ -161,11 +154,11 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/25 shadow-gradient-green">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/25">
             <Ticket className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className={`text-2xl font-bold ${fontClass}`}>
-            <span className="text-gradient-brand">{t('login', language)}</span>
+            <span className="text-primary">{t('login', language)}</span>
           </h1>
           <p className={`text-sm text-muted-foreground mt-2 ${fontClass}`}>
             {isBn ? 'আপনার অ্যাকাউন্টে প্রবেশ করুন' : 'Welcome back! Sign in to continue'}
@@ -177,9 +170,9 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <Card className="shadow-2xl border-primary/10 overflow-hidden card-gradient-border">
-            {/* Gradient top border - enhanced */}
-            <div className="h-1.5 bg-gradient-spectrum" />
+          <Card className="shadow-2xl border-primary/10 overflow-hidden">
+            {/* Solid top border */}
+            <div className="h-1.5 bg-primary" />
 
             <CardHeader className="pb-2 px-4 sm:px-6 pt-5">
               {/* Login mode toggle */}
@@ -188,7 +181,7 @@ export default function LoginPage() {
                   onClick={() => { setLoginMode('password'); setError(''); setOtpSent(false); }}
                   className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                     loginMode === 'password'
-                      ? 'bg-gradient-primary text-primary-foreground shadow-md'
+                      ? 'bg-primary text-primary-foreground shadow-md'
                       : 'text-muted-foreground hover:text-foreground'
                   } ${fontClass}`}
                 >
@@ -199,7 +192,7 @@ export default function LoginPage() {
                   onClick={() => { setLoginMode('otp'); setError(''); }}
                   className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                     loginMode === 'otp'
-                      ? 'bg-gradient-orange text-orange-foreground shadow-md'
+                      ? 'bg-orange text-orange-foreground shadow-md'
                       : 'text-muted-foreground hover:text-foreground'
                   } ${fontClass}`}
                 >
@@ -222,7 +215,7 @@ export default function LoginPage() {
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       placeholder={isBn ? 'ফোন / ইমেইল / ইউজারনেম' : 'Phone / Email / Username'}
-                      className="pl-10 h-11 border-primary/20 focus:border-primary ring-gradient-focus"
+                      className="pl-10 h-11 border-primary/20 focus:border-primary"
                     />
                   </div>
                 </div>
@@ -247,7 +240,7 @@ export default function LoginPage() {
                           type={showPassword ? 'text' : 'password'}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="pl-10 pr-10 h-11 border-primary/20 focus:border-primary ring-gradient-focus"
+                          className="pl-10 pr-10 h-11 border-primary/20 focus:border-primary"
                         />
                         <button
                           type="button"
@@ -281,8 +274,8 @@ export default function LoginPage() {
                     >
                       {!otpSent ? (
                         <div className="p-4 rounded-xl border border-orange/20 bg-orange/5 text-center space-y-3">
-                          <div className="w-12 h-12 rounded-xl icon-bg-orange mx-auto flex items-center justify-center">
-                            <Shield className="w-6 h-6 text-white" />
+                          <div className="w-12 h-12 rounded-xl bg-orange text-orange-foreground mx-auto flex items-center justify-center shadow-lg">
+                            <Shield className="w-6 h-6" />
                           </div>
                           <p className={`text-sm text-muted-foreground ${fontClass}`}>
                             {isBn ? 'আপনার ফোন বা ইমেইলে ওটিপি পাঠানো হবে' : 'We\'ll send an OTP to your registered phone or email'}
@@ -349,7 +342,7 @@ export default function LoginPage() {
                 {/* Submit button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 btn-gradient-brand rounded-xl text-base shadow-gradient-brand hover:shadow-gradient-spectrum"
+                  className="w-full h-12 rounded-xl text-base"
                   disabled={loading || (loginMode === 'otp' && otpSent && otp.length !== 6)}
                 >
                   {loading ? (
@@ -366,7 +359,7 @@ export default function LoginPage() {
                 {t('dontHaveAccount', language)}{' '}
                 <button
                   onClick={() => navigate('register')}
-                  className="text-primary font-semibold hover:underline min-h-[44px] inline-flex items-center px-1 hover-gradient-underline"
+                  className="text-primary font-semibold hover:underline min-h-[44px] inline-flex items-center px-1"
                 >
                   {t('createNow', language)}
                 </button>
