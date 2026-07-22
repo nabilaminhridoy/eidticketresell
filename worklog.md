@@ -238,3 +238,27 @@ Stage Summary:
 - Error boundaries ADDED: Both `error.tsx` (recoverable errors) and `global-error.tsx` (uncaught exceptions) provide graceful error UI
 - The `[lang]/not-found.tsx` already has a matching 404 design for language-specific routes
 - All using solid premium colors (green primary, orange accent, blue info) with no gradients
+
+---
+Task ID: 6
+Agent: main
+Task: Verify all [lang] routes are working properly
+
+Work Log:
+- User reported all routes weren't working - investigated the issue
+- Found that the server was unstable (OOM crashes on 4GB RAM system) and needed proper watchdog management
+- Set up persistent server with start-stop-daemon watchdog and NODE_OPTIONS="--max-old-space-size=2048"
+- Added allowedDevOrigins to next.config.ts for preview panel cross-origin access
+- Tested ALL 40+ routes via curl - every single one returns HTTP 200 with 45-48KB of content
+- Verified via agent-browser: Home, Buy Tickets, Sell Tickets, Login, FAQs, Safety Guidelines all render correctly
+- No console errors, no performance.measure errors
+- Server remains stable after all route compilations
+
+Stage Summary:
+- ALL routes are confirmed working:
+  - Public Pages: /en, buy-tickets, sell-tickets, how-it-works, safety-guidelines, faqs, blog, about-us, contact-us, verify-ticket, support, payment-policy, refund-policy, terms-of-service, privacy-policy, cookies-policy, checkout, order (successful/cancelled/failed/pending)
+  - Auth Pages: account/login, account/register, account/forget-password, account/reset-password, account/verify-otp
+  - User Panel: {username}/dashboard, {username}/my-tickets, {username}/my-orders, {username}/transactions, {username}/my-reviews, {username}/message, {username}/wallet, {username}/wallet/balance, {username}/wallet/payout-method, {username}/address, {username}
+- Server running stably via watchdog with proper memory limits
+- Cross-origin preview panel access configured in next.config.ts
+- Buy-tickets route supports transport query params (bus, train, flight, launch)
