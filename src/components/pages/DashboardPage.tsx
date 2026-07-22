@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAppStore, useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { useLanguageStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { User, Wallet, Ticket, ShoppingBag, ShieldCheck, Settings, ArrowRight, Check } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { navigate } = useAppStore();
+  const { navigate } = useNav();
   const { user, token, updateUser, logout } = useAuthStore();
   const { language, setLanguage } = useLanguageStore();
   const [tickets, setTickets] = useState([]);

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
+import { useAuthStore, useLanguageStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { t } from '@/lib/i18n';
 import { BD_DIVISIONS, BD_DISTRICTS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,7 @@ interface KycData {
 }
 
 export default function KycPage() {
-  const { navigate } = useAppStore();
+  const { navigate } = useNav();
   const { user, token, updateUser } = useAuthStore();
   const { language } = useLanguageStore();
   const isBn = language === 'bn';

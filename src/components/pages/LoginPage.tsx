@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
+import { useAuthStore, useLanguageStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { t } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,7 @@ import { toast } from 'sonner';
 type LoginMode = 'password' | 'otp';
 
 export default function LoginPage() {
-  const { navigate } = useAppStore();
+  const { navigate } = useNav();
   const { login } = useAuthStore();
   const { language } = useLanguageStore();
   const isBn = language === 'bn';

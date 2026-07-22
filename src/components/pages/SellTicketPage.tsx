@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
+import { useAuthStore, useLanguageStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { t } from '@/lib/i18n';
 import {
   ALL_BD_DISTRICTS,
@@ -232,7 +233,7 @@ function FieldLabel({
 /* ================================================================== */
 
 export default function SellTicketPage() {
-  const { navigate } = useAppStore();
+  const { navigate } = useNav();
   const { user, token, isAuthenticated, updateUser } = useAuthStore();
   const { language } = useLanguageStore();
   const isBn = language === 'bn';

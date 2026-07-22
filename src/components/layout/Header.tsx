@@ -20,10 +20,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { t } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n';
-
-type Page = Parameters<ReturnType<typeof useAppStore>['getState']>[0] extends { navigate: (page: infer P) => void } ? P : never;
 
 const transportItems = [
   { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, desc: 'Bus Tickets' },
@@ -39,7 +38,8 @@ export default function Header() {
   const buyTicketsRef = useRef<HTMLDivElement>(null);
   const buyTicketsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { theme, setTheme } = useTheme();
-  const { currentPage, navigate } = useAppStore();
+  const { currentPage } = useAppStore();
+  const { navigate: navNavigate } = useNav();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { language, setLanguage } = useLanguageStore();
 
@@ -67,7 +67,7 @@ export default function Header() {
   };
 
   const handleNavigate = (page: string, params?: Record<string, string>) => {
-    navigate(page as Page, params);
+    navNavigate(page, params);
     setMobileOpen(false);
     setBuyTicketsHover(false);
   };

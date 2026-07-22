@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { useLanguageStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import {
@@ -55,15 +57,22 @@ interface Ticket {
 }
 
 export default function SearchPage() {
-  const { navigate, pageParams } = useAppStore();
+  const urlSearchParams = useSearchParams();
+  const { pageParams } = useAppStore();
+  const { navigate } = useNav();
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
   const fontClass = isBn ? 'font-bangla' : '';
 
+  // Read params from URL search params first (for direct URL visits), fall back to store pageParams
+  const urlTransport = urlSearchParams.get('transport') || '';
+  const urlFrom = urlSearchParams.get('from') || '';
+  const urlTo = urlSearchParams.get('to') || '';
+
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [from, setFrom] = useState(pageParams.from || '');
-  const [to, setTo] = useState(pageParams.to || '');
-  const [transportType, setTransportType] = useState(pageParams.transportType || 'all');
+  const [from, setFrom] = useState(urlFrom || pageParams.from || '');
+  const [to, setTo] = useState(urlTo || pageParams.to || '');
+  const [transportType, setTransportType] = useState(urlTransport || pageParams.transportType || 'all');
   const [date, setDate] = useState('');
   const [fetching, setFetching] = useState(false);
   const fetchIdRef = useRef(0);

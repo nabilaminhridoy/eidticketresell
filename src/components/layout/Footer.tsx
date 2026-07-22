@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useAppStore, useLanguageStore } from '@/lib/store';
+import { useLanguageStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { t } from '@/lib/i18n';
 
 const quickLinks = [
@@ -42,13 +43,13 @@ const socialLinks = [
 ];
 
 export default function Footer() {
-  const { navigate } = useAppStore();
+  const { navigate } = useNav();
   const { language } = useLanguageStore();
 
   const currentYear = new Date().getFullYear();
 
   const handleNavigate = (page: string) => {
-    navigate(page as Parameters<typeof navigate>[0]);
+    navigate(page);
   };
 
   return (

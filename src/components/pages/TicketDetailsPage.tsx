@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, useAuthStore } from '@/lib/store';
+import { useNav } from '@/lib/use-nav';
 import { useLanguageStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM, TICKET_STATUS, BUS_CLASSES, COURIER_COMPANIES, DELIVERY_SPEEDS, formatDepartureDate, formatDepartureTime } from '@/lib/constants';
@@ -100,11 +101,19 @@ interface OrderData {
 }
 
 // ─── Component ────────────────────────────────────────────
-export default function TicketDetailsPage() {
-  const { navigate, pageParams } = useAppStore();
+interface TicketDetailsPageProps {
+  ticketId?: string;
+}
+
+export default function TicketDetailsPage({ ticketId }: TicketDetailsPageProps = {}) {
+  const { pageParams } = useAppStore();
+  const { navigate } = useNav();
   const { token, isAuthenticated } = useAuthStore();
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
+
+  // Resolve ticket ID: prop from URL path > store pageParams > empty
+  const resolvedTicketId = ticketId || pageParams.id || '';
 
   const [ticket, setTicket] = useState<TicketData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,11 +125,11 @@ export default function TicketDetailsPage() {
 
   // ─── Fetch ticket ────────────────────────────────────
   const fetchTicket = useCallback(async () => {
-    if (!pageParams.id) return;
+    if (!resolvedTicketId) return;
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/tickets/${pageParams.id}`);
+      const res = await fetch(`/api/tickets/${resolvedTicketId}`);
       if (!res.ok) throw new Error(isBn ? 'টিকেট পাওয়া যায়নি' : 'Ticket not found');
       const data = await res.json();
       setTicket(data.ticket || data);
@@ -130,7 +139,7 @@ export default function TicketDetailsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pageParams.id, isBn]);
+  }, [resolvedTicketId, isBn]);
 
   useEffect(() => {
     fetchTicket();
