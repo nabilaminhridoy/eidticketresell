@@ -82,7 +82,7 @@ export default function Footer() {
 
       {/* Main Footer Content */}
       <div className="bg-muted">
-        <div className="container mx-auto px-4 lg:px-8 py-10 lg:py-14">
+        <div className="container mx-auto px-4 lg:px-8 pt-10 pb-0 lg:pt-14 lg:pb-0">
 
           {/* ── Desktop Layout: 4-column grid ── */}
           <div className="hidden lg:grid lg:grid-cols-4 gap-10 lg:gap-12">
@@ -404,7 +404,7 @@ export default function Footer() {
 
       {/* ── Payment Method Image (full width from first to last column) ── */}
       <div className="bg-muted">
-        <div className="container mx-auto px-4 lg:px-8">
+        <div className="container mx-auto px-4 lg:px-8 py-4">
           <img
             src="/Payment.png"
             alt="Payment Methods"

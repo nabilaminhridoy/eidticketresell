@@ -277,3 +277,36 @@ Stage Summary:
 - Circular swap button positioned between FROM/TO columns on desktop, centered below on mobile
 - Search Tickets + Sell Tickets buttons now inside the form card in 2-col grid row
 - Lint passes clean, no new TypeScript errors
+
+---
+Task ID: 10
+Agent: main
+Task: Remove swap arrow between FROM/TO fields and fix footer payment image spacing
+
+Work Log:
+- Analyzed user's two uploaded screenshots using VLM to understand current state
+- Identified swap arrow (ArrowLeftRight icon) between FROM and TO fields in search form — user wants it removed entirely
+- Identified footer payment image spacing issue: too much gap above (40-56px from py-10/py-14 bottom padding), no gap below (0px before copyright bar)
+- Removed ArrowLeftRight import from lucide-react icons in HomePage.tsx
+- Removed useCallback import (was only used for swapCities function)
+- Removed swapCities function entirely
+- Removed desktop swap button (absolute positioned circular button between FROM/TO columns)
+- Removed mobile swap button (centered below TO field)
+- Changed FROM/TO grid from `relative grid` to plain `grid` (removed relative positioning needed for swap button)
+- Fixed footer payment image spacing:
+  - Changed main footer content container from `py-10 lg:py-14` to `pt-10 pb-0 lg:pt-14 lg:pb-0` (removed bottom padding)
+  - Changed payment section container from no padding to `py-4` (16px top and bottom padding)
+  - Verified with computed CSS: gap above = 16px, gap below = 16px (equal)
+  - Verified with getBoundingClientRect measurements: 16px above, 16px below
+- Verified with Agent Browser + VLM:
+  - Search form: No swap arrow between FROM and TO fields, 2-column grid layout correct
+  - Desktop footer: spacing approximately equal (~20px above, ~15-18px below)
+  - Mobile footer: spacing approximately equal (~20-25px above, ~15-20px below)
+- Lint passes clean, no errors
+
+Stage Summary:
+- Swap arrow completely removed from search form (both desktop and mobile)
+- Footer payment image spacing equalized: ~16px above and below (previously 40-56px above, 0px below)
+- useCallback import removed (no longer needed)
+- ArrowLeftRight icon import removed
+- All responsive layouts verified working

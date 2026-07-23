@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore, useLanguageStore } from '@/lib/store';
 import {
   Ticket, ArrowRight, Bus, TrainFront, Plane, Ship,
   Shield, Star, Users, Zap, Search, ChevronRight, TrendingUp,
-  MapPin, Sparkles, ArrowLeftRight, CalendarDays
+  MapPin, Sparkles, CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,10 +29,7 @@ export default function HomePage() {
   const [toCity, setToCity] = useState('');
   const [journeyDate, setJourneyDate] = useState('');
 
-  const swapCities = useCallback(() => {
-    setFromCity(toCity);
-    setToCity(fromCity);
-  }, [fromCity, toCity]);
+
 
   const handleSearch = () => {
     navigate('search', {
@@ -148,7 +145,7 @@ export default function HomePage() {
             >
               <div className="rounded-2xl bg-card border-2 border-primary/15 shadow-xl shadow-primary/5 p-5 sm:p-6">
                 {/* Row 1: FROM + TO with swap button */}
-                <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* FROM */}
                   <div className="space-y-2">
                     <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
@@ -192,30 +189,6 @@ export default function HomePage() {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {/* Swap button — desktop: circular, centered between FROM & TO columns */}
-                  <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10">
-                    <button
-                      type="button"
-                      onClick={swapCities}
-                      className="w-9 h-9 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm hover:shadow-md"
-                      title={isBn ? 'শহর অদলাবদল' : 'Swap cities'}
-                    >
-                      <ArrowLeftRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Swap button — mobile: centered below TO field */}
-                <div className="sm:hidden flex justify-center mt-3 mb-4">
-                  <button
-                    type="button"
-                    onClick={swapCities}
-                    className="w-9 h-9 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm hover:shadow-md"
-                    title={isBn ? 'শহর অদলাবদল' : 'Swap cities'}
-                  >
-                    <ArrowLeftRight className="w-4 h-4" />
-                  </button>
                 </div>
 
                 {/* Row 2: Transport Type + Journey Date */}
