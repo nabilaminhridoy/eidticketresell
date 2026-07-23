@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Toaster } from '@/components/ui/sonner';
-import Header from './Header';
-import Footer from './Footer';
 import { useAppStore, useLanguageStore } from '@/lib/store';
+
+// Dynamic imports to reduce initial compile memory footprint
+const Header = dynamic(() => import('./Header'), { ssr: false });
+const Footer = dynamic(() => import('./Footer'), { ssr: false });
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { currentPage } = useAppStore();

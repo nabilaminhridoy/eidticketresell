@@ -399,14 +399,17 @@ export default function Footer() {
             </Accordion>
           </div>
 
-          {/* ── Payment Method Image (both desktop & mobile) ── */}
-          <div className="mt-8 lg:mt-10">
-            <img
-              src="/Payment.png"
-              alt="Payment Methods"
-              className="w-full max-w-3xl mx-auto"
-            />
-          </div>
+        </div>
+      </div>
+
+      {/* ── Payment Method Image (full width from first to last column) ── */}
+      <div className="bg-muted">
+        <div className="container mx-auto px-4 lg:px-8">
+          <img
+            src="/Payment.png"
+            alt="Payment Methods"
+            className="w-full"
+          />
         </div>
       </div>
 

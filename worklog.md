@@ -27,6 +27,30 @@ Stage Summary:
 - Lint passes clean, server returns 200 for all routes
 
 ---
+Task ID: 8
+Agent: main
+Task: Fix "only z.ai logo appears" issue + Payment.png full width in footer
+
+Work Log:
+- Diagnosed server OOM (Out of Memory) crashes — the 4GB RAM sandbox + heavy page.tsx compilation exceeded memory limits
+- Extracted HomePage component from inline page.tsx to separate /src/components/pages/HomePage.tsx (~500 lines)
+- Rewrote page.tsx to be lightweight (~105 lines) with lazy import for HomePage instead of inline rendering
+- Made AppShell use dynamic imports for Header and Footer (ssr: false) to reduce memory footprint
+- Fixed Footer.tsx: moved Payment.png outside inner container, changed from max-w-3xl mx-auto to w-full in its own bg-muted section spanning full width across all columns
+- Closed agent-browser Chrome to free RAM (1.2GB)
+- Server starts successfully with NODE_OPTIONS="--max-old-space-size=1024" in subshell background mode
+- Verified with Agent Browser: page renders fully — header, home content, footer
+- Verified Buy Tickets hover dropdown (Bus, Train, Flight, Launch)
+- Verified mobile/tablet view: Logo | Language+Theme+Menu header, accordion footer
+- Verified mobile Sheet menu: top nav items + bottom Login | Register
+- Verified footer: TRANSPORT, QUICK LINKS, LEGAL columns, Payment Methods full width, Copyright 2026
+
+Stage Summary:
+- Server OOM resolved by extracting HomePage + dynamic imports for Header/Footer
+- page.tsx reduced from 667 to ~105 lines (HomePage lazy-loaded)
+- AppShell uses next/dynamic for Header/Footer (ssr: false)
+- Payment.png spans full width from first to last column
+- All responsive layouts verified working
 Task ID: 6
 Agent: main
 Task: Fix all navigation links/buttons on home page and across the app
