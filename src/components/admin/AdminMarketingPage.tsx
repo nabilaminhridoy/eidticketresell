@@ -1,57 +1,92 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   PenTool, Mail, Smartphone, Bell, Gift, UsersRound, Tag, Megaphone,
-  Newspaper, Plus, Search, Edit, Trash2, Send, Eye, BarChart3, Calendar,
-  ArrowLeft
+  Newspaper, Plus, Search, Edit, Trash2, Send, ArrowLeft, Loader2
 } from 'lucide-react';
 
-interface Campaign {
-  id: string;
-  name: string;
-  type: string;
-  status: 'active' | 'completed' | 'draft' | 'scheduled';
-  sent: number;
-  opened: number;
-  date: string;
-}
-
-interface PromoCode {
+interface PromoRecord {
   id: string;
   code: string;
-  type: 'percentage' | 'fixed';
+  type: string;
   value: number;
-  usageCount: number;
-  maxUsage: number;
-  status: 'active' | 'expired';
-  expiresAt: string;
+  minAmount: number;
+  maxDiscount: number | null;
+  usageLimit: number | null;
+  usedCount: number;
+  validFrom: string;
+  validUntil: string;
+  isActive: boolean;
+  status: string;
+}
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
 }
 
 export default function AdminMarketingPage({ section }: { section?: string }) {
+  const [promos, setPromos] = useState<PromoRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const currentSection = section || null;
 
-  const mockCampaigns: Campaign[] = [
-    { id: '1', name: 'Welcome Email Series', type: 'email', status: 'active', sent: 1200, opened: 840, date: '2024-01-15' },
-    { id: '2', name: 'New Year SMS Blast', type: 'sms', status: 'completed', sent: 5000, opened: 0, date: '2024-01-01' },
-    { id: '3', name: 'Push: Flash Sale Alert', type: 'push', status: 'scheduled', sent: 0, opened: 0, date: '2024-02-15' },
-  ];
-
-  const mockPromos: PromoCode[] = [
-    { id: '1', code: 'WELCOME10', type: 'percentage', value: 10, usageCount: 150, maxUsage: 500, status: 'active', expiresAt: '2024-03-01' },
-    { id: '2', code: 'BUS50BDT', type: 'fixed', value: 50, usageCount: 80, maxUsage: 200, status: 'active', expiresAt: '2024-02-28' },
-    { id: '3', code: 'NEWYEAR20', type: 'percentage', value: 20, usageCount: 300, maxUsage: 300, status: 'expired', expiresAt: '2024-01-15' },
-  ];
+  useEffect(() => {
+    if (!currentSection || currentSection === 'promo-codes' || currentSection === 'coupons') {
+      fetch('/api/admin/marketing', { headers: getAuthHeaders() })
+        .then(r => r.json())
+        .then(d => { if (d.promos) setPromos(d.promos); setLoading(false); })
+        .catch(() => setLoading(false));
+    }
+  }, [currentSection]);
 
   // Sub-section views
   const renderSubSection = () => {
+    if (currentSection === 'promo-codes' || currentSection === 'coupons') {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Promo Codes / Coupons</h2>
+            <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Create Code</Button>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : promos.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Gift className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No promo codes found</p>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Type</TableHead><TableHead>Value</TableHead><TableHead>Status</TableHead><TableHead className="hidden md:table-cell">Usage</TableHead><TableHead className="hidden md:table-cell">Expires</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {promos.map(p => (
+                      <TableRow key={p.id}>
+                        <TableCell className="font-medium">{p.code}</TableCell>
+                        <TableCell><Badge variant="outline">{p.type}</Badge></TableCell>
+                        <TableCell>{p.type === 'percentage' ? `${p.value}%` : `৳${p.value}`}</TableCell>
+                        <TableCell><Badge variant={p.status === 'active' ? 'default' : 'secondary'}>{p.status}</Badge></TableCell>
+                        <TableCell className="hidden md:table-cell">{p.usedCount}/{p.usageLimit || '∞'}</TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">{new Date(p.validUntil).toLocaleDateString()}</TableCell>
+                        <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button></div></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      );
+    }
     if (currentSection === 'email-campaigns') {
       return (
         <div className="space-y-4">
@@ -60,23 +95,10 @@ export default function AdminMarketingPage({ section }: { section?: string }) {
             <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Create Campaign</Button>
           </div>
           <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Status</TableHead><TableHead className="hidden md:table-cell">Sent</TableHead><TableHead className="hidden md:table-cell">Opened</TableHead><TableHead className="hidden md:table-cell">Open Rate</TableHead><TableHead className="hidden md:table-cell">Date</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {mockCampaigns.filter(c => c.type === 'email').map(c => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.name}</TableCell>
-                      <TableCell><Badge variant={c.status === 'active' ? 'default' : c.status === 'completed' ? 'secondary' : 'outline'}>{c.status}</Badge></TableCell>
-                      <TableCell className="hidden md:table-cell">{c.sent}</TableCell>
-                      <TableCell className="hidden md:table-cell">{c.opened}</TableCell>
-                      <TableCell className="hidden md:table-cell">{((c.opened / c.sent) * 100).toFixed(1)}%</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{c.date}</TableCell>
-                      <TableCell><Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Email campaigns management coming soon.</p>
+              <p className="text-xs mt-1">Create and manage email marketing campaigns.</p>
             </CardContent>
           </Card>
         </div>
@@ -90,21 +112,9 @@ export default function AdminMarketingPage({ section }: { section?: string }) {
             <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Create Campaign</Button>
           </div>
           <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Status</TableHead><TableHead className="hidden md:table-cell">Sent</TableHead><TableHead className="hidden md:table-cell">Date</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {mockCampaigns.filter(c => c.type === 'sms').map(c => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.name}</TableCell>
-                      <TableCell><Badge variant={c.status === 'active' ? 'default' : c.status === 'completed' ? 'secondary' : 'outline'}>{c.status}</Badge></TableCell>
-                      <TableCell className="hidden md:table-cell">{c.sent}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{c.date}</TableCell>
-                      <TableCell><Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              <Smartphone className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>SMS campaigns management coming soon.</p>
             </CardContent>
           </Card>
         </div>
@@ -130,36 +140,6 @@ export default function AdminMarketingPage({ section }: { section?: string }) {
         </div>
       );
     }
-    if (currentSection === 'promo-codes') {
-      return (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Promo Codes</h2>
-            <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Create Code</Button>
-          </div>
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Type</TableHead><TableHead>Value</TableHead><TableHead>Status</TableHead><TableHead className="hidden md:table-cell">Usage</TableHead><TableHead className="hidden md:table-cell">Expires</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {mockPromos.map(p => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.code}</TableCell>
-                      <TableCell><Badge variant="outline">{p.type}</Badge></TableCell>
-                      <TableCell>{p.type === 'percentage' ? `${p.value}%` : `৳${p.value}`}</TableCell>
-                      <TableCell><Badge variant={p.status === 'active' ? 'default' : 'secondary'}>{p.status}</Badge></TableCell>
-                      <TableCell className="hidden md:table-cell">{p.usageCount}/{p.maxUsage}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm">{p.expiresAt}</TableCell>
-                      <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button></div></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
     if (currentSection === 'referrals') {
       return (
         <div className="space-y-4">
@@ -171,19 +151,6 @@ export default function AdminMarketingPage({ section }: { section?: string }) {
               <div className="space-y-2"><label className="text-sm font-medium">Minimum Order for Reward</label><Input defaultValue="100" placeholder="BDT amount" /></div>
               <Button>Update Settings</Button>
             </CardContent>
-          </Card>
-        </div>
-      );
-    }
-    if (currentSection === 'coupons') {
-      return (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Coupons</h2>
-            <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Create Coupon</Button>
-          </div>
-          <Card>
-            <CardContent className="p-6"><p className="text-muted-foreground text-sm">Coupon management interface. Create discount coupons for special promotions.</p></CardContent>
           </Card>
         </div>
       );
@@ -212,16 +179,10 @@ export default function AdminMarketingPage({ section }: { section?: string }) {
       return (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Newsletter Management</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Subscribers</p><p className="text-2xl font-bold">2,450</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Sent This Month</p><p className="text-2xl font-bold">3</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Open Rate</p><p className="text-2xl font-bold">68%</p></CardContent></Card>
-          </div>
           <Card>
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-2"><label className="text-sm font-medium">Subject</label><Input placeholder="Newsletter subject" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Content</label><textarea className="w-full p-3 border rounded-lg text-sm" rows={5} placeholder="Newsletter content..." /></div>
-              <Button className="gap-1"><Send className="w-4 h-4" />Send Newsletter</Button>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              <Newspaper className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Newsletter management coming soon.</p>
             </CardContent>
           </Card>
         </div>
@@ -245,14 +206,14 @@ export default function AdminMarketingPage({ section }: { section?: string }) {
 
   // Hub overview
   const marketingFeatures = [
-    { key: 'email-campaigns', label: 'Email Campaigns', icon: Mail, desc: 'Create and manage email campaigns', count: 3 },
-    { key: 'sms-campaigns', label: 'SMS Campaigns', icon: Smartphone, desc: 'Send bulk SMS notifications', count: 1 },
-    { key: 'push-notifications', label: 'Push Notifications', icon: Bell, desc: 'Browser and mobile push alerts', count: 0 },
-    { key: 'promo-codes', label: 'Promo Codes', icon: Gift, desc: 'Create and manage promotional codes', count: 3 },
-    { key: 'referrals', label: 'Referral Program', icon: UsersRound, desc: 'Configure referral rewards', count: 0 },
-    { key: 'coupons', label: 'Coupons', icon: Tag, desc: 'Discount coupon management', count: 0 },
-    { key: 'announcements', label: 'Announcements', icon: Megaphone, desc: 'Site-wide announcements', count: 0 },
-    { key: 'newsletters', label: 'Newsletters', icon: Newspaper, desc: 'Newsletter subscriber management', count: 0 },
+    { key: 'email-campaigns', label: 'Email Campaigns', icon: Mail, desc: 'Create and manage email campaigns' },
+    { key: 'sms-campaigns', label: 'SMS Campaigns', icon: Smartphone, desc: 'Send bulk SMS notifications' },
+    { key: 'push-notifications', label: 'Push Notifications', icon: Bell, desc: 'Browser and mobile push alerts' },
+    { key: 'promo-codes', label: 'Promo Codes', icon: Gift, desc: 'Create and manage promotional codes', count: promos.filter(p => p.status === 'active').length },
+    { key: 'referrals', label: 'Referral Program', icon: UsersRound, desc: 'Configure referral rewards' },
+    { key: 'coupons', label: 'Coupons', icon: Tag, desc: 'Discount coupon management', count: promos.length },
+    { key: 'announcements', label: 'Announcements', icon: Megaphone, desc: 'Site-wide announcements' },
+    { key: 'newsletters', label: 'Newsletters', icon: Newspaper, desc: 'Newsletter subscriber management' },
   ];
 
   return (

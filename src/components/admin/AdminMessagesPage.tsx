@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import {
   MessageCircle, Search, User, ChevronLeft, ChevronRight,
-  Send, Clock, Eye, ArrowRight
+  Send, Clock, Eye, ArrowRight, Loader2
 } from 'lucide-react';
 
 interface Conversation {
@@ -21,7 +20,7 @@ interface Conversation {
   unreadCount: number;
 }
 
-interface Message {
+interface ChatMessage {
   id: string;
   chatId: string;
   senderId: string;
@@ -31,48 +30,32 @@ interface Message {
   createdAt: string;
 }
 
-const MOCK_CONVERSATIONS: Conversation[] = [
-  { id: 'chat1', orderId: 'ORD-00000001', participants: [{ id: '5', name: 'Nasir Ahmed', role: 'buyer' }, { id: '1', name: 'Rahim Uddin', role: 'seller' }], lastMessage: 'Thank you for the ticket! Everything went smoothly.', lastMessageTime: '2025-01-16T17:00:00Z', unreadCount: 0 },
-  { id: 'chat2', orderId: 'ORD-00000002', participants: [{ id: '4', name: 'Arif Khan', role: 'buyer' }, { id: '1', name: 'Rahim Uddin', role: 'seller' }], lastMessage: 'Can you send the PDF copy now?', lastMessageTime: '2025-01-17T08:00:00Z', unreadCount: 3 },
-  { id: 'chat3', orderId: 'ORD-00000003', participants: [{ id: '5', name: 'Nasir Ahmed', role: 'buyer' }, { id: '3', name: 'Fatima Begum', role: 'seller' }], lastMessage: 'I will meet you at Sadarghat terminal at 5 PM.', lastMessageTime: '2025-01-13T14:00:00Z', unreadCount: 1 },
-  { id: 'chat4', orderId: 'ORD-00000004', participants: [{ id: '2', name: 'Karim Hasan', role: 'buyer' }, { id: '2', name: 'Karim Hasan', role: 'seller' }], lastMessage: 'Payment is pending. Please complete the payment first.', lastMessageTime: '2025-01-18T12:00:00Z', unreadCount: 5 },
-  { id: 'chat5', orderId: 'ORD-00000005', participants: [{ id: '4', name: 'Arif Khan', role: 'buyer' }, { id: '1', name: 'Rahim Uddin', role: 'seller' }], lastMessage: 'I need a refund. The ticket was expired.', lastMessageTime: '2025-01-09T10:00:00Z', unreadCount: 0 },
-];
-
-const MOCK_MESSAGES: Record<string, Message[]> = {
-  chat1: [
-    { id: 'msg1', chatId: 'chat1', senderId: '5', senderName: 'Nasir Ahmed', content: 'Hi! I just purchased your Dhaka-Chittagong bus ticket. When can I expect to receive it?', isRead: true, createdAt: '2025-01-15T12:10:00Z' },
-    { id: 'msg2', chatId: 'chat1', senderId: '1', senderName: 'Rahim Uddin', content: 'Hi Nasir! Thanks for buying. I will send the PDF copy within 30 minutes.', isRead: true, createdAt: '2025-01-15T12:15:00Z' },
-    { id: 'msg3', chatId: 'chat1', senderId: '1', senderName: 'Rahim Uddin', content: 'I have sent the ticket PDF to your email. Please check and confirm.', isRead: true, createdAt: '2025-01-15T12:40:00Z' },
-    { id: 'msg4', chatId: 'chat1', senderId: '5', senderName: 'Nasir Ahmed', content: 'Received! The PNR number matches. Thank you for the quick delivery.', isRead: true, createdAt: '2025-01-15T13:00:00Z' },
-    { id: 'msg5', chatId: 'chat1', senderId: '5', senderName: 'Nasir Ahmed', content: 'Thank you for the ticket! Everything went smoothly.', isRead: true, createdAt: '2025-01-16T17:00:00Z' },
-  ],
-  chat2: [
-    { id: 'msg6', chatId: 'chat2', senderId: '4', senderName: 'Arif Khan', content: 'Hi, I bought your train ticket for Sylhet. Can you send the PDF copy?', isRead: true, createdAt: '2025-01-16T14:05:00Z' },
-    { id: 'msg7', chatId: 'chat2', senderId: '1', senderName: 'Rahim Uddin', content: 'Sure, give me a moment. I will upload it now.', isRead: true, createdAt: '2025-01-16T14:10:00Z' },
-    { id: 'msg8', chatId: 'chat2', senderId: '4', senderName: 'Arif Khan', content: 'Can you send the PDF copy now?', isRead: false, createdAt: '2025-01-17T08:00:00Z' },
-  ],
-  chat3: [
-    { id: 'msg9', chatId: 'chat3', senderId: '5', senderName: 'Nasir Ahmed', content: 'Hi, I purchased your launch ticket. How will the counter copy be delivered?', isRead: true, createdAt: '2025-01-10T16:05:00Z' },
-    { id: 'msg10', chatId: 'chat3', senderId: '3', senderName: 'Fatima Begum', content: 'We can meet at Sadarghat terminal before departure. I will hand over the physical ticket.', isRead: true, createdAt: '2025-01-10T16:30:00Z' },
-    { id: 'msg11', chatId: 'chat3', senderId: '3', senderName: 'Fatima Begum', content: 'I will meet you at Sadarghat terminal at 5 PM.', isRead: false, createdAt: '2025-01-13T14:00:00Z' },
-  ],
-  chat4: [
-    { id: 'msg12', chatId: 'chat4', senderId: '2', senderName: 'Karim Hasan', content: 'I want to buy this flight ticket. How do I proceed?', isRead: true, createdAt: '2025-01-18T11:05:00Z' },
-    { id: 'msg13', chatId: 'chat4', senderId: '2', senderName: 'Karim Hasan', content: 'Payment is pending. Please complete the payment first.', isRead: false, createdAt: '2025-01-18T12:00:00Z' },
-  ],
-  chat5: [
-    { id: 'msg14', chatId: 'chat5', senderId: '4', senderName: 'Arif Khan', content: 'The bus ticket you sold me was expired! The departure date was yesterday.', isRead: true, createdAt: '2025-01-08T15:00:00Z' },
-    { id: 'msg15', chatId: 'chat5', senderId: '1', senderName: 'Rahim Uddin', content: 'I am sorry about that. I did not realize it was already expired. Let me refund you.', isRead: true, createdAt: '2025-01-08T15:30:00Z' },
-    { id: 'msg16', chatId: 'chat5', senderId: '4', senderName: 'Arif Khan', content: 'I need a refund. The ticket was expired.', isRead: true, createdAt: '2025-01-09T10:00:00Z' },
-  ],
-};
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 export default function AdminMessagesPage() {
-  const [conversations] = useState<Conversation[]>(MOCK_CONVERSATIONS);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [selectedChat, setSelectedChat] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/messages', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => { if (d.conversations) setConversations(d.conversations); setLoading(false); })
+      .catch(() => { setError('Failed to load conversations'); setLoading(false); });
+  }, []);
+
+  const loadMessages = (chatId: string) => {
+    fetch(`/api/admin/messages?chatId=${chatId}`, { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => { if (d.messages) setMessages(d.messages); })
+      .catch(() => {});
+  };
 
   const filteredConversations = conversations.filter(c =>
     !search ||
@@ -82,8 +65,7 @@ export default function AdminMessagesPage() {
 
   const handleSelectChat = (chat: Conversation) => {
     setSelectedChat(chat);
-    const chatMessages = MOCK_MESSAGES[chat.id] || [];
-    setMessages(chatMessages);
+    loadMessages(chat.id);
   };
 
   return (
@@ -96,6 +78,10 @@ export default function AdminMessagesPage() {
           <p className="text-sm text-muted-foreground">{conversations.length} conversations</p>
         </div>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Conversations List */}
@@ -117,7 +103,9 @@ export default function AdminMessagesPage() {
             </div>
 
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
-              {filteredConversations.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+              ) : filteredConversations.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No conversations found</p>

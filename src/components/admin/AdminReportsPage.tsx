@@ -1,25 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileBarChart2, DollarSign, Users, Ticket, CreditCard, RefreshCw,
-  Wallet, ArrowLeft, BarChart3, TrendingUp, ShoppingBag, Calendar
+  Wallet, ArrowLeft, BarChart3, ShoppingBag, Loader2
 } from 'lucide-react';
 
-interface ReportData {
-  date: string;
-  metric: string;
-  value: string;
-  change: string;
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
 }
 
 export default function AdminReportsPage({ section }: { section?: string }) {
+  const [reportData, setReportData] = useState<Record<string, unknown>>({});
+  const [loading, setLoading] = useState(false);
   const currentSection = section || null;
 
   const sections = [
@@ -32,13 +31,70 @@ export default function AdminReportsPage({ section }: { section?: string }) {
     { key: 'withdrawals', label: 'Withdrawal Report', icon: Wallet, desc: 'Seller payout requests' },
   ];
 
+  useEffect(() => {
+    if (currentSection) {
+      fetch(`/api/admin/reports?type=${currentSection}`, { headers: getAuthHeaders() })
+        .then(r => r.json())
+        .then(d => { if (d.report) setReportData(d.report); setLoading(false); })
+        .catch(() => setLoading(false));
+    }
+  }, [currentSection]);
+
   const renderReport = (key: string) => {
-    const mockData: ReportData[] = [
-      { date: 'Jan 2024', metric: 'Total', value: '৳125,000', change: '+12%' },
-      { date: 'Dec 2023', metric: 'Total', value: '৳110,000', change: '+8%' },
-      { date: 'Nov 2023', metric: 'Total', value: '৳102,000', change: '+15%' },
-      { date: 'Oct 2023', metric: 'Total', value: '৳89,000', change: '+5%' },
-    ];
+    const data = reportData as Record<string, number | string>;
+
+    const getSummaryStats = () => {
+      switch (key) {
+        case 'sales':
+          return [
+            { label: 'Total Orders', value: `৳${((data.totalOrders as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Completed', value: `${((data.completedOrders as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Cancelled', value: `${((data.cancelledOrders as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Avg. Order', value: `৳${((data.avgOrderValue as number) || 0).toFixed(2)}`, change: '' },
+          ];
+        case 'revenue':
+          return [
+            { label: 'Total Revenue', value: `৳${((data.totalRevenue as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Platform Fee', value: `৳${((data.totalPlatformFee as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Refunded', value: `৳${((data.totalRefunded as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Net Revenue', value: `৳${((data.netRevenue as number) || 0).toLocaleString()}`, change: '' },
+          ];
+        case 'users':
+          return [
+            { label: 'Total Users', value: `${((data.totalUsers as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Active Users', value: `${((data.activeUsers as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'KYC Pending', value: `${((data.pendingKyc as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'KYC Approved', value: `${((data.approvedKyc as number) || 0).toLocaleString()}`, change: '' },
+          ];
+        case 'tickets':
+          return [
+            { label: 'Total Tickets', value: `${((data.totalTickets as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Active Tickets', value: `${((data.activeTickets as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Sold Tickets', value: `${((data.soldTickets as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Total Orders', value: `${((data.totalOrders as number) || 0)}`, change: '' },
+          ];
+        case 'payments':
+          return [
+            { label: 'Paid Transactions', value: `${((data.paidTransactions as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Total Revenue', value: `৳${((data.totalRevenue as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Platform Fee', value: `৳${((data.totalPlatformFee as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Avg. Transaction', value: `৳${(((data.totalRevenue as number) || 0) / ((data.paidTransactions as number) || 1)).toFixed(2)}`, change: '' },
+          ];
+        case 'refunds':
+          return [
+            { label: 'Total Refunds', value: `${((data.totalRefunds as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Total Refunded', value: `৳${((data.totalRefunded as number) || 0).toLocaleString()}`, change: '' },
+          ];
+        case 'withdrawals':
+          return [
+            { label: 'Pending', value: `${((data.pendingWithdrawals as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Completed', value: `${((data.completedWithdrawals as number) || 0).toLocaleString()}`, change: '' },
+            { label: 'Total Withdrawn', value: `৳${((data.totalWithdrawnAmount as number) || 0).toLocaleString()}`, change: '' },
+          ];
+        default:
+          return [];
+      }
+    };
 
     return (
       <div className="space-y-6">
@@ -47,56 +103,45 @@ export default function AdminReportsPage({ section }: { section?: string }) {
           <h1 className="text-xl font-bold">{sections.find(s => s.key === key)?.label}</h1>
         </div>
 
-        {/* Summary stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'This Month', value: '৳125,000', change: '+12%' },
-            { label: 'Last Month', value: '৳110,000', change: '+8%' },
-            { label: 'This Year', value: '৳1,500,000', change: '+25%' },
-            { label: key === 'sales' ? 'Avg. Order' : 'Avg. Transaction', value: '৳850', change: '+3%' },
-          ].map(stat => (
-            <Card key={stat.label}>
-              <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-xl font-bold">{stat.value}</p>
-                <Badge variant="secondary" className="text-xs">{stat.change}</Badge>
+        {loading ? (
+          <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : (
+          <>
+            {/* Summary stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {getSummaryStats().map(stat => (
+                <Card key={stat.label}>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    <p className="text-xl font-bold">{stat.value}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Chart placeholder */}
+            <Card>
+              <CardHeader><CardTitle className="text-lg">{sections.find(s => s.key === key)?.label} - Overview</CardTitle></CardHeader>
+              <CardContent className="p-6">
+                <div className="h-[200px] bg-muted/20 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Chart visualization placeholder</p>
+                    <p className="text-xs text-muted-foreground">Data computed from real database records</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
 
-        {/* Chart placeholder */}
-        <Card>
-          <CardHeader><CardTitle className="text-lg">{sections.find(s => s.key === key)?.label} - Monthly Trend</CardTitle></CardHeader>
-          <CardContent className="p-6">
-            <div className="h-[200px] bg-muted/20 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Chart visualization placeholder</p>
-                <p className="text-xs text-muted-foreground">Data will be rendered with chart library</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Data table */}
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Metric</TableHead><TableHead>Value</TableHead><TableHead>Change</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {mockData.map(row => (
-                  <TableRow key={row.date}>
-                    <TableCell className="font-medium">{row.date}</TableCell>
-                    <TableCell>{row.metric}</TableCell>
-                    <TableCell>{row.value}</TableCell>
-                    <TableCell><Badge variant="secondary">{row.change}</Badge></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+            {/* Data table */}
+            <Card>
+              <CardContent className="p-6 text-center text-muted-foreground">
+                <p className="text-sm">Detailed data table with filters will be available in future updates.</p>
+                <p className="text-xs mt-1">Summary stats are computed from real database data.</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     );
   };
@@ -111,7 +156,7 @@ export default function AdminReportsPage({ section }: { section?: string }) {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><FileBarChart2 className="w-6 h-6" />Reports</h1>
-        <p className="text-sm text-muted-foreground">Platform analytics and reporting</p>
+        <p className="text-sm text-muted-foreground">Platform analytics and reporting (computed from real data)</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

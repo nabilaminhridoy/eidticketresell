@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,21 +12,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  BookOpen, Plus, Search, Edit, Trash2, Eye, Calendar, Tag, FolderOpen,
-  ArrowLeft, FileText, TrendingUp, MoreHorizontal, Pencil, Clock, User
+  BookOpen, Plus, Search, Edit, Trash2, Eye, Tag,
+  ArrowLeft, Loader2
 } from 'lucide-react';
 
 interface BlogPost {
   id: string;
   title: string;
   slug: string;
+  content: string;
+  excerpt: string | null;
+  coverImage: string | null;
+  author: string | null;
+  categoryId: string | null;
   category: string;
-  tags: string[];
-  status: 'published' | 'draft' | 'archived';
-  author: string;
+  status: string;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  views: number;
 }
 
 interface BlogCategory {
@@ -39,7 +42,12 @@ interface BlogCategory {
 interface BlogTag {
   id: string;
   name: string;
-  count: number;
+  slug: string;
+}
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
 }
 
 export default function AdminBlogPage({ action, itemId, section }: {
@@ -47,6 +55,10 @@ export default function AdminBlogPage({ action, itemId, section }: {
   itemId?: string;
   section?: 'posts' | 'categories' | 'tags';
 }) {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [tags, setTags] = useState<BlogTag[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -57,34 +69,19 @@ export default function AdminBlogPage({ action, itemId, section }: {
   const currentAction = action || 'list';
   const currentSection = section || 'posts';
 
-  const mockPosts: BlogPost[] = [
-    { id: '1', title: 'How to Buy Bus Tickets Online', slug: 'how-to-buy-bus-tickets', category: 'Guides', tags: ['bus', 'tickets', 'guide'], status: 'published', author: 'Admin', createdAt: '2024-01-15', updatedAt: '2024-01-20', views: 1520 },
-    { id: '2', title: 'Top 10 Travel Destinations in Bangladesh', slug: 'top-10-destinations', category: 'Travel', tags: ['travel', 'destinations'], status: 'published', author: 'Editor', createdAt: '2024-01-10', updatedAt: '2024-01-12', views: 3200 },
-    { id: '3', title: 'Train Ticket Booking Guide', slug: 'train-ticket-guide', category: 'Guides', tags: ['train', 'guide'], status: 'draft', author: 'Admin', createdAt: '2024-02-01', updatedAt: '2024-02-01', views: 0 },
-    { id: '4', title: 'Launch Services in Barishal', slug: 'launch-services-barishal', category: 'Travel', tags: ['launch', 'barishal'], status: 'published', author: 'Editor', createdAt: '2024-01-25', updatedAt: '2024-01-28', views: 890 },
-    { id: '5', title: 'Safety Tips for Travelers', slug: 'safety-tips-travelers', category: 'Safety', tags: ['safety', 'tips'], status: 'archived', author: 'Admin', createdAt: '2023-12-15', updatedAt: '2024-01-01', views: 450 },
-  ];
+  useEffect(() => {
+    fetch('/api/admin/blog', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => {
+        if (d.posts) setPosts(d.posts);
+        if (d.categories) setCategories(d.categories);
+        if (d.tags) setTags(d.tags);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-  const mockCategories: BlogCategory[] = [
-    { id: '1', name: 'Guides', slug: 'guides', count: 12 },
-    { id: '2', name: 'Travel', slug: 'travel', count: 8 },
-    { id: '3', name: 'Safety', slug: 'safety', count: 3 },
-    { id: '4', name: 'News', slug: 'news', count: 5 },
-    { id: '5', name: 'Updates', slug: 'updates', count: 2 },
-  ];
-
-  const mockTags: BlogTag[] = [
-    { id: '1', name: 'bus', count: 8 },
-    { id: '2', name: 'train', count: 6 },
-    { id: '3', name: 'launch', count: 4 },
-    { id: '4', name: 'flight', count: 3 },
-    { id: '5', name: 'guide', count: 10 },
-    { id: '6', name: 'safety', count: 3 },
-    { id: '7', name: 'destinations', count: 5 },
-    { id: '8', name: 'tips', count: 7 },
-  ];
-
-  const filteredPosts = mockPosts.filter(post => {
+  const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -92,7 +89,8 @@ export default function AdminBlogPage({ action, itemId, section }: {
 
   // View single post
   if (currentAction === 'view' && itemId) {
-    const post = mockPosts.find(p => p.id === itemId) || mockPosts[0];
+    const post = posts.find(p => p.id === itemId) || posts[0];
+    if (!post) return <div className="text-center py-12 text-muted-foreground">Post not found</div>;
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -107,24 +105,22 @@ export default function AdminBlogPage({ action, itemId, section }: {
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><span className="text-muted-foreground">Author:</span> <span className="font-medium">{post.author}</span></div>
-              <div><span className="text-muted-foreground">Category:</span> <span className="font-medium">{post.category}</span></div>
-              <div><span className="text-muted-foreground">Views:</span> <span className="font-medium">{post.views}</span></div>
-              <div><span className="text-muted-foreground">Created:</span> <span className="font-medium">{post.createdAt}</span></div>
+              <div><span className="text-muted-foreground">Author:</span> <span className="font-medium">{post.author || 'N/A'}</span></div>
+              <div><span className="text-muted-foreground">Category:</span> <span className="font-medium">{post.category || 'N/A'}</span></div>
+              <div><span className="text-muted-foreground">Created:</span> <span className="font-medium">{new Date(post.createdAt).toLocaleDateString()}</span></div>
+              <div><span className="text-muted-foreground">Updated:</span> <span className="font-medium">{new Date(post.updatedAt).toLocaleDateString()}</span></div>
             </div>
-            <div className="flex gap-2">
-              {post.tags.map(tag => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
-            </div>
+            {post.excerpt && <p className="text-sm text-muted-foreground italic">{post.excerpt}</p>}
             <div className="prose max-w-none">
-              <p className="text-muted-foreground">Blog content would be displayed here. This is a placeholder view.</p>
+              <p className="text-sm">{post.content}</p>
             </div>
           </CardContent>
         </Card>
         <div className="flex gap-2">
           <Link href={`/admin/blog/${itemId}/edit`}>
-            <Button size="sm"><Pencil className="w-4 h-4" />Edit Post</Button>
+            <Button size="sm"><Edit className="w-4 h-4" />Edit Post</Button>
           </Link>
-          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}><Trash2 className="w-4 h-4" />Delete</Button>
+          <Button variant="destructive" size="sm" onClick={() => { setSelectedPost(post); setShowDeleteDialog(true); }}><Trash2 className="w-4 h-4" />Delete</Button>
         </div>
       </div>
     );
@@ -155,7 +151,7 @@ export default function AdminBlogPage({ action, itemId, section }: {
               <Select value={newPost.category} onValueChange={v => setNewPost({...newPost, category: v})}>
                 <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
-                  {mockCategories.map(c => <SelectItem key={c.id} value={c.slug}>{c.name}</SelectItem>)}
+                  {categories.map(c => <SelectItem key={c.id} value={c.slug}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -220,116 +216,135 @@ export default function AdminBlogPage({ action, itemId, section }: {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="published">Published</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Posts table */}
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Author</TableHead>
-                    <TableHead className="hidden md:table-cell">Views</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPosts.map(post => (
-                    <TableRow key={post.id}>
-                      <TableCell className="font-medium">
-                        <Link href={`/admin/blog/${post.id}`} className="hover:text-primary">{post.title}</Link>
-                      </TableCell>
-                      <TableCell><Badge variant="outline" className="text-xs">{post.category}</Badge></TableCell>
-                      <TableCell>
-                        <Badge variant={post.status === 'published' ? 'default' : post.status === 'draft' ? 'secondary' : 'outline'}>
-                          {post.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{post.author}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className="flex items-center gap-1 text-sm"><Eye className="w-3 h-3" />{post.views}</span>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{post.createdAt}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Link href={`/admin/blog/${post.id}/edit`}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button>
-                          </Link>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => { setSelectedPost(post); setShowDeleteDialog(true); }}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : filteredPosts.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No blog posts found</p>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Author</TableHead>
+                      <TableHead className="hidden md:table-cell">Date</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPosts.map(post => (
+                      <TableRow key={post.id}>
+                        <TableCell className="font-medium">
+                          <Link href={`/admin/blog/${post.id}`} className="hover:text-primary">{post.title}</Link>
+                        </TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{post.category || 'None'}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                            {post.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">{post.author || 'N/A'}</TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{new Date(post.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Link href={`/admin/blog/${post.id}/edit`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button>
+                            </Link>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => { setSelectedPost(post); setShowDeleteDialog(true); }}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Blog Categories</CardTitle>
-              <Button size="sm" className="gap-1" onClick={() => setShowCreateDialog(true)}><Plus className="w-4 h-4" />Add Category</Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Slug</TableHead>
-                    <TableHead>Posts</TableHead>
-                    <TableHead className="w-[80px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockCategories.map(cat => (
-                    <TableRow key={cat.id}>
-                      <TableCell className="font-medium">{cat.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{cat.slug}</TableCell>
-                      <TableCell><Badge variant="secondary">{cat.count}</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
-                        </div>
-                      </TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No categories found</p>
+            </div>
+          ) : (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Blog Categories</CardTitle>
+                <Button size="sm" className="gap-1" onClick={() => setShowCreateDialog(true)}><Plus className="w-4 h-4" />Add Category</Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Slug</TableHead>
+                      <TableHead>Posts</TableHead>
+                      <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.map(cat => (
+                      <TableRow key={cat.id}>
+                        <TableCell className="font-medium">{cat.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{cat.slug}</TableCell>
+                        <TableCell><Badge variant="secondary">{cat.count}</Badge></TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="tags" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Blog Tags</CardTitle>
-              <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Add Tag</Button>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-3">
-                {mockTags.map(tag => (
-                  <div key={tag.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <Tag className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="font-medium text-sm">{tag.name}</span>
-                    <Badge variant="secondary" className="text-xs">{tag.count}</Badge>
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Trash2 className="w-3 h-3 text-red-600" /></Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {loading ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : tags.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No tags found</p>
+            </div>
+          ) : (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Blog Tags</CardTitle>
+                <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Add Tag</Button>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  {tags.map(tag => (
+                    <div key={tag.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="font-medium text-sm">{tag.name}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6"><Trash2 className="w-3 h-3 text-red-600" /></Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 

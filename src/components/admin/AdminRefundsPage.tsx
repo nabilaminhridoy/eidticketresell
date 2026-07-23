@@ -42,33 +42,37 @@ interface DisputeRecord {
   updatedAt: string;
 }
 
-const MOCK_REFUNDS: RefundRecord[] = [
-  { id: 'ref1', orderId: 'ORD-00000005', buyerId: '4', buyerName: 'Arif Khan', sellerId: '1', sellerName: 'Rahim Uddin', amount: 566.5, reason: 'Ticket expired - seller did not cancel', status: 'completed', createdAt: '2025-01-08T15:00:00Z' },
-  { id: 'ref2', orderId: 'ORD-00000006', buyerId: '2', buyerName: 'Karim Hasan', sellerId: '3', sellerName: 'Fatima Begum', amount: 750, reason: 'Wrong seat number provided by seller', status: 'pending', createdAt: '2025-01-17T10:00:00Z' },
-  { id: 'ref3', orderId: 'ORD-00000007', buyerId: '5', buyerName: 'Nasir Ahmed', sellerId: '1', sellerName: 'Rahim Uddin', amount: 1326, reason: 'Train cancelled by railway - no alternative provided', status: 'processing', createdAt: '2025-01-19T08:00:00Z' },
-  { id: 'ref4', orderId: 'ORD-00000008', buyerId: '6', buyerName: 'Test User', sellerId: '2', sellerName: 'Karim Hasan', amount: 500, reason: 'Duplicate ticket sale', status: 'rejected', createdAt: '2025-01-14T12:00:00Z' },
-];
-
-const MOCK_DISPUTES: DisputeRecord[] = [
-  { id: 'dis1', orderId: 'ORD-00000003', initiatedBy: 'buyer', initiatorName: 'Nasir Ahmed', reason: 'Ticket not delivered as promised', description: 'Seller promised counter copy delivery via courier but has not sent it yet. 3 days have passed.', status: 'open', resolution: null, resolvedBy: null, createdAt: '2025-01-13T08:00:00Z', updatedAt: '2025-01-13T08:00:00Z' },
-  { id: 'dis2', orderId: 'ORD-00000002', initiatedBy: 'seller', initiatorName: 'Rahim Uddin', reason: 'Buyer not confirming delivery', description: 'Buyer received the ticket PDF but has not confirmed delivery in the app. Asking for refund.', status: 'investigating', resolution: null, resolvedBy: null, createdAt: '2025-01-17T14:00:00Z', updatedAt: '2025-01-18T10:00:00Z' },
-  { id: 'dis3', orderId: 'ORD-00000009', initiatedBy: 'buyer', initiatorName: 'Arif Khan', reason: 'Fraudulent ticket', description: 'PNR number does not exist in railway system.', status: 'resolved', resolution: 'Refund issued to buyer. Seller account suspended.', resolvedBy: 'admin1', createdAt: '2025-01-05T10:00:00Z', updatedAt: '2025-01-07T15:00:00Z' },
-  { id: 'dis4', orderId: 'ORD-00000010', initiatedBy: 'buyer', initiatorName: 'Karim Hasan', reason: 'Price mismatch', description: 'Seller charged ৳900 but ticket original price is ৳850.', status: 'closed', resolution: 'Partial refund of ৳50 platform fee difference issued.', resolvedBy: 'admin1', createdAt: '2025-01-02T06:00:00Z', updatedAt: '2025-01-04T12:00:00Z' },
-];
-
 const REFUND_STATUS_TABS = ['all', 'pending', 'processing', 'completed', 'rejected'];
 const DISPUTE_STATUS_TABS = ['all', 'open', 'investigating', 'resolved', 'closed'];
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
+
 export default function AdminRefundsPage() {
   const [activeTab, setActiveTab] = useState('refunds');
-  const [refunds] = useState<RefundRecord[]>(MOCK_REFUNDS);
-  const [disputes] = useState<DisputeRecord[]>(MOCK_DISPUTES);
+  const [refunds, setRefunds] = useState<RefundRecord[]>([]);
+  const [disputes, setDisputes] = useState<DisputeRecord[]>([]);
   const [refundStatusTab, setRefundStatusTab] = useState('all');
   const [disputeStatusTab, setDisputeStatusTab] = useState('all');
   const [page, setPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState<RefundRecord | DisputeRecord | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/refunds', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => { if (d.refunds) setRefunds(d.refunds); setLoading(false); })
+      .catch(() => { setError('Failed to load refunds'); setLoading(false); });
+
+    fetch('/api/admin/disputes', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => { if (d.disputes) setDisputes(d.disputes); })
+      .catch(() => {});
+  }, []);
 
   const filteredRefunds = refunds.filter(r => refundStatusTab === 'all' || r.status === refundStatusTab);
   const filteredDisputes = disputes.filter(d => disputeStatusTab === 'all' || d.status === disputeStatusTab);
@@ -121,15 +125,19 @@ export default function AdminRefundsPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+      )}
+
       <Card>
         <CardContent className="p-4 space-y-4">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="refunds" className="gap-1">
-                <RefreshCw className="w-3 h-3" /> Refunds
+                <RefreshCw className="w-3 h-3" /> Refunds ({refunds.length})
               </TabsTrigger>
               <TabsTrigger value="disputes" className="gap-1">
-                <AlertTriangle className="w-3 h-3" /> Disputes
+                <AlertTriangle className="w-3 h-3" /> Disputes ({disputes.length})
               </TabsTrigger>
             </TabsList>
 
@@ -143,59 +151,55 @@ export default function AdminRefundsPage() {
                   ))}
                 </TabsList>
 
-                {REFUND_STATUS_TABS.map(tab => (
-                  <TabsContent key={tab} value={tab}>
-                    {loading ? (
-                      <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-                    ) : filteredRefunds.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <RefreshCw className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>No refunds found</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Order</TableHead>
-                              <TableHead>Buyer</TableHead>
-                              <TableHead className="hidden md:table-cell">Seller</TableHead>
-                              <TableHead>Amount</TableHead>
-                              <TableHead className="hidden sm:table-cell">Reason</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredRefunds.map(refund => (
-                              <TableRow key={refund.id}>
-                                <TableCell className="font-medium">{refund.orderId}</TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-1"><User className="w-3 h-3 text-muted-foreground" />{refund.buyerName}</div>
-                                </TableCell>
-                                <TableCell className="hidden md:table-cell">
-                                  <div className="flex items-center gap-1"><User className="w-3 h-3 text-muted-foreground" />{refund.sellerName}</div>
-                                </TableCell>
-                                <TableCell>
-                                  <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />৳{refund.amount}</span>
-                                </TableCell>
-                                <TableCell className="hidden sm:table-cell">
-                                  <p className="text-xs truncate max-w-[200px]">{refund.reason}</p>
-                                </TableCell>
-                                <TableCell>{getRefundStatusBadge(refund.status)}</TableCell>
-                                <TableCell>
-                                  <Button size="sm" variant="ghost" onClick={() => handleViewRefund(refund)}>
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </TabsContent>
-                ))}
+                {loading ? (
+                  <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                ) : filteredRefunds.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <RefreshCw className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No refunds found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order</TableHead>
+                          <TableHead>Buyer</TableHead>
+                          <TableHead className="hidden md:table-cell">Seller</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead className="hidden sm:table-cell">Reason</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredRefunds.map(refund => (
+                          <TableRow key={refund.id}>
+                            <TableCell className="font-medium">{refund.orderId}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1"><User className="w-3 h-3 text-muted-foreground" />{refund.buyerName}</div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <div className="flex items-center gap-1"><User className="w-3 h-3 text-muted-foreground" />{refund.sellerName}</div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />৳{refund.amount}</span>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              <p className="text-xs truncate max-w-[200px]">{refund.reason}</p>
+                            </TableCell>
+                            <TableCell>{getRefundStatusBadge(refund.status)}</TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="ghost" onClick={() => handleViewRefund(refund)}>
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </Tabs>
             </TabsContent>
 
@@ -209,57 +213,53 @@ export default function AdminRefundsPage() {
                   ))}
                 </TabsList>
 
-                {DISPUTE_STATUS_TABS.map(tab => (
-                  <TabsContent key={tab} value={tab}>
-                    {filteredDisputes.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>No disputes found</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Order</TableHead>
-                              <TableHead>Initiator</TableHead>
-                              <TableHead className="hidden sm:table-cell">Reason</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead className="hidden md:table-cell">Resolution</TableHead>
-                              <TableHead>Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredDisputes.map(dispute => (
-                              <TableRow key={dispute.id}>
-                                <TableCell className="font-medium">{dispute.orderId}</TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-1">
-                                    <User className="w-3 h-3 text-muted-foreground" />
-                                    {dispute.initiatorName}
-                                    <Badge variant="outline" className="text-xs ml-1">{dispute.initiatedBy}</Badge>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="hidden sm:table-cell">
-                                  <p className="text-xs truncate max-w-[200px]">{dispute.reason}</p>
-                                </TableCell>
-                                <TableCell>{getDisputeStatusBadge(dispute.status)}</TableCell>
-                                <TableCell className="hidden md:table-cell">
-                                  <p className="text-xs truncate max-w-[150px]">{dispute.resolution || 'Pending'}</p>
-                                </TableCell>
-                                <TableCell>
-                                  <Button size="sm" variant="ghost" onClick={() => handleViewDispute(dispute)}>
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </TabsContent>
-                ))}
+                {filteredDisputes.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No disputes found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order</TableHead>
+                          <TableHead>Initiator</TableHead>
+                          <TableHead className="hidden sm:table-cell">Reason</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden md:table-cell">Resolution</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredDisputes.map(dispute => (
+                          <TableRow key={dispute.id}>
+                            <TableCell className="font-medium">{dispute.orderId}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <User className="w-3 h-3 text-muted-foreground" />
+                                {dispute.initiatorName}
+                                <Badge variant="outline" className="text-xs ml-1">{dispute.initiatedBy}</Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              <p className="text-xs truncate max-w-[200px]">{dispute.reason}</p>
+                            </TableCell>
+                            <TableCell>{getDisputeStatusBadge(dispute.status)}</TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <p className="text-xs truncate max-w-[150px]">{dispute.resolution || 'Pending'}</p>
+                            </TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="ghost" onClick={() => handleViewDispute(dispute)}>
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </Tabs>
             </TabsContent>
           </Tabs>

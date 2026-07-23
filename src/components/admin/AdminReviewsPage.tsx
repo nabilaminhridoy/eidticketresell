@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Loader2 } from 'lucide-react';
 import {
   Star, Eye, Trash2, ChevronLeft, ChevronRight, User, MessageSquare,
-  AlertTriangle, Shield
+  AlertTriangle
 } from 'lucide-react';
 
 interface ReviewRecord {
@@ -26,17 +27,15 @@ interface ReviewRecord {
   createdAt: string;
 }
 
-const MOCK_REVIEWS: ReviewRecord[] = [
-  { id: 'rev1', orderId: 'ORD-00000001', authorId: '5', authorName: 'Nasir Ahmed', targetId: '1', targetName: 'Rahim Uddin', rating: 5, comment: 'Excellent seller! Ticket was valid and delivered promptly. Highly recommended.', createdAt: '2025-01-16T16:00:00Z' },
-  { id: 'rev2', orderId: 'ORD-00000001', authorId: '1', authorName: 'Rahim Uddin', targetId: '5', targetName: 'Nasir Ahmed', rating: 4, comment: 'Good buyer, confirmed delivery quickly. Payment was on time.', createdAt: '2025-01-16T17:00:00Z' },
-  { id: 'rev3', orderId: 'ORD-00000003', authorId: '5', authorName: 'Nasir Ahmed', targetId: '3', targetName: 'Fatima Begum', rating: 3, comment: 'Average experience. Ticket was valid but delivery took longer than expected.', createdAt: '2025-01-12T12:00:00Z' },
-  { id: 'rev4', orderId: 'ORD-00000002', authorId: '4', authorName: 'Arif Khan', targetId: '1', targetName: 'Rahim Uddin', rating: 2, comment: 'Seller provided wrong seat number. Had to negotiate at the station. Not happy.', createdAt: '2025-01-17T08:00:00Z' },
-  { id: 'rev5', orderId: 'ORD-00000011', authorId: '2', authorName: 'Karim Hasan', targetId: '2', targetName: 'Karim Hasan', rating: 1, comment: 'SPAM REVIEW - This appears to be a fraudulent self-review!', createdAt: '2025-01-20T10:00:00Z' },
-  { id: 'rev6', orderId: 'ORD-00000012', authorId: '6', authorName: 'Test User', targetId: '1', targetName: 'Rahim Uddin', rating: 4, comment: null, createdAt: '2025-01-19T06:00:00Z' },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 export default function AdminReviewsPage() {
-  const [reviews] = useState<ReviewRecord[]>(MOCK_REVIEWS);
+  const [reviews, setReviews] = useState<ReviewRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedReview, setSelectedReview] = useState<ReviewRecord | null>(null);
@@ -44,6 +43,14 @@ export default function AdminReviewsPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const pageSize = 10;
+
+  useEffect(() => {
+    fetch('/api/admin/reviews', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => { if (d.reviews) setReviews(d.reviews); setLoading(false); })
+      .catch(() => { setError('Failed to load reviews'); setLoading(false); });
+  }, []);
+
   const filteredReviews = reviews.filter(r =>
     !search || r.authorName.toLowerCase().includes(search.toLowerCase()) || r.targetName.toLowerCase().includes(search.toLowerCase())
   );
@@ -83,7 +90,6 @@ export default function AdminReviewsPage() {
   };
 
   const confirmDelete = () => {
-    // In real app, would call API
     setDeleteModalOpen(false);
   };
 
@@ -98,6 +104,10 @@ export default function AdminReviewsPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+      )}
+
       <Card>
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-2">
@@ -106,7 +116,9 @@ export default function AdminReviewsPage() {
             </div>
           </div>
 
-          {filteredReviews.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : filteredReviews.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Star className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No reviews found</p>

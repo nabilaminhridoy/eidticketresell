@@ -35,9 +35,41 @@ export function verifyToken(token: string): Record<string, unknown> | null {
 }
 
 export function generateTicketId(count: number): string {
-  return `ETR-${String(count).padStart(8, '0')}`;
+  return `ETR-${count}`;
 }
 
 export function generateOrderId(count: number): string {
-  return `ORD-${String(count).padStart(8, '0')}`;
+  return `ORD-${count}`;
+}
+
+export function generateKycId(count: number): string {
+  return `KYC-${count}`;
+}
+
+export function generatePaymentId(count: number): string {
+  return `TXN-${count}`;
+}
+
+export function generateWithdrawalId(count: number): string {
+  return `WDR-${count}`;
+}
+
+export function generatePayoutId(count: number): string {
+  return `PAY-${count}`;
+}
+
+export function generateWalletTransactionId(count: number): string {
+  return `WLT-${count}`;
+}
+
+export function generateRefundId(count: number): string {
+  return `REF-${count}`;
+}
+
+export function generateDisputeId(count: number): string {
+  return `DSP-${count}`;
+}
+
+export function generateSupportId(count: number): string {
+  return `SUP-${count}`;
 }

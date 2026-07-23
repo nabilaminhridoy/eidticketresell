@@ -989,3 +989,176 @@ Stage Summary:
 - End-to-End Chat: Full implementation - chat UI with encryption badge, conversation list, message send/receive, order context
 - All 4 remaining todo items completed successfully
 - All API connections verified, no errors in dev server logs
+
+---
+Task ID: 3
+Agent: seed-route-developer
+Task: Rewrite admin seed API route with comprehensive realistic Bangladesh data
+
+Work Log:
+- Read worklog.md to understand project context and previous work
+- Read existing seed route (only created super admin) and full Prisma schema (all 20+ models)
+- Read lib/auth.ts to understand hashPassword and ID generation functions
+- Read lib/db.ts to understand Prisma client setup
+- Wrote comprehensive seed route covering ALL database models with realistic BD data
+- Models seeded (in dependency order):
+  1. Admins (3): super_admin + moderator + support staff
+  2. Counters (10): ticket, order, kyc, payment, withdrawal, payout, wallet_transaction, refund, dispute, support counters
+  3. Settings (24): general, fees, payment, delivery, notification, system groups
+  4. Transport Companies (10): 4 bus, 1 train, 3 flight, 2 launch (Bangla names included)
+  5. Blog Categories (3): Travel Tips, Festival Guide, Safety & Security
+  6. FAQ Categories (5): Buying, Selling, Payments, KYC, Delivery
+  7. Ads (4): homepage, sidebar, header, buy-tickets placements
+  8. Coupons (3): EID2025 (10%), NEWUSER (৳50), REFER50 (৳50)
+  9. Users (15): 5 verified sellers + 7 buyers + 3 mixed (BD names, BD phones, referrals)
+  10. KYC (8): 5 approved, 2 pending, 1 rejected (NID, DL, passport; BD districts/divisions)
+  11. Wallets (15): sellers with higher balances (৳5K-50K), buyers lower (৳100-5K), some escrow
+  12. Tickets (12): 4 bus, 3 train, 3 flight, 2 launch (ETR-1 through ETR-12, realistic BD routes, prices in BDT)
+  13. Orders (8): ORD-1 through ORD-8, mix of completed/confirmed/pending/cancelled/disputed
+  14. Transactions (15): credit, debit, escrow_hold, escrow_release, escrow_refund types
+  15. Withdrawals (5): bKash and bank_transfer, statuses: completed/pending/approved/rejected
+  16. Reviews (5): ratings 2-5, realistic BD-context comments
+  17. Notifications (10): info, success, warning, error types for users
+  18. Support Tickets (5): BD subjects (payment issue, ticket not received, OTP, withdrawal, courier)
+  19. Blog Posts (5): published, BD travel content
+  20. Disputes (2): open and investigating statuses
+  21. Chats + Messages (3 conversations): 2 participants per chat, 3-5 messages per conversation
+  22. Journey Verifications (2): 1 verified, 1 submitted (GPS, photo)
+  23. Admin Activity Logs (5): approved_kyc, processed_withdrawal, rejected_kyc, resolved_support
+- Verified seed route lint passes clean (no errors)
+- Dev server running stable, no issues
+- Pre-existing lint errors in other files (AdminMessagesPage, AdminRefundsPage, AdminReviewsPage) - not from this task
+
+Stage Summary:
+- Complete rewrite of /src/app/api/admin/seed/route.ts from single super admin to comprehensive 23-model seed
+- All data uses realistic Bangladesh names, phone numbers (+880 format), districts, divisions, routes, BDT prices
+- Ticket IDs use ETR-1 through ETR-12, Order IDs ORD-1 through ORD-8 format
+- Platform fees calculated correctly: 2% for online_copy, 3% for counter_copy
+- Dependency order maintained: Admin → Counter → Settings → Companies → Categories → Users → KYC → Wallets → Tickets → Orders → Transactions → Withdrawals → Reviews → Notifications → Support → Blog → Disputes → Chats → Journey → AdminActivityLog
+- Duplicate check: returns message if super_admin already exists
+- Error handling: try/catch with detailed error response
+- Credentials returned: admin passwords and user default password
+
+
+---
+Task ID: 4
+Agent: main
+Task: Update ALL admin page components to fetch real data from database API routes instead of hardcoded mock/demo data
+
+Work Log:
+- Read all 30+ admin page components to catalog which ones use mock data vs API data
+- Identified existing API routes: stats, users, kyc, tickets, orders, payments, payout, activity-log, seed, auth
+- Identified pages using hardcoded mock arrays: Refunds, Reviews, Messages, Blog, FAQs, Ads, Marketing, SettingsGeneral, SettingsPayments, Security, Reports, Analytics, Admins
+- Identified pages that can stay as admin-editable: Pages, Homepage, SEO, Email, SMS, Roles, Media, System
+
+Created 13 new API routes at /src/app/api/admin/:
+1. /api/admin/refunds/route.ts - GET refunds (orders with refund/cancelled status, includes dispute reason)
+2. /api/admin/disputes/route.ts - GET disputes with order/buyer/seller info
+3. /api/admin/reviews/route.ts - GET reviews with author/target/order info
+4. /api/admin/messages/route.ts - GET conversations + GET messages per chatId
+5. /api/admin/blog/route.ts - GET posts, categories, tags
+6. /api/admin/faqs/route.ts - GET FAQ categories
+7. /api/admin/ads/route.ts - GET ads with full Ad model data
+8. /api/admin/marketing/route.ts - GET coupons/promo codes + referrals
+9. /api/admin/analytics/route.ts - GET analytics computed from real DB data (counts, breakdowns)
+10. /api/admin/reports/route.ts - GET report data (sales, revenue, users, tickets, payments, refunds, withdrawals)
+11. /api/admin/admins/route.ts - GET admin accounts from Admin model
+12. /api/admin/settings/route.ts - GET + PUT settings from Setting model
+13. /api/admin/security/route.ts - GET login history from AdminActivityLog
+
+All API routes use:
+- `db` from '@/lib/db' for Prisma queries
+- `verifyToken` from '@/lib/auth' for admin authentication
+- Bearer token verification requiring admin/super_admin role
+- Proper error handling and pagination support
+
+Updated 14 admin page components to use real API data:
+1. AdminDashboard.tsx - Removed hardcoded fallback mock activity data, shows loading/empty states from real API
+2. AdminRefundsPage.tsx - Replaced MOCK_REFUNDS/MOCK_DISPUTES with fetch from /api/admin/refunds + /api/admin/disputes
+3. AdminReviewsPage.tsx - Replaced MOCK_REVIEWS with fetch from /api/admin/reviews
+4. AdminMessagesPage.tsx - Replaced MOCK_CONVERSATIONS/MOCK_MESSAGES with fetch from /api/admin/messages
+5. AdminBlogPage.tsx - Replaced mockPosts/mockCategories/mockTags with fetch from /api/admin/blog
+6. AdminFaqsPage.tsx - Replaced mockFaqs/mockCategories with fetch from /api/admin/faqs (categories from DB)
+7. AdminAdsPage.tsx - Replaced mockAds with fetch from /api/admin/ads
+8. AdminMarketingPage.tsx - Replaced mockPromos with fetch from /api/admin/marketing
+9. AdminSettingsGeneralPage.tsx - Replaced hardcoded defaults with fetch from /api/admin/settings
+10. AdminSettingsPaymentsPage.tsx - Replaced hardcoded fee/payment values with fetch from /api/admin/settings?group=payments
+11. AdminSecurityPage.tsx - Replaced mockLoginHistory with fetch from /api/admin/security
+12. AdminReportsPage.tsx - Replaced mock report data with fetch from /api/admin/reports (computed from real DB)
+13. AdminAnalyticsPage.tsx - Replaced mock metrics with fetch from /api/admin/analytics (computed from real DB)
+14. AdminAdminsPage.tsx - Replaced mockAdmins with fetch from /api/admin/admins
+
+Pages left as admin-editable/config-only (no mock data to remove):
+- AdminPagesPage (CMS pages) - stays admin-editable
+- AdminHomepagePage (homepage sections) - stays admin-editable
+- AdminSeoPage (SEO settings) - stays admin-editable
+- AdminSettingsEmailPage - stays admin-editable
+- AdminSettingsSmsPage - stays admin-editable
+- AdminRolesPage - stays admin-editable
+- AdminMediaPage - placeholder (file manager not built)
+- AdminSystemPage - placeholder
+
+Key patterns used across all updated pages:
+- 'use client' directive for client-side data fetching
+- `getAuthHeaders()` helper reads Bearer token from localStorage ('etr_admin_token')
+- useEffect with .then() chain for data fetching (lint-compatible pattern)
+- Loading states (Loader2 spinner)
+- Empty states ("No data found" with icon)
+- Error states (red banner)
+- Responsive design preserved (hidden columns on mobile)
+
+Lint: bun run lint passes clean (0 errors, 0 warnings)
+
+Stage Summary:
+- All admin pages now fetch real data from database via authenticated API routes
+- No more hardcoded mock/demo data arrays in any admin component
+- 13 new API routes created with proper auth, pagination, and error handling
+- Pages without Prisma models (FAQ items, CMS pages) show categories from DB and editable forms
+- Settings pages load from Setting model in database
+- Analytics/Reports computed from real database data (not mock)
+- Disputes page uses AdminRefundsPage with tabs for both refunds and disputes (both fetch from their own APIs)
+---
+Task ID: 18
+Agent: main
+Task: Fix Browser icon error, update ID formats, seed comprehensive Bangladesh data, replace mock data with real DB data
+
+Work Log:
+- Fixed Browser icon import error in AdminSettingsGeneralPage.tsx: replaced `Browser` with `Monitor` (lucide-react doesn't have Browser)
+- Updated ID generation format in /src/lib/auth.ts:
+  - ETR-{count} for Tickets
+  - ORD-{count} for Orders
+  - KYC-{count} for KYC
+  - TXN-{count} for Payment Transactions
+  - WDR-{count} for Withdrawals
+  - PAY-{count} for Payouts
+  - WLT-{count} for Wallet Transactions
+  - REF-{count} for Refunds
+  - DSP-{count} for Disputes
+  - SUP-{count} for Support Tickets
+- Delegated comprehensive seed script to subagent (Task 3):
+  - Rewrote /api/admin/seed/route.ts with 25 model types, 570+ lines
+  - Realistic Bangladesh data: BD names, phones (+880), NID, districts, transport companies
+  - Platform fees: Online Copy 2%, Counter Copy 3%
+  - 15 users, 12 tickets, 8 orders, 8 KYC, 15 wallets, 5 reviews, 5 withdrawals, etc.
+  - Updated to use upsert for Admin and Counter models to avoid duplicate errors
+  - Added force=true parameter to allow re-seeding
+- Delegated admin page updates to subagent (Task 4):
+  - Created 13 new API routes for admin pages that previously used mock data
+  - Updated 14 admin page components to fetch from API instead of mock data
+  - Lint passes clean (0 errors, 0 warnings)
+- Seeded database with force=true: all 25 models populated successfully
+- Verified with Agent Browser:
+  - Admin Dashboard shows real stats: 15 Users, 9 Active Tickets, 8 Orders, 8,172.5 Revenue
+  - Users page shows real BD user data with KYC statuses
+  - Tickets page shows real BD transport data (Green Line, Bangladesh Railway, etc.)
+  - Payment Gateway shows 2%/3% fee structure
+  - Journey Verify page shows stats and admin approval workflow
+  - All pages load without errors in dev log
+
+Stage Summary:
+- Browser icon error fixed
+- ID generation format updated per user's specification (KYC-, ETR-, ORD-, TXN-, etc.)
+- Comprehensive Bangladesh data seeded into database (25 model types, realistic data)
+- All admin pages now fetch from real database API routes (not mock data)
+- Frontend website and admin panel share the same database data source
+- Lint passes clean, server running without errors

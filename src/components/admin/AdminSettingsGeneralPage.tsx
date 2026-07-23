@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,20 +12,62 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Settings, Globe, Upload, ImageIcon, Save, Mail, Phone, MapPin,
-  Palette, Language, Clock, Coins, Browser
+  Palette, Language, Clock, Coins, Monitor, Loader2
 } from 'lucide-react';
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
+
 export default function AdminSettingsGeneralPage({ section }: { section?: string }) {
-  const [siteName, setSiteName] = useState('ETR');
-  const [siteDescription, setSiteDescription] = useState('Bangladesh\'s trusted ticket marketplace');
+  const [settingsMap, setSettingsMap] = useState<Record<string, string>>({});
+  const [siteName, setSiteName] = useState('');
+  const [siteDescription, setSiteDescription] = useState('');
+  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
 
   const currentSection = section || 'general';
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    fetch('/api/admin/settings', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => {
+        if (d.settings) {
+          const map: Record<string, string> = {};
+          d.settings.forEach((s: { key: string; value: string }) => {
+            map[s.key] = s.value;
+          });
+          setSettingsMap(map);
+          setSiteName(map['site_name'] || 'ETR');
+          setSiteDescription(map['site_description'] || 'Bangladesh\'s trusted ticket marketplace');
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const settings = [
+        { key: 'site_name', value: siteName, group: 'general' },
+        { key: 'site_description', value: siteDescription, group: 'general' },
+      ];
+      await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // Save failed silently
+    }
   };
+
+  if (loading && currentSection === 'general') {
+    return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
 
   // Localization section
   if (currentSection === 'localization') {
@@ -157,7 +199,7 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
   if (currentSection === 'favicon') {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Browser className="w-6 h-6" />Favicon Settings</h1>
+        <h1 className="text-2xl font-bold flex items-center gap-2"><Monitor className="w-6 h-6" />Favicon Settings</h1>
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="space-y-2">
@@ -196,8 +238,8 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
             <CardContent className="p-6 space-y-4">
               <div className="space-y-2"><label className="text-sm font-medium">Site Name</label><Input value={siteName} onChange={e => setSiteName(e.target.value)} /></div>
               <div className="space-y-2"><label className="text-sm font-medium">Site Description</label><Textarea value={siteDescription} onChange={e => setSiteDescription(e.target.value)} rows={3} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Site URL</label><Input defaultValue="https://etr.com.bd" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Admin Email</label><Input defaultValue="admin@etr.com.bd" type="email" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Site URL</label><Input defaultValue={settingsMap['site_url'] || 'https://etr.com.bd'} /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Admin Email</label><Input defaultValue={settingsMap['admin_email'] || 'admin@etr.com.bd'} type="email" /></div>
               <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
             </CardContent>
           </Card>
@@ -207,10 +249,10 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
           <Card>
             <CardHeader><CardTitle>Contact Information</CardTitle></CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="space-y-2"><label className="text-sm font-medium">Contact Email</label><Input defaultValue="support@etr.com.bd" type="email" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Phone Number</label><Input defaultValue="+880 1XXX-XXXXXX" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Address</label><Textarea defaultValue="Dhaka, Bangladesh" rows={2} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">WhatsApp</label><Input defaultValue="+880 1XXX-XXXXXX" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Contact Email</label><Input defaultValue={settingsMap['contact_email'] || 'support@etr.com.bd'} type="email" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Phone Number</label><Input defaultValue={settingsMap['contact_phone'] || '+880 1XXX-XXXXXX'} /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Address</label><Textarea defaultValue={settingsMap['contact_address'] || 'Dhaka, Bangladesh'} rows={2} /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">WhatsApp</label><Input defaultValue={settingsMap['whatsapp_number'] || '+880 1XXX-XXXXXX'} /></div>
               <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
             </CardContent>
           </Card>
@@ -222,7 +264,7 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
             <CardContent className="p-6 space-y-4">
               <div className="flex items-center gap-2"><Switch defaultChecked /><label className="text-sm">Enable Dark Mode</label></div>
               <div className="space-y-2"><label className="text-sm font-medium">Primary Color</label>
-                <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-primary border-2 border-border" /><Input defaultValue="#7C3AED" className="max-w-[150px]" /></div>
+                <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-primary border-2 border-border" /><Input defaultValue={settingsMap['primary_color'] || '#7C3AED'} className="max-w-[150px]" /></div>
               </div>
               <div className="flex items-center gap-2"><Switch defaultChecked /><label className="text-sm">Show powered by ETR in footer</label></div>
               <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
