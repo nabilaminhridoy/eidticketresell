@@ -123,6 +123,12 @@ export function getPagePath(lang: Language, page: string, params?: Record<string
       return p.username ? `/${lang}/${p.username}/dashboard` : `/${lang}`;
     case 'chat':
       return p.username ? `/${lang}/${p.username}/message${buildQueryString(p, ['username'])}` : `/${lang}/support`;
+    case 'qr-display':
+      return p.username ? `/${lang}/${p.username}/qr-display${buildQueryString(p, ['username'])}` : `/${lang}`;
+    case 'qr-scan':
+      return p.username ? `/${lang}/${p.username}/qr-scan${buildQueryString(p, ['username'])}` : `/${lang}`;
+    case 'journey-verify':
+      return p.username ? `/${lang}/${p.username}/journey-verify${buildQueryString(p, ['username'])}` : `/${lang}`;
     case 'logout':
       return p.username ? `/${lang}/${p.username}/logout` : `/${lang}`;
 

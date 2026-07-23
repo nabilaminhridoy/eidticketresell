@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Wallet, Ticket, ShoppingBag, ShieldCheck, Settings, ArrowRight, Check } from 'lucide-react';
+import { User, Wallet, Ticket, ShoppingBag, ShieldCheck, Settings, ArrowRight, Check, MessageCircle, QrCode, ScanLine, ClipboardCheck } from 'lucide-react';
 
 export default function DashboardPage() {
   const { navigate } = useNav();
@@ -91,8 +91,71 @@ export default function DashboardPage() {
         <TabsContent value="orders">
           <h2 className="font-bold mb-4">{t('myOrders', language)}</h2>
           {orders.length === 0 ? <p className="text-center py-8 text-muted-foreground">{t('noData', language)}</p> : (
-            <div className="space-y-2">{(orders as Array<{id:string;status:string;totalAmount:number;createdAt:string}>).map((o) => (
-              <Card key={o.id}><CardContent className="p-3 sm:p-4 flex items-center justify-between gap-2"><div className="min-w-0"><p className="font-medium">#{o.id.slice(0,8)}</p><p className="text-xs text-muted-foreground">{o.createdAt}</p></div><div className="flex items-center gap-2 shrink-0"><span className="font-semibold whitespace-nowrap">{t('bdt', language)}{o.totalAmount}</span><Badge variant="secondary" className="text-xs">{o.status}</Badge></div></CardContent></Card>
+            <div className="space-y-3">{(orders as Array<{id:string;orderId:string;status:string;totalAmount:number;amount:number;platformFee:number;deliveryMethod:string;deliveryStatus:string;isQrScanned:boolean;ticket?:{ticketType:string;transportType:string;routeFrom:string;routeTo:string;departureDate:string;price:number};seller?:{id:string;name:string};buyer?:{id:string;name:string};createdAt:string}>).map((o) => (
+              <Card key={o.id} className="overflow-hidden">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="font-medium">#{o.orderId || o.id.slice(0,8)}</p>
+                      <p className="text-xs text-muted-foreground">{o.createdAt}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-semibold whitespace-nowrap">৳{o.totalAmount}</span>
+                      <Badge variant="secondary" className="text-xs">{o.status}</Badge>
+                    </div>
+                  </div>
+                  {o.ticket && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                      <span>{o.ticket.routeFrom}</span>
+                      <ArrowRight className="w-3 h-3" />
+                      <span>{o.ticket.routeTo}</span>
+                      <Badge variant="outline" className="text-[10px] ml-1">{o.ticket.transportType}</Badge>
+                      <Badge variant="outline" className="text-[10px] ml-1">{o.ticket?.ticketType === 'online_copy' ? 'Online' : 'Counter'}</Badge>
+                    </div>
+                  )}
+                  {/* Platform fee display */}
+                  <div className="flex items-center gap-2 text-xs mb-2">
+                    <Badge className={o.ticket?.ticketType === 'online_copy' ? 'bg-primary text-white' : 'bg-orange-500 text-white'}>
+                      {o.ticket?.ticketType === 'online_copy' ? '2% Fee' : '3% Fee'}
+                    </Badge>
+                    <span className="text-muted-foreground">৳{o.platformFee} platform fee</span>
+                    <span className="text-muted-foreground">•</span>
+                    <Badge variant="outline" className="text-[10px]">{o.deliveryMethod}</Badge>
+                  </div>
+                  {/* Action buttons based on order type and role */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {/* Chat button */}
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => navigate('message', { orderId: o.id })}>
+                      <MessageCircle className="w-3 h-3 mr-1" />Chat
+                    </Button>
+                    {/* QR verification button (for counter copy) */}
+                    {o.ticket?.ticketType === 'counter_copy' && o.deliveryMethod !== 'online_pdf' && !o.isQrScanned && (
+                      user?.id === o.seller?.id ? (
+                        <Button size="sm" variant="default" className="h-7 text-xs bg-primary" onClick={() => navigate('qr-display', { orderId: o.id })}>
+                          <QrCode className="w-3 h-3 mr-1" />Show QR
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="default" className="h-7 text-xs bg-orange-500" onClick={() => navigate('qr-scan', { orderId: o.id })}>
+                          <ScanLine className="w-3 h-3 mr-1" />Verify QR
+                        </Button>
+                      )
+                    )}
+                    {/* Journey verification button (for online copy buyer) */}
+                    {o.ticket?.ticketType === 'online_copy' && user?.id === o.buyer?.id && o.deliveryStatus !== 'journey_verified' && o.status !== 'completed' && (
+                      <Button size="sm" variant="default" className="h-7 text-xs bg-primary" onClick={() => navigate('journey-verify', { orderId: o.id })}>
+                        <ClipboardCheck className="w-3 h-3 mr-1" />Verify Journey
+                      </Button>
+                    )}
+                    {/* Already verified badge */}
+                    {o.deliveryStatus === 'journey_verified' && (
+                      <Badge className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Verified</Badge>
+                    )}
+                    {o.isQrScanned && (
+                      <Badge className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />QR Scanned</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             ))}</div>
           )}
         </TabsContent>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyToken, generateOrderId } from '@/lib/auth';
-import { PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM } from '@/lib/constants';
+import { ONLINE_COPY_PLATFORM_FEE_PERCENTAGE, COUNTER_COPY_PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM } from '@/lib/constants';
 
 export async function GET(req: NextRequest) {
   try {
@@ -87,8 +87,9 @@ export async function POST(req: NextRequest) {
     });
     if (existing) return NextResponse.json({ error: 'You already have an active order for this ticket' }, { status: 409 });
 
-    // Calculate fees based on ticket type
-    const platformFee = Math.max(PLATFORM_FEE_MINIMUM, Math.round(ticket.price * (PLATFORM_FEE_PERCENTAGE / 100)));
+    // Calculate fees based on ticket type: Online Copy = 2%, Counter Copy = 3%
+    const feePercentage = ticket.ticketType === 'online_copy' ? ONLINE_COPY_PLATFORM_FEE_PERCENTAGE : COUNTER_COPY_PLATFORM_FEE_PERCENTAGE;
+    const platformFee = Math.max(PLATFORM_FEE_MINIMUM, Math.round(ticket.price * (feePercentage / 100)));
 
     let amount: number; // What seller receives
     let totalAmount: number; // What buyer pays

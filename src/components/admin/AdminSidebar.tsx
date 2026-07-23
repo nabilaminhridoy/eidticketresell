@@ -38,6 +38,7 @@ const sidebarSections = [
       { label: 'Messages', icon: MessageCircle, path: '/admin/messages' },
       { label: 'Reviews', icon: Star, path: '/admin/reviews' },
       { label: 'Ticket Verify', icon: ScanLine, path: '/admin/verify-ticket' },
+      { label: 'Journey Verify', icon: ClipboardCheck, path: '/admin/journey-verify' },
     ],
   },
   {

@@ -37,8 +37,11 @@ export const TICKET_STATUS = {
   pending_review: { label: 'Pending Review', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
 };
 
-export const PLATFORM_FEE_PERCENTAGE = 2;
+export const ONLINE_COPY_PLATFORM_FEE_PERCENTAGE = 2; // 2% for Online Copy tickets
+export const COUNTER_COPY_PLATFORM_FEE_PERCENTAGE = 3; // 3% for Counter Copy tickets
 export const PLATFORM_FEE_MINIMUM = 20;
+// Legacy alias for backwards compatibility (used in admin pages)
+export const PLATFORM_FEE_PERCENTAGE = ONLINE_COPY_PLATFORM_FEE_PERCENTAGE;
 
 export const ROLES = {
   guest: 'Guest',

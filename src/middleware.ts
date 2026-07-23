@@ -41,6 +41,9 @@ const KNOWN_USER_SUB_SEGMENTS = [
   'security',
   'address',
   'message',
+  'qr-display',
+  'qr-scan',
+  'journey-verify',
 ];
 
 export function middleware(request: NextRequest) {
