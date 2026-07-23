@@ -55,7 +55,7 @@ function Loader() {
 function NotFoundRedirect({ router: routerProp }: { router: useRouter }) {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/en/not-found');
+    router.replace('/en/404');
   }, [router]);
   return <Loader />;
 }

@@ -2,14 +2,9 @@
 
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import { useLanguageStore } from '@/lib/store';
 import type { Language } from '@/lib/i18n';
-
-// Lazy load AppShell to reduce initial compilation memory
-const AppShell = dynamic(() => import('@/components/layout/AppShell'), {
-  ssr: false,
-});
+import AppShell from '@/components/layout/AppShell';
 
 const VALID_LANGS = ['en', 'bn'];
 
@@ -35,6 +30,5 @@ export default function LangLayout({ children }: { children: React.ReactNode }) 
 
   if (!isValid) return null;
 
-  // All pages now use AppShell (Header + Footer)
   return <AppShell>{children}</AppShell>;
 }

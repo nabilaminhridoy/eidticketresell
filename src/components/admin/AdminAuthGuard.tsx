@@ -31,7 +31,7 @@ export default function AdminAuthGuard({ children }: { children: React.ReactNode
     if (!token) {
       // Redirect unauthorized users to the frontend 404 page
       // so only /admin/login is discoverable
-      router.replace('/en/not-found');
+      router.replace('/en/404');
     }
   }, [token, router]);
 

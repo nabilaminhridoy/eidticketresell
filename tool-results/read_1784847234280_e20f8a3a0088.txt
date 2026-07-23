@@ -1,0 +1,625 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef } from 'react';
+     4→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+     5→import { Button } from '@/components/ui/button';
+     6→import { Badge } from '@/components/ui/badge';
+     7→import { Input } from '@/components/ui/input';
+     8→import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+     9→import { Separator } from '@/components/ui/separator';
+    10→import {
+    11→  Upload, Trash2, Loader2, CheckCircle2, X, Image as ImageLucide,
+    12→  Palette, CreditCard, FolderOpen, Eye, RefreshCw, AlertCircle
+    13→} from 'lucide-react';
+    14→
+    15→function getAuthHeaders() {
+    16→  const token = localStorage.getItem('etr_admin_token');
+    17→  return { 'Authorization': `Bearer ${token}` };
+    18→}
+    19→
+    20→interface ImageSetting {
+    21→  key: string;
+    22→  value: string;
+    23→  group: string;
+    24→}
+    25→
+    26→interface MediaFile {
+    27→  key: string;
+    28→  value: string;
+    29→  group: string;
+    30→}
+    31→
+    32→// Brand image definitions
+    33→const BRAND_IMAGES = [
+    34→  { key: 'site_logo', label: 'Site Logo (Light Mode)', description: 'Main logo displayed in header on light backgrounds', category: 'brand', subDir: 'logos' },
+    35→  { key: 'dark_mode_logo', label: 'Dark Mode Logo', description: 'Logo for dark theme header', category: 'brand', subDir: 'logos' },
+    36→  { key: 'site_favicon', label: 'Site Favicon', description: 'Browser tab icon (recommended: 32x32 or 16x16 PNG/ICO)', category: 'brand', subDir: 'favicon' },
+    37→];
+    38→
+    39→// Payment image definitions
+    40→const PAYMENT_IMAGES = [
+    41→  { key: 'payment_gateway_logo', label: 'Payment Gateway Logo', description: 'General payment section logo', category: 'payment', subDir: 'payment' },
+    42→  { key: 'bkash_logo', label: 'bKash Logo', description: 'bKash mobile payment logo', category: 'payment', subDir: 'payment' },
+    43→  { key: 'nagad_logo', label: 'Nagad Logo', description: 'Nagad mobile payment logo', category: 'payment', subDir: 'payment' },
+    44→  { key: 'rocket_logo', label: 'Rocket Logo', description: 'Rocket mobile payment logo', category: 'payment', subDir: 'payment' },
+    45→];
+    46→
+    47→export default function AdminMediaPage({ section }: { section?: string }) {
+    48→  const [imageSettings, setImageSettings] = useState<Record<string, string>>({});
+    49→  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+    50→  const [loading, setLoading] = useState(true);
+    51→  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+    52→  const [uploadProgress, setUploadProgress] = useState<string>('');
+    53→  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+    54→  const [successMessage, setSuccessMessage] = useState<string>('');
+    55→  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+    56→  const [searchQuery, setSearchQuery] = useState('');
+    57→  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+    58→  const currentSection = section || null;
+    59→
+    60→  // Fetch media data on mount (using .then chains to avoid lint rule about setState in effects)
+    61→  useEffect(() => {
+    62→    fetch('/api/admin/media', { headers: getAuthHeaders() })
+    63→      .then(r => r.json())
+    64→      .then(data => {
+    65→        const map: Record<string, string> = {};
+    66→        if (data.images) {
+    67→          data.images.forEach((s: ImageSetting) => {
+    68→            map[s.key] = s.value;
+    69→          });
+    70→        }
+    71→        setImageSettings(map);
+    72→        setMediaFiles(data.media || []);
+    73→        setLoading(false);
+    74→      })
+    75→      .catch(() => { setLoading(false); });
+    76→  }, []);
+    77→
+    78→  // Refresh handler (called by button click, not inside an effect)
+    79→  const handleRefresh = () => {
+    80→    setLoading(true);
+    81→    fetch('/api/admin/media', { headers: getAuthHeaders() })
+    82→      .then(r => r.json())
+    83→      .then(data => {
+    84→        const map: Record<string, string> = {};
+    85→        if (data.images) {
+    86→          data.images.forEach((s: ImageSetting) => {
+    87→            map[s.key] = s.value;
+    88→          });
+    89→        }
+    90→        setImageSettings(map);
+    91→        setMediaFiles(data.media || []);
+    92→        setLoading(false);
+    93→      })
+    94→      .catch(() => { setLoading(false); });
+    95→  };
+    96→
+    97→  const showMessage = (msg: string) => {
+    98→    setSuccessMessage(msg);
+    99→    setTimeout(() => setSuccessMessage(''), 3000);
+   100→  };
+   101→
+   102→  const handleUpload = async (file: File, settingKey: string, category: string, subDir: string) => {
+   103→    setUploadingKey(settingKey);
+   104→    setUploadProgress(`Uploading ${file.name}...`);
+   105→
+   106→    const formData = new FormData();
+   107→    formData.append('file', file);
+   108→    formData.append('settingKey', settingKey);
+   109→    formData.append('category', category);
+   110→
+   111→    try {
+   112→      const res = await fetch('/api/admin/media', {
+   113→        method: 'POST',
+   114→        headers: getAuthHeaders(),
+   115→        body: formData,
+   116→      });
+   117→
+   118→      if (res.ok) {
+   119→        const data = await res.json();
+   120→        setImageSettings(prev => ({ ...prev, [settingKey]: data.path }));
+   121→        showMessage(`${settingKey} uploaded successfully!`);
+   122→        // Refresh data to get latest
+   123→        handleRefresh();
+   124→      } else {
+   125→        const err = await res.json();
+   126→        setUploadProgress(`Upload failed: ${err.error || 'Unknown error'}`);
+   127→        setTimeout(() => setUploadProgress(''), 3000);
+   128→      }
+   129→    } catch {
+   130→      setUploadProgress('Upload failed: Network error');
+   131→      setTimeout(() => setUploadProgress(''), 3000);
+   132→    }
+   133→
+   134→    setUploadingKey(null);
+   135→    setUploadProgress('');
+   136→  };
+   137→
+   138→  const handleDelete = async (settingKey: string) => {
+   139→    setDeletingKey(settingKey);
+   140→    try {
+   141→      const res = await fetch(`/api/admin/media?key=${settingKey}`, {
+   142→        method: 'DELETE',
+   143→        headers: getAuthHeaders(),
+   144→      });
+   145→      if (res.ok) {
+   146→        setImageSettings(prev => ({ ...prev, [settingKey]: '' }));
+   147→        showMessage(`${settingKey} removed successfully!`);
+   148→        handleRefresh();
+   149→      }
+   150→    } catch {
+   151→      // silently handle
+   152→    }
+   153→    setDeletingKey(null);
+   154→  };
+   155→
+   156→  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, item: { key: string; category: string; subDir: string }) => {
+   157→    const file = e.target.files?.[0];
+   158→    if (file) {
+   159→      // Validate file size (max 5MB)
+   160→      if (file.size > 5 * 1024 * 1024) {
+   161→        setUploadProgress('File too large. Maximum size is 5MB.');
+   162→        setTimeout(() => setUploadProgress(''), 3000);
+   163→        return;
+   164→      }
+   165→      // Validate file type
+   166→      const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/webp', 'image/x-icon', 'image/vnd.microsoft.icon'];
+   167→      if (!allowedTypes.includes(file.type)) {
+   168→        setUploadProgress('Invalid file type. Allowed: PNG, JPG, GIF, SVG, WEBP, ICO');
+   169→        setTimeout(() => setUploadProgress(''), 3000);
+   170→        return;
+   171→      }
+   172→      handleUpload(file, item.key, item.category, item.subDir);
+   173→    }
+   174→    // Reset the input so the same file can be re-selected
+   175→    e.target.value = '';
+   176→  };
+   177→
+   178→  const handleDrop = (e: React.DragEvent, item: { key: string; category: string; subDir: string }) => {
+   179→    e.preventDefault();
+   180→    e.stopPropagation();
+   181→    setDragOverKey(null);
+   182→    const file = e.dataTransfer.files?.[0];
+   183→    if (file) {
+   184→      handleUpload(file, item.key, item.category, item.subDir);
+   185→    }
+   186→  };
+   187→
+   188→  const handleDragOver = (e: React.DragEvent, key: string) => {
+   189→    e.preventDefault();
+   190→    e.stopPropagation();
+   191→    setDragOverKey(key);
+   192→  };
+   193→
+   194→  const handleDragLeave = (e: React.DragEvent) => {
+   195→    e.preventDefault();
+   196→    e.stopPropagation();
+   197→    setDragOverKey(null);
+   198→  };
+   199→
+   200→  // Image upload card component
+   201→  const ImageUploadCard = ({ item }: { item: { key: string; label: string; description: string; category: string; subDir: string } }) => {
+   202→    const currentValue = imageSettings[item.key] || '';
+   203→    const isUploading = uploadingKey === item.key;
+   204→    const isDeleting = deletingKey === item.key;
+   205→    const isDragOver = dragOverKey === item.key;
+   206→
+   207→    return (
+   208→      <Card className="overflow-hidden">
+   209→        <CardContent className="p-4 space-y-3">
+   210→          <div className="flex items-center justify-between">
+   211→            <div>
+   212→              <h4 className="font-medium text-sm">{item.label}</h4>
+   213→              <p className="text-xs text-muted-foreground">{item.description}</p>
+   214→            </div>
+   215→            {currentValue && (
+   216→              <Button
+   217→                variant="ghost"
+   218→                size="sm"
+   219→                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8"
+   220→                disabled={isDeleting}
+   221→                onClick={() => handleDelete(item.key)}
+   222→              >
+   223→                {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+   224→              </Button>
+   225→            )}
+   226→          </div>
+   227→
+   228→          {/* Image preview / upload drop zone */}
+   229→          <div
+   230→            className={`relative rounded-lg border-2 transition-all cursor-pointer ${
+   231→              isDragOver ? 'border-primary bg-primary/10 scale-[1.02]' :
+   232→              currentValue ? 'border-border' : 'border-dashed border-muted-foreground/30 hover:border-primary/50 bg-muted/10'
+   233→            }`}
+   234→            onDrop={(e) => handleDrop(e, item)}
+   235→            onDragOver={(e) => handleDragOver(e, item.key)}
+   236→            onDragLeave={handleDragLeave}
+   237→            onClick={() => {
+   238→              if (!isUploading && fileInputRefs.current[item.key]) {
+   239→                fileInputRefs.current[item.key]?.click();
+   240→              }
+   241→            }}
+   242→            role="button"
+   243→            tabIndex={0}
+   244→            aria-label={`Upload ${item.label}`}
+   245→          >
+   246→            <input
+   247→              ref={(el) => { fileInputRefs.current[item.key] = el; }}
+   248→              type="file"
+   249→              accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp,image/x-icon,image/vnd.microsoft.icon"
+   250→              className="hidden"
+   251→              onChange={(e) => handleFileSelect(e, item)}
+   252→              aria-hidden="true"
+   253→            />
+   254→
+   255→            {isUploading ? (
+   256→              <div className="aspect-[4/3] flex items-center justify-center">
+   257→                <div className="flex flex-col items-center gap-2">
+   258→                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+   259→                  <p className="text-xs text-muted-foreground">{uploadProgress}</p>
+   260→                </div>
+   261→              </div>
+   262→            ) : currentValue ? (
+   263→              <div className="aspect-[4/3] flex items-center justify-center overflow-hidden bg-muted/20 relative group">
+   264→                <img
+   265→                  src={currentValue}
+   266→                  alt={item.label}
+   267→                  className="max-w-full max-h-full object-contain p-2 transition-transform group-hover:scale-105"
+   268→                />
+   269→                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+   270→                  <div className="flex gap-2">
+   271→                    <Eye className="w-5 h-5 text-white" />
+   272→                    <Upload className="w-5 h-5 text-white" />
+   273→                  </div>
+   274→                </div>
+   275→              </div>
+   276→            ) : (
+   277→              <div className="aspect-[4/3] flex items-center justify-center cursor-pointer">
+   278→                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+   279→                  <Upload className="w-8 h-8" />
+   280→                  <p className="text-sm font-medium">Drop image or click to upload</p>
+   281→                  <p className="text-xs">PNG, JPG, SVG, GIF, WEBP, ICO (max 5MB)</p>
+   282→                </div>
+   283→              </div>
+   284→            )}
+   285→          </div>
+   286→
+   287→          {currentValue && (
+   288→            <div className="flex items-center gap-2">
+   289→              <Badge variant="outline" className="text-xs">
+   290→                <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" />
+   291→                Uploaded
+   292→              </Badge>
+   293→              <span className="text-xs text-muted-foreground truncate max-w-[200px]">{currentValue}</span>
+   294→            </div>
+   295→          )}
+   296→        </CardContent>
+   297→      </Card>
+   298→    );
+   299→  };
+   300→
+   301→  // Upload view
+   302→  if (currentSection === 'upload') {
+   303→    return (
+   304→      <div className="space-y-6">
+   305→        <h1 className="text-2xl font-bold flex items-center gap-2"><Upload className="w-6 h-6" />Upload Media</h1>
+   306→        <Card>
+   307→          <CardContent className="p-6 space-y-4">
+   308→            <div className="p-8 border-2 border-dashed rounded-lg text-center bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer">
+   309→              <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+   310→              <p className="font-medium">Drag and drop files here</p>
+   311→              <p className="text-sm text-muted-foreground">or click to browse your files</p>
+   312→              <p className="text-xs text-muted-foreground mt-2">Supported: JPG, PNG, GIF, SVG, WEBP, ICO (Max 5MB)</p>
+   313→            </div>
+   314→          </CardContent>
+   315→        </Card>
+   316→      </div>
+   317→    );
+   318→  }
+   319→
+   320→  // Folders view
+   321→  if (currentSection === 'folders') {
+   322→    return (
+   323→      <div className="space-y-6">
+   324→        <div className="flex items-center justify-between">
+   325→          <h1 className="text-2xl font-bold flex items-center gap-2"><FolderOpen className="w-6 h-6" />Media Folders</h1>
+   326→        </div>
+   327→        <Card className="p-8 text-center">
+   328→          <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+   329→          <p className="text-muted-foreground">Media folders are organized automatically based on upload category.</p>
+   330→          <div className="mt-4 flex flex-wrap justify-center gap-2">
+   331→            <Badge variant="outline">logos</Badge>
+   332→            <Badge variant="outline">favicon</Badge>
+   333→            <Badge variant="outline">payment</Badge>
+   334→            <Badge variant="outline">general</Badge>
+   335→          </div>
+   336→        </Card>
+   337→      </div>
+   338→    );
+   339→  }
+   340→
+   341→  if (loading) {
+   342→    return (
+   343→      <div className="flex items-center justify-center py-12">
+   344→        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+   345→      </div>
+   346→    );
+   347→  }
+   348→
+   349→  // Success message toast
+   350→  const SuccessToast = successMessage ? (
+   351→    <div className="fixed top-4 right-4 z-50">
+   352→      <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 shadow-lg">
+   353→        <CheckCircle2 className="w-4 h-4" />
+   354→        <span className="text-sm font-medium">{successMessage}</span>
+   355→        <button onClick={() => setSuccessMessage('')} className="ml-2 hover:bg-emerald-100 rounded p-0.5">
+   356→          <X className="w-3 h-3" />
+   357→        </button>
+   358→      </div>
+   359→    </div>
+   360→  ) : null;
+   361→
+   362→  // Upload progress toast
+   363→  const ProgressToast = uploadProgress ? (
+   364→    <div className="fixed top-4 right-4 z-50">
+   365→      <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700 shadow-lg">
+   366→        <AlertCircle className="w-4 h-4" />
+   367→        <span className="text-sm">{uploadProgress}</span>
+   368→      </div>
+   369→    </div>
+   370→  ) : null;
+   371→
+   372→  return (
+   373→    <div className="space-y-6">
+   374→      {SuccessToast}
+   375→      {ProgressToast}
+   376→
+   377→      {/* Header */}
+   378→      <div className="flex items-center justify-between">
+   379→        <div>
+   380→          <h1 className="text-2xl font-bold flex items-center gap-2"><ImageLucide className="w-6 h-6" />Media Library</h1>
+   381→          <p className="text-sm text-muted-foreground">Manage logos, favicon, payment images, and uploaded media</p>
+   382→        </div>
+   383→        <Button variant="outline" size="sm" className="gap-1" onClick={handleRefresh} disabled={loading}>
+   384→          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />Refresh
+   385→        </Button>
+   386→      </div>
+   387→
+   388→      <Tabs defaultValue="brand">
+   389→        <TabsList>
+   390→          <TabsTrigger value="brand" className="gap-1">
+   391→            <Palette className="w-3.5 h-3.5" />Brand Assets
+   392→          </TabsTrigger>
+   393→          <TabsTrigger value="payment" className="gap-1">
+   394→            <CreditCard className="w-3.5 h-3.5" />Payment Images
+   395→          </TabsTrigger>
+   396→          <TabsTrigger value="library" className="gap-1">
+   397→            <FolderOpen className="w-3.5 h-3.5" />Media Library
+   398→          </TabsTrigger>
+   399→        </TabsList>
+   400→
+   401→        {/* Brand Assets Tab */}
+   402→        <TabsContent value="brand" className="space-y-6">
+   403→          <Card>
+   404→            <CardHeader>
+   405→              <CardTitle className="flex items-center gap-2">
+   406→                <Palette className="w-5 h-5 text-primary" />
+   407→                Logo & Favicon
+   408→              </CardTitle>
+   409→              <CardDescription>
+   410→                Upload and manage your site&apos;s brand identity assets. These images appear in the header, browser tab, and throughout the site.
+   411→              </CardDescription>
+   412→            </CardHeader>
+   413→            <CardContent>
+   414→              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+   415→                {BRAND_IMAGES.map((item) => (
+   416→                  <ImageUploadCard key={item.key} item={item} />
+   417→                ))}
+   418→              </div>
+   419→            </CardContent>
+   420→          </Card>
+   421→
+   422→          {/* Preview section */}
+   423→          {(imageSettings['site_logo'] || imageSettings['dark_mode_logo'] || imageSettings['site_favicon']) && (
+   424→            <Card>
+   425→              <CardHeader>
+   426→                <CardTitle className="text-lg">Brand Preview</CardTitle>
+   427→                <CardDescription>How your brand assets appear on the site</CardDescription>
+   428→              </CardHeader>
+   429→              <CardContent>
+   430→                <div className="flex flex-wrap items-center gap-6 p-4 rounded-lg bg-muted/30">
+   431→                  {/* Light mode preview */}
+   432→                  <div className="flex items-center gap-3 p-3 rounded-lg bg-white border">
+   433→                    <span className="text-xs text-gray-500 mr-1">Light:</span>
+   434→                    {imageSettings['site_logo'] ? (
+   435→                      <img src={imageSettings['site_logo']} alt="Site Logo" className="h-8 max-w-[120px] object-contain" />
+   436→                    ) : (
+   437→                      <span className="text-xs text-gray-400">No logo</span>
+   438→                    )}
+   439→                  </div>
+   440→                  {/* Dark mode preview */}
+   441→                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-900 border border-gray-700">
+   442→                    <span className="text-xs text-gray-400 mr-1">Dark:</span>
+   443→                    {imageSettings['dark_mode_logo'] ? (
+   444→                      <img src={imageSettings['dark_mode_logo']} alt="Dark Mode Logo" className="h-8 max-w-[120px] object-contain" />
+   445→                    ) : (
+   446→                      <span className="text-xs text-gray-500">No logo</span>
+   447→                    )}
+   448→                  </div>
+   449→                  {/* Favicon preview */}
+   450→                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
+   451→                    <span className="text-xs text-muted-foreground mr-1">Favicon:</span>
+   452→                    {imageSettings['site_favicon'] ? (
+   453→                      <img src={imageSettings['site_favicon']} alt="Favicon" className="h-6 w-6 object-contain" />
+   454→                    ) : (
+   455→                      <span className="text-xs text-muted-foreground">No favicon</span>
+   456→                    )}
+   457→                  </div>
+   458→                </div>
+   459→              </CardContent>
+   460→            </Card>
+   461→          )}
+   462→        </TabsContent>
+   463→
+   464→        {/* Payment Gateway Images Tab */}
+   465→        <TabsContent value="payment" className="space-y-6">
+   466→          <Card>
+   467→            <CardHeader>
+   468→              <CardTitle className="flex items-center gap-2">
+   469→                <CreditCard className="w-5 h-5 text-primary" />
+   470→                Payment Gateway Images
+   471→              </CardTitle>
+   472→              <CardDescription>
+   473→                Upload logos for payment methods displayed on the checkout and wallet pages.
+   474→              </CardDescription>
+   475→            </CardHeader>
+   476→            <CardContent>
+   477→              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+   478→                {PAYMENT_IMAGES.map((item) => (
+   479→                  <ImageUploadCard key={item.key} item={item} />
+   480→                ))}
+   481→              </div>
+   482→            </CardContent>
+   483→          </Card>
+   484→
+   485→          {/* Payment preview section */}
+   486→          {(imageSettings['bkash_logo'] || imageSettings['nagad_logo'] || imageSettings['rocket_logo'] || imageSettings['payment_gateway_logo']) && (
+   487→            <Card>
+   488→              <CardHeader>
+   489→                <CardTitle className="text-lg">Payment Methods Preview</CardTitle>
+   490→                <CardDescription>How payment options appear to users</CardDescription>
+   491→              </CardHeader>
+   492→              <CardContent>
+   493→                <div className="flex flex-wrap items-center justify-center gap-4 p-6 rounded-lg bg-muted/30">
+   494→                  {imageSettings['payment_gateway_logo'] && (
+   495→                    <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-card border">
+   496→                      <img src={imageSettings['payment_gateway_logo']} alt="Payment Gateway" className="h-12 max-w-[100px] object-contain" />
+   497→                      <span className="text-xs text-muted-foreground">Gateway</span>
+   498→                    </div>
+   499→                  )}
+   500→                  {imageSettings['bkash_logo'] && (
+   501→                    <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-card border">
+   502→                      <img src={imageSettings['bkash_logo']} alt="bKash" className="h-12 max-w-[100px] object-contain" />
+   503→                      <span className="text-xs text-muted-foreground">bKash</span>
+   504→                    </div>
+   505→                  )}
+   506→                  {imageSettings['nagad_logo'] && (
+   507→                    <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-card border">
+   508→                      <img src={imageSettings['nagad_logo']} alt="Nagad" className="h-12 max-w-[100px] object-contain" />
+   509→                      <span className="text-xs text-muted-foreground">Nagad</span>
+   510→                    </div>
+   511→                  )}
+   512→                  {imageSettings['rocket_logo'] && (
+   513→                    <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-card border">
+   514→                      <img src={imageSettings['rocket_logo']} alt="Rocket" className="h-12 max-w-[100px] object-contain" />
+   515→                      <span className="text-xs text-muted-foreground">Rocket</span>
+   516→                    </div>
+   517→                  )}
+   518→                </div>
+   519→              </CardContent>
+   520→            </Card>
+   521→          )}
+   522→        </TabsContent>
+   523→
+   524→        {/* Media Library Tab */}
+   525→        <TabsContent value="library" className="space-y-4">
+   526→          <div className="flex gap-3 items-center">
+   527→            <div className="relative flex-1 max-w-sm">
+   528→              <ImageLucide className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+   529→              <Input
+   530→                placeholder="Search media..."
+   531→                value={searchQuery}
+   532→                onChange={e => setSearchQuery(e.target.value)}
+   533→                className="pl-9"
+   534→              />
+   535→            </div>
+   536→          </div>
+   537→
+   538→          <Separator />
+   539→
+   540→          {/* All images grid */}
+   541→          {(() => {
+   542→            // Combine all image settings that have values with general media files
+   543→            const allItems: Array<{ key: string; value: string; label: string; group: string }> = [];
+   544→
+   545→            // Brand images
+   546→            BRAND_IMAGES.forEach(item => {
+   547→              if (imageSettings[item.key]) {
+   548→                allItems.push({ key: item.key, value: imageSettings[item.key], label: item.label, group: 'brand' });
+   549→              }
+   550→            });
+   551→
+   552→            // Payment images
+   553→            PAYMENT_IMAGES.forEach(item => {
+   554→              if (imageSettings[item.key]) {
+   555→                allItems.push({ key: item.key, value: imageSettings[item.key], label: item.label, group: 'payment' });
+   556→              }
+   557→            });
+   558→
+   559→            // General media
+   560→            mediaFiles.forEach(file => {
+   561→              if (file.value) {
+   562→                allItems.push({ key: file.key, value: file.value, label: file.key, group: file.group });
+   563→              }
+   564→            });
+   565→
+   566→            // Filter by search
+   567→            const filtered = searchQuery
+   568→              ? allItems.filter(item =>
+   569→                  item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+   570→                  item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+   571→                  item.value.toLowerCase().includes(searchQuery.toLowerCase())
+   572→                )
+   573→              : allItems;
+   574→
+   575→            if (filtered.length === 0) {
+   576→              return (
+   577→                <Card className="p-8 text-center">
+   578→                  <ImageLucide className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+   579→                  <p className="text-muted-foreground font-medium">No media files uploaded yet</p>
+   580→                  <p className="text-sm text-muted-foreground mt-1">
+   581→                    Go to Brand Assets or Payment Images tabs to upload your first images.
+   582→                  </p>
+   583→                </Card>
+   584→              );
+   585→            }
+   586→
+   587→            return (
+   588→              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+   589→                {filtered.map((item) => (
+   590→                  <Card key={item.key} className="hover:shadow-md transition-shadow overflow-hidden group">
+   591→                    <CardContent className="p-3">
+   592→                      <div className="aspect-square rounded-lg bg-muted/20 flex items-center justify-center overflow-hidden mb-2 relative">
+   593→                        <img
+   594→                          src={item.value}
+   595→                          alt={item.label}
+   596→                          className="max-w-full max-h-full object-contain p-1 transition-transform group-hover:scale-105"
+   597→                        />
+   598→                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+   599→                          <Eye className="w-5 h-5 text-white" />
+   600→                        </div>
+   601→                      </div>
+   602→                      <p className="text-sm font-medium truncate">{item.label}</p>
+   603→                      <p className="text-xs text-muted-foreground truncate">{item.value}</p>
+   604→                      <Badge
+   605→                        variant="outline"
+   606→                        className={`text-xs mt-1 ${
+   607→                          item.group === 'brand' ? 'border-primary/30 text-primary' :
+   608→                          item.group === 'payment' ? 'border-emerald-500/30 text-emerald-600' :
+   609→                          'border-muted-foreground/30 text-muted-foreground'
+   610→                        }`}
+   611→                      >
+   612→                        {item.group === 'brand' ? 'Brand' : item.group === 'payment' ? 'Payment' : 'Media'}
+   613→                      </Badge>
+   614→                    </CardContent>
+   615→                  </Card>
+   616→                ))}
+   617→              </div>
+   618→            );
+   619→          })()}
+   620→        </TabsContent>
+   621→      </Tabs>
+   622→    </div>
+   623→  );
+   624→}
+   625→

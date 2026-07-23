@@ -14,7 +14,7 @@ const KNOWN_STATIC_SEGMENTS = [
   'cookies-policy',
   'faqs',
   'how-it-works',
-  'not-found',
+  '404',
   'payment-policy',
   'privacy-policy',
   'refund-policy',
@@ -107,14 +107,14 @@ export function middleware(request: NextRequest) {
           return NextResponse.next();
         }
         const url = request.nextUrl.clone();
-        url.pathname = `/${firstSegment}/not-found`;
+        url.pathname = `/${firstSegment}/404`;
         return NextResponse.redirect(url);
       }
       if (KNOWN_USER_SUB_SEGMENTS.includes(thirdSegment)) {
         return NextResponse.next();
       }
       const url = request.nextUrl.clone();
-      url.pathname = `/${firstSegment}/not-found`;
+      url.pathname = `/${firstSegment}/404`;
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -122,7 +122,7 @@ export function middleware(request: NextRequest) {
 
   // Path doesn't match any known route pattern → redirect to 404
   const url = request.nextUrl.clone();
-  url.pathname = `/${firstSegment}/not-found`;
+  url.pathname = `/${firstSegment}/404`;
   return NextResponse.redirect(url);
 }
 

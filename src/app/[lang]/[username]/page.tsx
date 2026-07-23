@@ -4,7 +4,7 @@ import { use } from 'react';
 import dynamic from 'next/dynamic';
 
 const DashboardPage = dynamic(() => import('@/components/pages/DashboardPage'), { ssr: false });
-const NotFoundPage = dynamic(() => import('@/app/[lang]/not-found').then(m => ({ default: m.default })), { ssr: false });
+const NotFoundPage = dynamic(() => import('@/app/[lang]/404/not-found-client').then(m => ({ default: m.default })), { ssr: false });
 
 export default function UserProfileRoute({ params }: { params: Promise<{ username: string; lang: string }> }) {
   const { username } = use(params);
