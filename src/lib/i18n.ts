@@ -285,6 +285,21 @@ type TranslationKeys = {
   dark: string;
   system: string;
 
+  // Support Form
+  subject: string;
+  attachment: string;
+  attachmentHint: string;
+  phoneHintBd: string;
+  emailHintDomains: string;
+  getInTouch: string;
+  supportFormDesc: string;
+  supportSuccessTitle: string;
+  supportSuccessMsg: string;
+  fileTooLarge: string;
+  invalidPhoneFormat: string;
+  invalidEmailDomain: string;
+  requiredField: string;
+
   // Admin
   users: string;
   kyc: string;
@@ -601,6 +616,21 @@ const en: TranslationKeys = {
   dark: 'Dark',
   system: 'System',
 
+  // Support Form
+  subject: 'Subject',
+  attachment: 'Attachment',
+  attachmentHint: 'Max 5MB. Supported: JPG, PNG, PDF, DOC',
+  phoneHintBd: '+88 followed by 11-digit BD number',
+  emailHintDomains: 'Accepts @gmail.com, @outlook.com, @yahoo.com etc.',
+  getInTouch: 'Get In Touch',
+  supportFormDesc: 'Fill out the form below and our support team will get back to you within 24 hours.',
+  supportSuccessTitle: 'Support Request Submitted!',
+  supportSuccessMsg: 'We have received your request. Our team will contact you within 24 hours.',
+  fileTooLarge: 'File size must be under 5MB',
+  invalidPhoneFormat: 'Enter a valid +88 BD phone number (11 digits after +88)',
+  invalidEmailDomain: 'Please use a valid email (e.g. @gmail.com, @outlook.com, @yahoo.com)',
+  requiredField: 'This field is required',
+
   users: 'Users',
   kyc: 'KYC',
   payments: 'Payments',
@@ -914,6 +944,21 @@ const bn: TranslationKeys = {
   light: 'লাইট',
   dark: 'ডার্ক',
   system: 'সিস্টেম',
+
+  // Support Form
+  subject: 'বিষয়',
+  attachment: 'সংযুক্তি',
+  attachmentHint: 'সর্বোচ্চ ৫MB। সমর্থিত: JPG, PNG, PDF, DOC',
+  phoneHintBd: '+88 এর পরে ১১-digit বাংলাদেশ ফোন নম্বর',
+  emailHintDomains: '@gmail.com, @outlook.com, @yahoo.com ইত্যাদি গ্রহণযোগ্য',
+  getInTouch: 'যোগাযোগ করুন',
+  supportFormDesc: 'নিচের ফর্ম পূরণ করুন, আমাদের সাহায্য দল ২৪ ঘন্টার মধ্যে আপনার সাথে যোগাযোগ করবে।',
+  supportSuccessTitle: 'সাহায্য অনুরোধ জমা হয়েছে!',
+  supportSuccessMsg: 'আমরা আপনার অনুরোধ পেয়েছি। আমাদের দল ২৪ ঘন্টার মধ্যে আপনার সাথে যোগাযোগ করবে।',
+  fileTooLarge: 'ফাইলের আকার ৫MB এর নিচে হতে হবে',
+  invalidPhoneFormat: 'একটি সঠিক +88 বাংলাদেশ ফোন নম্বর দিন (+88 এর পরে ১১ ডিজিট)',
+  invalidEmailDomain: 'একটি সঠিক ইমেইল ব্যবহার করুন (যেমন @gmail.com, @outlook.com, @yahoo.com)',
+  requiredField: 'এই ফিল্ড আবশ্যক',
 
   users: 'ব্যবহারকারী',
   kyc: 'কেওয়াইসি',

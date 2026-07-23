@@ -28,6 +28,7 @@ const LazySellTicketPage = lazy(() => import('@/components/pages/SellTicketPage'
 const LazyDashboardPage = lazy(() => import('@/components/pages/DashboardPage'));
 const LazyAdminPage = lazy(() => import('@/components/pages/AdminPage'));
 const LazyInfoPage = lazy(() => import('@/components/pages/InfoPage'));
+const LazySupportPage = lazy(() => import('@/components/pages/SupportPage'));
 
 const pageComponents: Record<string, ComponentType> = {
   home: LazyHomePage,
@@ -65,7 +66,7 @@ const pageComponents: Record<string, ComponentType> = {
   'how-it-works': LazyInfoPage,
   faq: LazyInfoPage,
   blog: LazyInfoPage,
-  support: LazyInfoPage,
+  support: LazySupportPage,
   terms: LazyInfoPage,
   privacy: LazyInfoPage,
   refund: LazyInfoPage,

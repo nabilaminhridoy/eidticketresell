@@ -1,5 +1,8 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function SupportPage() {
-  return <InfoPage section="support" />;
+import dynamic from 'next/dynamic';
+
+const SupportPage = dynamic(() => import('@/components/pages/SupportPage'), { ssr: false });
+
+export default function SupportPageRoute() {
+  return <SupportPage />;
 }

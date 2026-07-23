@@ -310,3 +310,46 @@ Stage Summary:
 - useCallback import removed (no longer needed)
 - ArrowLeftRight icon import removed
 - All responsive layouts verified working
+
+---
+Task ID: 11
+Agent: main
+Task: Create Support page with form (Full Name, Phone +88, Email validation, Subject, Message, Attachment, Submit)
+
+Work Log:
+- Explored existing Support page structure — was using InfoPage with simple phone/email cards
+- Updated Prisma schema: SupportTicket model extended with fullName, phone, email, subject, message, attachment fields; userId made optional (String?) for guest submissions; user relation changed to User?
+- Pushed schema to database with `bun run db:push`
+- Created SupportPage.tsx component with:
+  - Quick contact cards (Phone, Email, Response Time) above form
+  - 2-column desktop grid for Full Name+Phone, Email+Subject rows
+  - Full-width Description textarea and Attachment upload area
+  - Green Submit button with Send icon
+  - Full validation: required fields, BD phone format (+88, 11 digits), email domain validation (@gmail.com, @outlook.com, etc.), file size limit (5MB)
+  - Success page with animated green CheckCircle icon, "Support Request Submitted!" title, 24-hour response badge
+  - Mobile: single column stacked layout with all fields full width
+- Created API route `/api/support/route.ts`:
+  - POST handler with FormData parsing
+  - Server-side validation matching client-side (email domains, phone format, file size/type)
+  - File upload to `public/uploads/support/` directory
+  - Prisma SupportTicket creation with optional userId (guest support)
+  - Fixed Prisma optional relation issue: used spread operator `...(userId ? { userId } : {})` instead of `userId: null`
+- Updated i18n translations: added 13 new keys (subject, attachment, attachmentHint, phoneHintBd, emailHintDomains, getInTouch, supportFormDesc, supportSuccessTitle, supportSuccessMsg, fileTooLarge, invalidPhoneFormat, invalidEmailDomain, requiredField) in both English and Bengali
+- Updated page.tsx: added LazySupportPage import, changed 'support' entry from LazyInfoPage to LazySupportPage
+- Updated support page route: changed from InfoPage to dynamic import of SupportPage (ssr: false)
+- Restarted dev server to pick up new Prisma Client after schema change
+- Verified with Agent Browser:
+  - Desktop: form shows all 6 fields in 2-column grid, quick contact cards above, submit button
+  - Mobile: all fields stacked vertically, full width
+  - Validation: required field errors shown, email domain validation works, phone format validation works
+  - Submission: form submits successfully, shows success page with green checkmark, "Support Request Submitted!" title, 24-hour response badge
+  - Backend: POST /api/support returns 200, Prisma INSERT query confirms data saved
+
+Stage Summary:
+- Complete Support page with professional form created
+- Desktop: 2-column grid (Name+Phone, Email+Subject), full-width Description+Attachment+Submit
+- Mobile: single column stacked with full-width fields
+- Full validation: BD phone (+88 11 digits), email domains (gmail/outlook/yahoo etc.), required fields, file size
+- Backend API: file upload support, Prisma database storage, guest submissions allowed
+- Success page: animated checkmark, confirmation message, 24-hour badge
+- Bilingual support: all new labels have English and Bengali translations
