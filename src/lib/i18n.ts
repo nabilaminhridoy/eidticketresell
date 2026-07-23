@@ -341,6 +341,45 @@ type TranslationKeys = {
   systemMode: string;
   security: string;
   notificationsSettings: string;
+
+  // Filter By
+  filterBy: string;
+  priceRange: string;
+  minPrice: string;
+  maxPrice: string;
+  morning: string;
+  afternoon: string;
+  night: string;
+  midNight: string;
+  ticketClass: string;
+  availableSeats: string;
+  seats1: string;
+  seats2: string;
+  seats3: string;
+  seats4: string;
+  seats4Plus: string;
+  clearFilters: string;
+
+  // Sort By
+  sortBy: string;
+  sortDefault: string;
+  newestFirst: string;
+  oldestFirst: string;
+  priceLowToHigh: string;
+  priceHighToLow: string;
+  departureEarliest: string;
+  departureLatest: string;
+  travelDateEarliest: string;
+  travelDateLatest: string;
+  bestMatch: string;
+
+  // Pagination
+  perPage: string;
+  showingResults: string;
+  resultsFound: string;
+  showing: string;
+  ofResults: string;
+  all: string;
 };
 
 const en: TranslationKeys = {
@@ -670,6 +709,45 @@ const en: TranslationKeys = {
   systemMode: 'System',
   security: 'Security',
   notificationsSettings: 'Notifications',
+
+  // Filter By
+  filterBy: 'Filter By',
+  priceRange: 'Price Range',
+  minPrice: 'Min Price',
+  maxPrice: 'Max Price',
+  morning: 'Morning (6 AM–12 PM)',
+  afternoon: 'Afternoon (12 PM–6 PM)',
+  night: 'Night (6 PM–12 AM)',
+  midNight: 'Mid Night (12 AM–6 AM)',
+  ticketClass: 'Class',
+  availableSeats: 'Available Seats',
+  seats1: '1 Seat',
+  seats2: '2 Seats',
+  seats3: '3 Seats',
+  seats4: '4 Seats',
+  seats4Plus: '4+ Seats',
+  clearFilters: 'Clear All Filters',
+
+  // Sort By
+  sortBy: 'Sort By',
+  sortDefault: 'Default',
+  newestFirst: 'Newest First',
+  oldestFirst: 'Oldest First',
+  priceLowToHigh: 'Price: Low to High',
+  priceHighToLow: 'Price: High to Low',
+  departureEarliest: 'Departure: Earliest First',
+  departureLatest: 'Departure: Latest First',
+  travelDateEarliest: 'Travel Date: Earliest First',
+  travelDateLatest: 'Travel Date: Latest First',
+  bestMatch: 'Best Match',
+
+  // Pagination
+  perPage: 'Per Page',
+  showingResults: 'Showing {from}–{to} of {total} results',
+  resultsFound: '{count} results found',
+  showing: 'Showing',
+  ofResults: 'of {total} results',
+  all: 'All',
 };
 
 const bn: TranslationKeys = {
@@ -999,6 +1077,45 @@ const bn: TranslationKeys = {
   systemMode: 'সিস্টেম',
   security: 'নিরাপত্তা',
   notificationsSettings: 'বিজ্ঞপ্তি',
+
+  // Filter By
+  filterBy: 'ফিল্টার করুন',
+  priceRange: 'মূল্য পরিসীমা',
+  minPrice: 'সর্বনিম্ন মূল্য',
+  maxPrice: 'সর্বোচ্চ মূল্য',
+  morning: 'সকাল (৬ AM–১২ PM)',
+  afternoon: 'দুপুর (১২ PM–৬ PM)',
+  night: 'রাত (৬ PM–১২ AM)',
+  midNight: 'মধ্যরাত (১২ AM–৬ AM)',
+  ticketClass: 'শ্রেণি',
+  availableSeats: 'আসন সংখ্যা',
+  seats1: '১ আসন',
+  seats2: '২ আসন',
+  seats3: '৩ আসন',
+  seats4: '৪ আসন',
+  seats4Plus: '৪+ আসন',
+  clearFilters: 'সব ফিল্টার মুছুন',
+
+  // Sort By
+  sortBy: 'সাজান',
+  sortDefault: 'ডিফল্ট',
+  newestFirst: 'নতুন প্রথম',
+  oldestFirst: 'পুরনো প্রথম',
+  priceLowToHigh: 'মূল্য: কম থেকে বেশি',
+  priceHighToLow: 'মূল্য: বেশি থেকে কম',
+  departureEarliest: 'যাত্রা: সবচেয়ে দ্রুত',
+  departureLatest: 'যাত্রা: সবচেয়ে বিলম্বিত',
+  travelDateEarliest: 'যাত্রা তারিখ: সবচেয়ে দ্রুত',
+  travelDateLatest: 'যাত্রা তারিখ: সবচেয়ে বিলম্বিত',
+  bestMatch: 'সেরা মিল',
+
+  // Pagination
+  perPage: 'প্রতি পৃষ্ঠা',
+  showingResults: '{total} টি ফলাফলের {from}–{to} দেখাচ্ছে',
+  resultsFound: '{count} টি ফলাফল পাওয়া গেছে',
+  showing: 'দেখাচ্ছে',
+  ofResults: '{total} টি ফলাফলের',
+  all: 'সব',
 };
 
 export const translations = { en, bn } as const;

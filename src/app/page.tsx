@@ -4,18 +4,7 @@ import { lazy, Suspense, ComponentType } from 'react';
 import { motion } from 'framer-motion';
 import AppShell from '@/components/layout/AppShell';
 import { useAppStore } from '@/lib/store';
-
-// Loading fallback
-function PageLoader() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-muted-foreground text-sm">Loading...</p>
-      </div>
-    </div>
-  );
-}
+import PageLoader from '@/components/ui/PageLoader';
 
 // Pre-created lazy page components (declared outside render to avoid re-creation)
 const LazyHomePage = lazy(() => import('@/components/pages/HomePage'));

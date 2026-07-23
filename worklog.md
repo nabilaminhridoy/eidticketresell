@@ -353,3 +353,192 @@ Stage Summary:
 - Backend API: file upload support, Prisma database storage, guest submissions allowed
 - Success page: animated checkmark, confirmation message, 24-hour badge
 - Bilingual support: all new labels have English and Bengali translations
+---
+Task ID: 2
+Agent: main
+Task: Add i18n translation keys for filter/sort/pagination
+
+Work Log:
+- Read existing i18n.ts file (1009 lines) to understand structure and check existing keys
+- Verified that `transportType`, `ticketType`, and `departureTime` already exist in TranslationKeys type and both en/bn objects - skipped those
+- Verified `all` does NOT exist as a standalone key - added it
+- Added 33 new keys to TranslationKeys type (lines 344-382): filterBy, priceRange, minPrice, maxPrice, morning, afternoon, night, midNight, ticketClass, availableSeats, seats1-4, seats4Plus, clearFilters, sortBy, sortDefault, newestFirst, oldestFirst, priceLowToHigh, priceHighToLow, departureEarliest, departureLatest, travelDateEarliest, travelDateLatest, bestMatch, perPage, showingResults, resultsFound, showing, ofResults, all
+- Added English translations to `en` object (lines 713-750)
+- Added Bengali translations to `bn` object (lines 1081-1118)
+- Ran lint - no errors
+
+Stage Summary:
+- Added 33 new translation keys for filter, sort, and pagination features
+
+---
+Task ID: 1
+Agent: main
+Task: Create beautiful modern loading screen
+
+Work Log:
+- Read current page.tsx to understand existing PageLoader (basic spinner with border-3 circle and "Loading..." text)
+- Created /src/components/ui/PageLoader.tsx with professional branded loading screen using CSS animations only (no framer-motion, memory-efficient)
+- Component features:
+  - Subtle gradient backdrop with radial-gradient (green/orange tones) that pulses
+  - Decorative floating dots with staggered animations (3 dots at different positions and timing)
+  - Animated ticket icon (from lucide-react) with scale+fade entrance animation
+  - Orbiting dashed ring around icon (8s linear spin)
+  - Inner pulsing ring with scale and box-shadow animation
+  - Brand name "Eid Ticket Resell" with delayed fade-in entrance (0.35s delay)
+  - Bengali subtitle "ঈদ টিকেট রিসেল" using font-bangla class
+  - Three bouncing dots loading indicator with staggered timing (0.2s offset)
+  - "Loading" text with delayed fade-in entrance (0.5s delay, 70% of animation stays invisible)
+  - All animations use CSS keyframes with `both` fill mode for proper initial states
+- Added 13 new @keyframes and 13 animation utility classes to globals.css:
+  - loader-entrance, loader-icon-entrance, loader-brand-entrance, loader-text-entrance
+  - loader-ring-spin, loader-pulse-ring, loader-gradient
+  - loader-dot-1/2/3, loader-bounce-dot
+- Updated page.tsx: removed old inline PageLoader function, added import from @/components/ui/PageLoader
+- Lint passes with no errors
+- Dev server running successfully on port 3000
+
+Stage Summary:
+- Key results: Modern branded loading screen with CSS-only animations, professional ticket icon indicator, brand name with Bengali subtitle, staggered entrance animations
+---
+Task ID: 3
+Agent: main
+Task: Redesign SearchPage with filter sidebar, sort dropdown, responsive grid, pagination
+
+Work Log:
+- Read current SearchPage.tsx (simple card list with inline filters)
+- Read constants (BUS_CLASSES, TRANSPORT_TYPES, ALL_BD_DISTRICTS, formatDepartureDate/Time)
+- Read i18n translations (verified all required keys exist: filterBy, sortBy, priceRange, minPrice, maxPrice, morning, afternoon, night, midNight, ticketClass, availableSeats, seats1-4Plus, clearFilters, sort options, perPage, showingResults, etc.)
+- Read shadcn/ui components: Sheet, Checkbox, RadioGroup, Accordion, Pagination, Select, Badge, Card, Button, Input, Label, Separator
+- Updated API route (/api/tickets/route.ts) to support:
+  - Comma-separated transportType values (multi-select filter)
+  - Comma-separated ticketType values
+  - seatClass param (comma-separated for multi-select)
+  - departureTimePeriod param (morning/afternoon/night/mid_night with time range mapping)
+  - departureTime sorting (added to valid sort fields)
+  - Cleaned up complex where clause building to handle OR conditions properly for time period filtering
+- Completely redesigned SearchPage.tsx with:
+  - FilterSidebar sub-component (inline in same file) with Accordion sections
+  - TicketCard sub-component (grid-optimized card design)
+  - Desktop: 280px sticky sidebar + 3-column ticket grid
+  - Tablet: hidden sidebar + 2-column grid, filter button to open Sheet
+  - Mobile: Sheet drawer from bottom + 1-column grid, filter button with badge count
+  - 6 filter categories: Transport Type (checkbox+icon), Ticket Type (checkbox+icon), Price Range (min/max inputs), Departure Time (checkbox+icon with Sunrise/Sun/Moon/Sunset icons), Class (checkbox+Armchair icon), Available Seats (RadioGroup)
+  - Sort dropdown: Default, Newest, Oldest, Price Low/High, Departure Earliest/Latest, Travel Date Earliest/Latest, Best Match
+  - Per-page selector: 12/18/24
+  - Pagination with smart page number display (ellipsis for large ranges)
+  - "Showing X-Y of Z results" text
+  - Active filter count badge on mobile filter button
+  - Clear All Filters button
+  - URL search params preserved for initial state (from, to, transport, date)
+  - All labels bilingual via t() function
+  - Framer motion AnimatePresence for grid transitions
+- Fixed TypeScript error with SORT_OPTIONS union type (used 'in' operator for property check)
+- Verified: lint passes clean, TypeScript compilation passes for our files
+
+Stage Summary:
+- Complete redesign of SearchPage with professional filter/sort/pagination system
+- Responsive layout: sidebar+grid desktop, drawer+2col tablet, drawer+1col mobile
+- API enhanced with multi-select filters, time period filtering, and departure time sorting
+- All 6 filter categories fully functional with appropriate shadcn/ui components
+- Sort dropdown with 10 options, per-page selector with 3 options
+- Pagination with smart ellipsis and prev/next navigation
+- Mobile-friendly Sheet drawer for filters with badge count and apply/clear buttons
+
+---
+Task ID: 1
+Agent: main
+Task: Create beautiful modern loading screen
+
+Work Log:
+- Created PageLoader component at /src/components/ui/PageLoader.tsx with CSS-only animations
+- Features: ticket icon with orbiting dashed ring, pulsing inner ring, brand name entrance animation, bouncing dots, gradient backdrop, decorative floating dots
+- Added 13 CSS keyframe animations to /src/app/globals.css
+- Updated /src/app/page.tsx to import new PageLoader instead of inline version
+- Lint passes clean
+
+Stage Summary:
+- Professional branded loading screen with animated ticket icon, orbiting ring, brand name, and bouncing dots
+- CSS-only animations (no framer-motion) for memory efficiency
+- Staggered entrance animations for professional feel
+
+---
+Task ID: 2
+Agent: main
+Task: Add i18n translation keys for filter/sort/pagination
+
+Work Log:
+- Added 33 new translation keys to TranslationKeys type in i18n.ts
+- Added English and Bengali translations for all 33 keys
+- Keys cover: filterBy, priceRange, departure time periods, ticketClass, availableSeats, seat options, sort options (10), pagination keys
+- Skipped existing keys: transportType, ticketType, departureTime
+- Lint passes clean
+
+Stage Summary:
+- 33 new translation keys added for Buy Tickets page filters, sorting, and pagination
+- Full bilingual support (English/Bengali) for all new UI elements
+
+---
+Task ID: 3
+Agent: main
+Task: Redesign SearchPage with filter sidebar, sort dropdown, responsive grid, pagination
+
+Work Log:
+- Complete redesign of SearchPage.tsx with 3 sub-components: FilterSidebar, TicketCard, SearchPage
+- Desktop layout: 280px sticky sidebar + 3-column ticket grid
+- Tablet layout: Filter button + 2-column grid
+- Mobile layout: Filter button (opens Sheet drawer) + 1-column grid
+- Filter sidebar: 6 accordion sections (Transport Type checkboxes, Ticket Type checkboxes, Price Range min/max inputs, Departure Time checkboxes with Morning/Afternoon/Night/Mid Night, Class checkboxes with all BUS_CLASSES, Available Seats radio buttons 1-4+)
+- Sort dropdown: 10 options (Default, Newest, Oldest, Price Low→High, Price High→Low, Departure Earliest/Latest, Travel Date Earliest/Latest, Best Match)
+- Per-page selector: 12/18/24
+- Pagination: Smart page numbers with ellipsis, prev/next buttons
+- Results count: "Showing X–Y of Z results"
+- Clear All Filters button with active filter count badge
+- Updated API /api/tickets/route.ts: added departureTimePeriod, seatClass, multi-select support, departureTime sort field
+
+Stage Summary:
+- Complete professional Buy Tickets page with filter sidebar, sort options, responsive grid, pagination
+- Verified with Agent Browser: desktop sidebar+grid, tablet 2-col, mobile filter sheet+1-col all working correctly
+- No console errors, API queries working properly
+- All 6 filter categories functional with accordion UI
+- Mobile filter drawer with Apply/Clear buttons
+
+---
+Task ID: 4
+Agent: main
+Task: Update tickets API to support new filter/sort options
+
+Work Log:
+- Added departureTimePeriod param for time-based filtering (morning/afternoon/night/mid_night)
+- Added seatClass param for class filtering (comma-separated multi-select)
+- Added departureTime as valid sort field
+- Added parseCsv helper for comma-separated value handling
+- Updated where clause construction for OR conditions with time period ranges
+- Time ranges: morning (06:00-11:59), afternoon (12:00-17:59), night (18:00-23:59), mid_night (00:00-05:59)
+- Lint passes clean
+
+Stage Summary:
+- API now supports all filter params from SearchPage frontend
+- Time period filtering uses lexicographic string comparison on HH:MM format
+- Multi-select filters supported via comma-separated values
+- Pagination response format: { page, limit, total, totalPages }
+
+---
+Task ID: 5
+Agent: main
+Task: Visual verification with Agent Browser
+
+Work Log:
+- Opened home page at desktop 1440x900 - renders correctly
+- Navigated to Buy Tickets page at desktop - shows filter sidebar + sort dropdown + grid
+- All 6 filter categories verified: Transport Type, Ticket Type, Price Range, Departure Time, Class, Available Seats
+- Switched to mobile 390x844 - shows Filter By button (opens sheet drawer)
+- Opened mobile filter sheet - shows all 6 filter categories with Apply/Clear buttons
+- Switched to tablet 768x1024 - shows proper layout
+- Checked console errors - none found
+- Checked dev server log - all requests returning 200, Prisma queries working
+
+Stage Summary:
+- All pages render correctly at desktop, tablet, and mobile viewports
+- No console errors or server-side errors
+- Filter sidebar, sort dropdown, pagination, and mobile sheet all functional
+- Loading screen component created and integrated

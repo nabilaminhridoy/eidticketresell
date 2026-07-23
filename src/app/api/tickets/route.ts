@@ -17,43 +17,108 @@ export async function GET(req: NextRequest) {
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const ticketType = searchParams.get('ticketType');
+    const departureTimePeriod = searchParams.get('departureTimePeriod');
+    const seatClassParam = searchParams.get('seatClass');
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-    const payload = token ? verifyToken(token) : null;
 
-    const where: Record<string, unknown> = { status };
-    if (transportType) where.transportType = transportType;
-    if (from) where.routeFrom = { contains: from, mode: 'insensitive' };
-    if (to) where.routeTo = { contains: to, mode: 'insensitive' };
-    if (date) where.departureDate = date;
-    if (ticketType) where.ticketType = ticketType;
+    // Helper to parse comma-separated values
+    const parseCsv = (val: string | null) => val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const transportTypes = parseCsv(transportType);
+    const ticketTypes = parseCsv(ticketType);
+    const seatClasses = parseCsv(seatClassParam);
+    const timePeriods = parseCsv(departureTimePeriod);
+
+    // Build base where clause (always applied)
+    const baseWhere: Record<string, unknown> = { status };
+    if (transportTypes.length === 1) baseWhere.transportType = transportTypes[0];
+    else if (transportTypes.length > 1) baseWhere.transportType = { in: transportTypes };
+    if (from) baseWhere.routeFrom = { contains: from, mode: 'insensitive' };
+    if (to) baseWhere.routeTo = { contains: to, mode: 'insensitive' };
+    if (date) baseWhere.departureDate = date;
+    if (ticketTypes.length === 1) baseWhere.ticketType = ticketTypes[0];
+    else if (ticketTypes.length > 1) baseWhere.ticketType = { in: ticketTypes };
+    if (seatClasses.length === 1) baseWhere.seatClass = seatClasses[0];
+    else if (seatClasses.length > 1) baseWhere.seatClass = { in: seatClasses };
     if (minPrice || maxPrice) {
       const pf: Record<string, number> = {};
       if (minPrice) pf.gte = parseFloat(minPrice);
       if (maxPrice) pf.lte = parseFloat(maxPrice);
-      where.price = pf;
+      baseWhere.price = pf;
     }
-    if (search) {
-      where.OR = [
-        { routeFrom: { contains: search, mode: 'insensitive' } },
-        { routeTo: { contains: search, mode: 'insensitive' } },
-        { transportCompany: { contains: search, mode: 'insensitive' } },
-        { ticketId: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
+
+    // Build time period ranges
+    // morning: 06:00-11:59, afternoon: 12:00-17:59, night: 18:00-23:59, mid_night: 00:00-05:59
+    const timeRangeMap: Record<string, { gte: string; lte: string }> = {
+      morning: { gte: '06:00', lte: '11:59' },
+      afternoon: { gte: '12:00', lte: '17:59' },
+      night: { gte: '18:00', lte: '23:59' },
+      mid_night: { gte: '00:00', lte: '05:59' },
+    };
+
+    // Build final Prisma-compatible where clause
+    let finalWhere: Record<string, unknown>;
+
+    if (timePeriods.length > 0) {
+      // When time period filtering is active, we need OR conditions
+      // Each time period creates a separate branch with the time range added
+      const orConditions: Array<Record<string, unknown>> = timePeriods
+        .filter(p => timeRangeMap[p])
+        .map(p => ({
+          ...baseWhere,
+          departureTime: timeRangeMap[p],
+        }));
+
+      if (orConditions.length === 0) {
+        finalWhere = baseWhere;
+      } else if (search) {
+        // Need AND of (time period OR) and (search OR)
+        finalWhere = {
+          AND: [
+            { OR: orConditions },
+            {
+              OR: [
+                { ...baseWhere, routeFrom: { contains: search, mode: 'insensitive' } },
+                { ...baseWhere, routeTo: { contains: search, mode: 'insensitive' } },
+                { ...baseWhere, transportCompany: { contains: search, mode: 'insensitive' } },
+                { ...baseWhere, ticketId: { contains: search, mode: 'insensitive' } },
+                { ...baseWhere, description: { contains: search, mode: 'insensitive' } },
+              ],
+            },
+          ],
+        };
+      } else {
+        finalWhere = { OR: orConditions };
+      }
+    } else {
+      finalWhere = baseWhere;
+      if (search) {
+        finalWhere = {
+          ...baseWhere,
+          OR: [
+            { routeFrom: { contains: search, mode: 'insensitive' } },
+            { routeTo: { contains: search, mode: 'insensitive' } },
+            { transportCompany: { contains: search, mode: 'insensitive' } },
+            { ticketId: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        };
+      }
     }
 
     const skip = (page - 1) * limit;
     const orderBy: Record<string, string> = {};
-    if (['price', 'departureDate', 'createdAt', 'views'].includes(sortBy)) {
+    const validSortFields = ['price', 'departureDate', 'departureTime', 'createdAt', 'views'];
+    if (validSortFields.includes(sortBy)) {
       orderBy[sortBy] = sortOrder === 'asc' ? 'asc' : 'desc';
-    } else { orderBy.createdAt = 'desc'; }
+    } else {
+      orderBy.createdAt = 'desc';
+    }
 
     const [tickets, total] = await Promise.all([
       db.ticket.findMany({
-        where,
+        where: finalWhere,
         include: {
           seller: {
             select: {
@@ -65,7 +130,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit,
       }),
-      db.ticket.count({ where }),
+      db.ticket.count({ where: finalWhere }),
     ]);
 
     // For public listing: hide sensitive info unless buyer has purchased
