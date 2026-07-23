@@ -199,6 +199,8 @@ model Order {
   seller  User    @relation("SellerOrders", fields: [sellerId], references: [id])
   reviews Review[]
   chat    Chat?
+  dispute Dispute?
+  journeyVerification JourneyVerification?
 }
 
 model Chat {
@@ -311,10 +313,13 @@ model BlogPost {
   excerpt     String?
   coverImage  String?
   author      String?
+  categoryId  String?
   isPublished Boolean  @default(false)
   publishedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  category    BlogCategory? @relation(fields: [categoryId], references: [id])
 }
 
 model Coupon {
@@ -386,8 +391,105 @@ model OtpVerification {
   email     String?
   phone     String?
   otp       String
-  type      String   // email_verification, phone_verification, login, forgot_password
+  type      String   // email_verification, phone_verification, login, forgot_password, admin_login
   verified  Boolean  @default(false)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model Admin {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  password      String
+  role          String   @default("admin") // admin, super_admin
+  avatar        String?
+  isActive      Boolean  @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  activities    AdminActivityLog[]
+}
+
+model AdminActivityLog {
+  id        String   @id @default(cuid())
+  adminId   String?
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  admin Admin? @relation(fields: [adminId], references: [id])
+}
+
+model JourneyVerification {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  buyerId   String
+  photo     String?  // Journey photo URL
+  video     String?  // Journey video URL
+  gpsLat    Float?   // GPS latitude
+  gpsLng    Float?   // GPS longitude
+  gpsTimestamp DateTime?
+  status    String   @default("pending") // pending, submitted, verified, rejected
+  submittedAt DateTime?
+  verifiedAt   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Dispute {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  initiatedBy String   // buyer or seller
+  reason      String
+  description String?
+  status      String   @default("open") // open, investigating, resolved, closed
+  resolution  String?
+  resolvedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  image       String?
+  link        String?
+  placement   String   // homepage, sidebar, header, footer, buy-tickets, dashboard
+  type        String   @default("banner") // banner, popup, text
+  isActive    Boolean  @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BlogCategory {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+
+  posts BlogPost[]
+}
+
+model BlogTag {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+}
+
+model FaqCategory {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  order Int    @default(0)
 }

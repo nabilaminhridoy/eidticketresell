@@ -56,6 +56,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Admin routes — bypass language prefix entirely
+  if (pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
+
   // Root "/" → redirect to /en/
   if (pathname === '/') {
     const url = request.nextUrl.clone();
@@ -75,7 +80,6 @@ export function middleware(request: NextRequest) {
   }
 
   // Valid lang prefix — check if the path matches a known route
-  // segments[0] = '', segments[1] = lang, segments[2] = route segment (or empty for home)
   const secondSegment = segments[2] || '';
 
   // Home page: /[lang]/ with no second segment
@@ -88,21 +92,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if it could be a username route: /[lang]/[username] or /[lang]/[username]/subroute
-  // Username should look like a valid username: alphanumeric, underscores, reasonable length
+  // Check if it could be a username route
   const isValidUsernamePattern = /^[a-zA-Z0-9_]{3,30}$/.test(secondSegment);
 
   if (isValidUsernamePattern) {
-    // If there's a third segment, check it's a known username sub-route
     const thirdSegment = segments[3] || '';
     if (thirdSegment) {
-      // For /username/wallet/balance, /username/wallet/payout-method patterns
       if (thirdSegment === 'wallet' && segments[4]) {
         const walletSub = segments[4];
         if (walletSub === 'balance' || walletSub === 'payout-method') {
           return NextResponse.next();
         }
-        // Unknown wallet sub-route → 404
         const url = request.nextUrl.clone();
         url.pathname = `/${firstSegment}/not-found`;
         return NextResponse.redirect(url);
@@ -110,12 +110,10 @@ export function middleware(request: NextRequest) {
       if (KNOWN_USER_SUB_SEGMENTS.includes(thirdSegment)) {
         return NextResponse.next();
       }
-      // Unknown sub-route after username → 404
       const url = request.nextUrl.clone();
       url.pathname = `/${firstSegment}/not-found`;
       return NextResponse.redirect(url);
     }
-    // Just /[lang]/[username] — could be a valid username profile page
     return NextResponse.next();
   }
 
