@@ -115,10 +115,34 @@ export const BD_DISTRICTS: Record<string, Array<{ label: string; labelBn: string
   ],
 };
 
-export const ALL_BD_DISTRICTS = Object.values(BD_DISTRICTS)
-  .flat()
-  .filter((dist, idx, arr) => arr.findIndex((d) => d.label === dist.label) === idx)
-  .sort((a, b) => a.label.localeCompare(b.label));
+export const ALL_BD_DISTRICTS = [
+  { label: 'Barishal', labelBn: 'বরিশাল' },
+  { label: 'Bogra', labelBn: 'বগুড়া' },
+  { label: 'Brahmanbaria', labelBn: 'ব্রাহ্মণবাড়িয়া' },
+  { label: 'Chandpur', labelBn: 'চাঁদপুর' },
+  { label: 'Chittagong', labelBn: 'চট্টগ্রাম' },
+  { label: 'Comilla', labelBn: 'কুমিল্লা' },
+  { label: "Cox's Bazar", labelBn: 'কক্সবাজার' },
+  { label: 'Dhaka', labelBn: 'ঢাকা' },
+  { label: 'Dinajpur', labelBn: 'দিনাজপুর' },
+  { label: 'Faridpur', labelBn: 'ফরিদপুর' },
+  { label: 'Feni', labelBn: 'ফেনী' },
+  { label: 'Gazipur', labelBn: 'গাজীপুর' },
+  { label: 'Habiganj', labelBn: 'হবিগঞ্জ' },
+  { label: 'Jessore', labelBn: 'যশোর' },
+  { label: 'Khulna', labelBn: 'খুলনা' },
+  { label: 'Kishoreganj', labelBn: 'কিশোরগঞ্জ' },
+  { label: 'Kushtia', labelBn: 'কুষ্টিয়া' },
+  { label: 'Lakshmipur', labelBn: 'লক্ষ্মীপুর' },
+  { label: 'Mymensingh', labelBn: 'ময়মনসিংহ' },
+  { label: 'Narayanganj', labelBn: 'নারায়ণগঞ্জ' },
+  { label: 'Noakhali', labelBn: 'নোয়াখালী' },
+  { label: 'Pabna', labelBn: 'পাবনা' },
+  { label: 'Rajshahi', labelBn: 'রাজশাহী' },
+  { label: 'Rangpur', labelBn: 'রংপুর' },
+  { label: 'Sylhet', labelBn: 'সিলেট' },
+  { label: 'Tangail', labelBn: 'টাঙ্গাইল' },
+];
 
 export const BUS_CLASSES = [
   { id: 'non_ac', label: 'Non AC', labelBn: 'নন এসি' },

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useAppStore, useLanguageStore } from '@/lib/store';
 import {
   Ticket, ArrowRight, Bus, TrainFront, Plane, Ship,
@@ -28,8 +27,6 @@ export default function HomePage() {
   const [fromCity, setFromCity] = useState('');
   const [toCity, setToCity] = useState('');
   const [journeyDate, setJourneyDate] = useState('');
-
-
 
   const handleSearch = () => {
     navigate('search', {
@@ -103,45 +100,32 @@ export default function HomePage() {
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-28 relative">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Badge className="mb-6 px-4 py-1.5 text-sm bg-primary/15 text-primary border-primary/20 hover:bg-primary/20">
+            <div className="animate-[fadeInUp_0.6s_ease-out_both]">
+              <Badge className="mb-6 px-4 py-1.5 text-sm bg-primary/15 text-primary border-primary/20 hover:bg-primary/20 transition-colors duration-300">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 {language === 'en' ? 'Eid Special 2025' : 'ঈদ স্পেশাল ২০২৫'}
               </Badge>
-            </motion.div>
+            </div>
 
             {/* Title */}
-            <motion.h1
-              className={`text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] ${language === 'bn' ? 'font-bangla' : ''}`}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
+            <h1
+              className={`text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] ${language === 'bn' ? 'font-bangla' : ''} animate-[fadeInUp_0.6s_ease-out_0.1s_both]`}
             >
               <span className="text-primary">
                 {t('heroTitle', language)}
               </span>
-            </motion.h1>
+            </h1>
 
             {/* Subtitle */}
-            <motion.p
-              className={`text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+            <p
+              className={`text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''} animate-[fadeInUp_0.6s_ease-out_0.2s_both]`}
             >
               {t('heroSubtitle', language)}
-            </motion.p>
+            </p>
 
             {/* Transport Search Form */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="max-w-3xl mx-auto mb-8"
+            <div
+              className="max-w-3xl mx-auto mb-8 animate-[fadeInUp_0.6s_ease-out_0.3s_both]"
             >
               <div className="rounded-2xl bg-card border-2 border-primary/15 shadow-xl shadow-primary/5 p-5 sm:p-6">
                 {/* Row 1: FROM + TO with swap button */}
@@ -243,7 +227,7 @@ export default function HomePage() {
                   <Button
                     size="lg"
                     onClick={handleSearch}
-                    className="rounded-xl text-base h-12 transition-all duration-300 w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="rounded-xl text-base h-12 transition-all duration-300 w-full bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Search className="w-5 h-5 mr-2" />
                     {t('searchTickets', language)}
@@ -255,14 +239,14 @@ export default function HomePage() {
                     size="lg"
                     variant="outline"
                     onClick={() => navigate('sell-ticket')}
-                    className="rounded-xl text-base h-12 w-full border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40"
+                    className="rounded-xl text-base h-12 w-full border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Ticket className="w-5 h-5 mr-2" />
                     {t('sellTickets', language)}
                   </Button>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
 
           </div>
@@ -278,32 +262,24 @@ export default function HomePage() {
 
       {/* ========== TRANSPORT TYPES ========== */}
       <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
-        <motion.div
-          className="text-center mb-10"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center mb-10 animate-[fadeInUp_0.5s_ease-out_both]">
           <Badge variant="secondary" className="mb-3 bg-primary/10 text-primary border-primary/20">
             {t('allTransport', language)}
           </Badge>
           <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
             {language === 'en' ? 'Choose Your Transport' : 'আপনার যানবাহন বেছে নিন'}
           </h2>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {transportTypes.map((transport, index) => (
-            <motion.div
+            <div
               key={transport.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
+              className="animate-[fadeInUp_0.4s_ease-out_both]"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               <Card
-                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-lg`}
+                className={`group cursor-pointer border-2 border-transparent ${transport.hoverBorder} transition-all duration-300 hover:shadow-lg hover:scale-[1.03] hover:-translate-y-1`}
                 onClick={() => navigate('search', { transportType: transport.id })}
               >
                 <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center gap-4">
@@ -313,15 +289,15 @@ export default function HomePage() {
                   <h3 className={`font-semibold text-lg ${language === 'bn' ? 'font-bangla' : ''}`}>
                     {t(transport.labelKey, language)}
                   </h3>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary transition-colors duration-300">
                     <span className={language === 'bn' ? 'font-bangla' : ''}>
                       {language === 'en' ? 'Browse tickets' : 'টিকেট দেখুন'}
                     </span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -329,31 +305,23 @@ export default function HomePage() {
       {/* ========== HOW IT WORKS ========== */}
       <section className="bg-muted">
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
-          <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="text-center mb-12 animate-[fadeInUp_0.5s_ease-out_both]">
             <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
               {t('howItWorks', language)}
             </Badge>
             <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
               {t('howItWorksTitle', language)}
             </h2>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {steps.map((item, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
+                className="animate-[fadeInUp_0.4s_ease-out_both]"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <Card className={`h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg ${item.accent}`}>
+                <Card className={`h-full border-transparent hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:scale-[1.03] hover:-translate-y-1 ${item.accent}`}>
                   <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                     <div className={`w-14 h-14 rounded-2xl ${item.iconBg} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
                       {item.step}
@@ -362,7 +330,7 @@ export default function HomePage() {
                     <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{item.desc}</p>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -370,31 +338,23 @@ export default function HomePage() {
 
       {/* ========== WHY CHOOSE US ========== */}
       <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center mb-12 animate-[fadeInUp_0.5s_ease-out_both]">
           <Badge variant="secondary" className="mb-3 bg-blue/10 text-blue border-blue/20">
             {t('whyChooseUs', language)}
           </Badge>
           <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
             {t('whyChooseUs', language)}
           </h2>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
+              className="animate-[fadeInUp_0.4s_ease-out_both]"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
-              <Card className="h-full border-transparent hover:border-primary/20 transition-all hover:shadow-lg">
+              <Card className="h-full border-transparent hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:scale-[1.03] hover:-translate-y-1">
                 <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                   <div className={`w-14 h-14 rounded-2xl ${feature.iconBg} flex items-center justify-center shadow-lg`}>
                     <feature.icon className="w-7 h-7 text-white" />
@@ -403,7 +363,7 @@ export default function HomePage() {
                   <p className={`text-sm text-muted-foreground leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>{feature.desc}</p>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -413,17 +373,14 @@ export default function HomePage() {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <motion.div
+              <div
                 key={index}
-                className="text-center"
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
+                className="text-center animate-[fadeInScale_0.4s_ease-out_both]"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="text-3xl lg:text-5xl font-bold text-white mb-2">{stat.value}</div>
                 <div className={`text-white/80 text-sm lg:text-base ${language === 'bn' ? 'font-bangla' : ''}`}>{stat.label}</div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -431,13 +388,7 @@ export default function HomePage() {
 
       {/* ========== POPULAR ROUTES ========== */}
       <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
-        <motion.div
-          className="text-center mb-10"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center mb-10 animate-[fadeInUp_0.5s_ease-out_both]">
           <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
             <TrendingUp className="w-3 h-3 mr-1" />
             {t('popularRoutes', language)}
@@ -445,23 +396,21 @@ export default function HomePage() {
           <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
             {t('popularRoutes', language)}
           </h2>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {POPULAR_ROUTES.map((route, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
+              className="animate-[fadeInUp_0.3s_ease-out_both]"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <Card
-                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300"
+                className="group cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
                 onClick={() => navigate('search', { from: route.from, to: route.to })}
               >
                 <CardContent className="p-5 flex items-center gap-3">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -476,7 +425,7 @@ export default function HomePage() {
                   <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -485,13 +434,8 @@ export default function HomePage() {
       <section className="bg-muted">
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20 relative">
           <div className="max-w-2xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <Badge className="mb-4 bg-orange/15 text-orange border-orange/20">
+            <div className="animate-[fadeInUp_0.5s_ease-out_both]">
+              <Badge className="mb-4 bg-orange/15 text-orange border-orange/20 hover:bg-orange/20 transition-colors duration-300">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 {language === 'en' ? 'Start Earning' : 'আয় শুরু করুন'}
               </Badge>
@@ -504,15 +448,15 @@ export default function HomePage() {
                 {language === 'en' ? 'Join thousands of verified sellers and reach millions of travelers across Bangladesh' : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং বাংলাদেশ জুড়ে লক্ষ লক্ষ যাত্রীর কাছে পৌঁছান'}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="lg" onClick={() => navigate('sell-ticket')} className="bg-orange text-orange-foreground hover:bg-orange/90 rounded-xl px-8 h-12 text-base">
+                <Button size="lg" onClick={() => navigate('sell-ticket')} className="bg-orange text-orange-foreground hover:bg-orange/90 rounded-xl px-8 h-12 text-base transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
                   <Ticket className="w-5 h-5 mr-2" />
                   {t('sellTickets', language)}
                 </Button>
-                <Button size="lg" variant="outline" onClick={() => navigate('how-it-works')} className="rounded-xl px-8 h-12 text-base border-blue/30 hover:bg-blue/10 hover:text-blue hover:border-blue">
+                <Button size="lg" variant="outline" onClick={() => navigate('how-it-works')} className="rounded-xl px-8 h-12 text-base border-blue/30 hover:bg-blue/10 hover:text-blue hover:border-blue transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
                   {language === 'en' ? 'Learn More' : 'আরও জানুন'}
                 </Button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>

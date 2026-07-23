@@ -1,0 +1,354 @@
+     1→#!/usr/bin/env bun
+     2→/**
+     3→ * Standalone seed script for populating the database with prefixed IDs.
+     4→ * Run with: bun run src/scripts/seed.ts
+     5→ */
+     6→
+     7→import { PrismaClient } from '@prisma/client';
+     8→import { hash } from 'bcryptjs';
+     9→
+    10→const db = new PrismaClient();
+    11→
+    12→async function generatePrefixedId(prefix: string): Promise<string> {
+    13→  const counterName = `${prefix.toLowerCase()}_seq`;
+    14→  const counter = await db.counter.upsert({
+    15→    where: { name: counterName },
+    16→    update: { value: { increment: 1 } },
+    17→    create: { name: counterName, value: 1 },
+    18→  });
+    19→  return `${prefix}-${counter.value}`;
+    20→}
+    21→
+    22→async function main() {
+    23→  console.log('🧹 Cleaning database...');
+    24→
+    25→  // Delete in dependency order
+    26→  await db.message.deleteMany();
+    27→  await db.chatParticipant.deleteMany();
+    28→  await db.chat.deleteMany();
+    29→  await db.journeyVerification.deleteMany();
+    30→  await db.refund.deleteMany();
+    31→  await db.dispute.deleteMany();
+    32→  await db.review.deleteMany();
+    33→  await db.supportReply.deleteMany();
+    34→  await db.supportTicket.deleteMany();
+    35→  await db.notification.deleteMany();
+    36→  await db.adminActivityLog.deleteMany();
+    37→  await db.activityLog.deleteMany();
+    38→  await db.transaction.deleteMany();
+    39→  await db.withdrawal.deleteMany();
+    40→  await db.couponUsage.deleteMany();
+    41→  await db.coupon.deleteMany();
+    42→  await db.order.deleteMany();
+    43→  await db.ticket.deleteMany();
+    44→  await db.kyc.deleteMany();
+    45→  await db.wallet.deleteMany();
+    46→  await db.referral.deleteMany();
+    47→  await db.otpVerification.deleteMany();
+    48→  await db.user.deleteMany();
+    49→  await db.blogPost.deleteMany();
+    50→  await db.blogTag.deleteMany();
+    51→  await db.blogCategory.deleteMany();
+    52→  await db.faqCategory.deleteMany();
+    53→  await db.ad.deleteMany();
+    54→  await db.setting.deleteMany();
+    55→  await db.transportCompany.deleteMany();
+    56→  await db.counter.deleteMany();
+    57→  await db.admin.deleteMany();
+    58→
+    59→  console.log('✅ Database cleaned');
+    60→
+    61→  // 1. ADMINS
+    62→  console.log('1️⃣ Creating admins...');
+    63→  const hashedPassword = await hash('admin123', 10);
+    64→  const admin1 = await db.admin.create({ data: { email: 'admin@eidticketresell.com', name: 'Super Admin', password: hashedPassword, role: 'super_admin', isActive: true } });
+    65→  const admin2 = await db.admin.create({ data: { email: 'moderator@eidticketresell.com', name: 'Moderator Admin', password: hashedPassword, role: 'admin', isActive: true } });
+    66→  const admin3 = await db.admin.create({ data: { email: 'support@eidticketresell.com', name: 'Support Staff', password: hashedPassword, role: 'admin', isActive: true } });
+    67→
+    68→  // 2. SETTINGS
+    69→  console.log('2️⃣ Creating settings...');
+    70→  const settingsData = [
+    71→    { key: 'site_name', value: 'Eid Ticket Resell', group: 'general' },
+    72→    { key: 'site_description', value: 'Bangladesh\'s trusted platform for reselling tickets.', group: 'general' },
+    73→    { key: 'platform_fee_online', value: '2', group: 'fees' },
+    74→    { key: 'platform_fee_counter', value: '3', group: 'fees' },
+    75→    { key: 'bkash_merchant_number', value: '+8801700000000', group: 'payment' },
+    76→    { key: 'withdrawal_min_amount', value: '500', group: 'payment' },
+    77→    { key: 'escrow_hold_hours', value: '48', group: 'system' },
+    78→    { key: 'maintenance_mode', value: 'false', group: 'system' },
+    79→  ];
+    80→  for (const s of settingsData) await db.setting.create({ data: s });
+    81→
+    82→  // 3. TRANSPORT COMPANIES
+    83→  console.log('3️⃣ Creating transport companies...');
+    84→  const tcData = [
+    85→    { name: 'Green Line Paribahan', nameBn: 'গ্রিন লাইন পরিবহন', type: 'bus', isActive: true },
+    86→    { name: 'Shyamoli Paribahan', nameBn: 'শ্যামলী পরিবহন', type: 'bus', isActive: true },
+    87→    { name: 'Hanif Enterprise', nameBn: 'হানিফ এন্টারপ্রিজ', type: 'bus', isActive: true },
+    88→    { name: 'Desh Travels', nameBn: 'দেশ ট্রাভেলস', type: 'bus', isActive: true },
+    89→    { name: 'Bangladesh Railway', nameBn: 'বাংলাদেশ রেলওয়ে', type: 'train', isActive: true },
+    90→    { name: 'Biman Bangladesh Airlines', nameBn: 'বিমান বাংলাদেশ এয়ারলাইন্স', type: 'flight', isActive: true },
+    91→    { name: 'US-Bangla Airlines', nameBn: 'US-বাংলা এয়ারলাইন্স', type: 'flight', isActive: true },
+    92→    { name: 'Novoair', nameBn: 'নভোএয়ার', type: 'flight', isActive: true },
+    93→    { name: 'BIWTC Launch Service', nameBn: 'বিআইডব্লিউটিসি লঞ্চ সার্ভিস', type: 'launch', isActive: true },
+    94→    { name: 'Sadharan Bima Launch', nameBn: 'সাধারণ বিমা লঞ্চ', type: 'launch', isActive: true },
+    95→  ];
+    96→  for (const tc of tcData) await db.transportCompany.create({ data: tc });
+    97→
+    98→  // 4. USERS
+    99→  console.log('4️⃣ Creating users...');
+   100→  const userPassword = await hash('user123', 10);
+   101→  const sellers = [];
+   102→  const buyers = [];
+   103→
+   104→  const sellerData = [
+   105→    { email: 'karim@example.com', phone: '+8801711111111', username: 'karim_seller', name: 'Karim Uddin', password: userPassword, role: 'verified_seller', isKycVerified: true, emailVerified: true, phoneVerified: true },
+   106→    { email: 'rahim@example.com', phone: '+8801722222222', username: 'rahim_seller', name: 'Rahim Khan', password: userPassword, role: 'verified_seller', isKycVerified: true, emailVerified: true, phoneVerified: true },
+   107→    { email: 'zahid@example.com', phone: '+8801733333333', username: 'zahid_seller', name: 'Zahid Hassan', password: userPassword, role: 'verified_seller', isKycVerified: true, emailVerified: true, phoneVerified: true },
+   108→    { email: 'tanvir@example.com', phone: '+8801744444444', username: 'tanvir_seller', name: 'Tanvir Ahmed', password: userPassword, role: 'verified_seller', isKycVerified: true, emailVerified: true, phoneVerified: true },
+   109→    { email: 'aminul@example.com', phone: '+8801755555555', username: 'aminul_seller', name: 'Aminul Islam', password: userPassword, role: 'verified_seller', isKycVerified: true, emailVerified: true, phoneVerified: true },
+   110→  ];
+   111→  for (const ud of sellerData) sellers.push(await db.user.create({ data: ud }));
+   112→
+   113→  const buyerData = [
+   114→    { email: 'fatima@example.com', phone: '+8801766666666', username: 'fatima_buyer', name: 'Fatima Begum', password: userPassword, role: 'user', emailVerified: true, phoneVerified: true },
+   115→    { email: 'nusrat@example.com', phone: '+8801777777777', username: 'nusrat_buyer', name: 'Nusrat Jahan', password: userPassword, role: 'user', emailVerified: true },
+   116→    { email: 'sabrina@example.com', phone: '+8801788888888', username: 'sabrina_buyer', name: 'Sabrina Chowdhury', password: userPassword, role: 'user', emailVerified: true },
+   117→    { email: 'rumi@example.com', phone: '+8801799999999', username: 'rumi_buyer', name: 'Rumi Akter', password: userPassword, role: 'user', emailVerified: true, phoneVerified: true },
+   118→    { email: 'imran@example.com', username: 'imran_buyer', name: 'Imran Hossain', password: userPassword, role: 'user' },
+   119→    { email: 'salma@example.com', phone: '+8801712121212', username: 'salma_buyer', name: 'Salma Khatun', password: userPassword, role: 'user', emailVerified: true },
+   120→    { email: 'arif@example.com', phone: '+8801713131313', username: 'arif_buyer', name: 'Arif Rahman', password: userPassword, role: 'user', emailVerified: true },
+   121→  ];
+   122→  for (const bd of buyerData) buyers.push(await db.user.create({ data: bd }));
+   123→
+   124→  // 5. KYC
+   125→  console.log('5️⃣ Creating KYC records...');
+   126→  const kycRecords = [];
+   127→  const kycData = [
+   128→    { userId: sellers[0].id, kycName: 'Karim Uddin', kycDob: '1985-03-15', kycGender: 'male', documentType: 'nid', documentNumber: 'NID-1985-12345', documentFront: '/uploads/kyc/karim-front.jpg', selfiePhoto: '/uploads/kyc/karim-selfie.jpg', status: 'approved', district: 'Dhaka', division: 'Dhaka' },
+   129→    { userId: sellers[1].id, kycName: 'Rahim Khan', kycDob: '1990-07-22', kycGender: 'male', documentType: 'nid', documentNumber: 'NID-1990-67890', documentFront: '/uploads/kyc/rahim-front.jpg', selfiePhoto: '/uploads/kyc/rahim-selfie.jpg', status: 'approved', district: 'Chittagong', division: 'Chittagong' },
+   130→    { userId: sellers[2].id, kycName: 'Zahid Hassan', kycDob: '1988-01-10', kycGender: 'male', documentType: 'nid', documentNumber: 'NID-1988-11111', documentFront: '/uploads/kyc/zahid-front.jpg', selfiePhoto: '/uploads/kyc/zahid-selfie.jpg', status: 'approved', district: 'Sylhet', division: 'Sylhet' },
+   131→    { userId: sellers[3].id, kycName: 'Tanvir Ahmed', kycDob: '1992-11-28', kycGender: 'male', documentType: 'driving_licence', documentNumber: 'DL-1992-22222', documentFront: '/uploads/kyc/tanvir-front.jpg', selfiePhoto: '/uploads/kyc/tanvir-selfie.jpg', status: 'approved', district: 'Rajshahi', division: 'Rajshahi' },
+   132→    { userId: sellers[4].id, kycName: 'Aminul Islam', kycDob: '1987-05-14', kycGender: 'male', documentType: 'nid', documentNumber: 'NID-1987-33333', documentFront: '/uploads/kyc/aminul-front.jpg', selfiePhoto: '/uploads/kyc/aminul-selfie.jpg', status: 'approved', district: 'Khulna', division: 'Khulna' },
+   133→    { userId: buyers[0].id, kycName: 'Fatima Begum', kycDob: '1995-09-03', kycGender: 'female', documentType: 'nid', documentNumber: 'NID-1995-44444', documentFront: '/uploads/kyc/fatima-front.jpg', selfiePhoto: '/uploads/kyc/fatima-selfie.jpg', status: 'pending' },
+   134→    { userId: buyers[3].id, kycName: 'Rumi Akter', kycDob: '1993-06-25', kycGender: 'female', documentType: 'nid', documentNumber: 'NID-1993-55555', documentFront: '/uploads/kyc/rumi-front.jpg', selfiePhoto: '/uploads/kyc/rumi-selfie.jpg', status: 'pending' },
+   135→    { userId: buyers[5].id, kycName: 'Imran Hossain', kycDob: '1997-08-09', kycGender: 'male', documentType: 'passport', documentNumber: 'PP-1997-66666', documentFront: '/uploads/kyc/imran-front.jpg', selfiePhoto: '/uploads/kyc/imran-selfie.jpg', status: 'rejected', reviewNote: 'Document image not clear. Please resubmit.' },
+   136→  ];
+   137→  for (const kd of kycData) {
+   138→    const kycId = await generatePrefixedId('KYC');
+   139→    kycRecords.push(await db.kyc.create({ data: { kycId, ...kd } }));
+   140→  }
+   141→
+   142→  // 6. WALLETS
+   143→  console.log('6️⃣ Creating wallets...');
+   144→  const walletData = [
+   145→    ...sellers.map((s, i) => ({ userId: s.id, availableBalance: 25000 - i * 2000, pendingBalance: 0, escrowBalance: 1000 + i * 500, totalEarnings: 15000 + i * 3000, totalWithdrawn: 5000 + i * 1000 })),
+   146→    ...buyers.map((b, i) => ({ userId: b.id, availableBalance: 3000 - i * 200, pendingBalance: 0, escrowBalance: 0, totalEarnings: 0, totalWithdrawn: 0 })),
+   147→  ];
+   148→  const wallets = [];
+   149→  for (const wd of walletData) wallets.push(await db.wallet.create({ data: wd }));
+   150→
+   151→  // 7. TICKETS
+   152→  console.log('7️⃣ Creating tickets...');
+   153→  const tickets = [];
+   154→  const ticketDataList = [
+   155→    { sellerId: sellers[0].id, transportType: 'bus', transportCompany: 'Green Line Paribahan', ticketType: 'online_copy', pnrNumber: 'GL-2025-001', routeFrom: 'Dhaka', routeTo: 'Chittagong', departureDate: '2025-06-15', departureTime: '06:00 AM', seatClass: 'AC Business', price: 1350, platformFee: 27, totalAmount: 1377, status: 'sold' },
+   156→    { sellerId: sellers[1].id, transportType: 'bus', transportCompany: 'Shyamoli Paribahan', ticketType: 'online_copy', pnrNumber: 'SP-2025-001', routeFrom: 'Dhaka', routeTo: 'Sylhet', departureDate: '2025-06-20', departureTime: '08:00 AM', seatClass: 'Non AC', price: 550, platformFee: 11, totalAmount: 561, status: 'sold' },
+   157→    { sellerId: sellers[2].id, transportType: 'bus', transportCompany: 'Hanif Enterprise', ticketType: 'counter_copy', routeFrom: 'Dhaka', routeTo: "Cox's Bazar", departureDate: '2025-06-25', departureTime: '09:00 PM', seatClass: 'AC Sleeper', price: 1200, platformFee: 36, totalAmount: 1236, status: 'active', deliveryType: 'in_person', meetingPlace: 'Gabtoli Bus Terminal' },
+   158→    { sellerId: sellers[3].id, transportType: 'bus', transportCompany: 'Desh Travels', ticketType: 'counter_copy', routeFrom: 'Chittagong', routeTo: 'Dhaka', departureDate: '2025-06-28', departureTime: '10:00 PM', seatClass: 'AC Business', price: 850, platformFee: 25.5, totalAmount: 875.5, status: 'active', deliveryType: 'courier', courierName: 'Pathao', deliverySpeed: 'express', deliveryCharge: 120, deliveryChargePaidBy: 'buyer' },
+   159→    { sellerId: sellers[0].id, transportType: 'train', transportCompany: 'Bangladesh Railway', ticketType: 'online_copy', pnrNumber: 'BR-2025-001', routeFrom: 'Dhaka', routeTo: 'Chittagong', departureDate: '2025-06-30', departureTime: '07:00 AM', seatClass: 'AC Snigdha', price: 1100, platformFee: 22, totalAmount: 1122, status: 'sold' },
+   160→    { sellerId: sellers[4].id, transportType: 'train', transportCompany: 'Bangladesh Railway', ticketType: 'online_copy', pnrNumber: 'BR-2025-002', routeFrom: 'Dhaka', routeTo: 'Sylhet', departureDate: '2025-07-02', departureTime: '08:30 AM', seatClass: 'AC Snigdha', price: 700, platformFee: 14, totalAmount: 714, status: 'active' },
+   161→    { sellerId: sellers[1].id, transportType: 'train', transportCompany: 'Bangladesh Railway', ticketType: 'online_copy', pnrNumber: 'BR-2025-003', routeFrom: 'Dhaka', routeTo: 'Rajshahi', departureDate: '2025-07-05', departureTime: '09:00 AM', seatClass: 'AC Snigdha', price: 650, platformFee: 13, totalAmount: 663, status: 'pending_review' },
+   162→    { sellerId: sellers[2].id, transportType: 'flight', transportCompany: 'US-Bangla Airlines', ticketType: 'online_copy', pnrNumber: 'USB-2025-001', routeFrom: 'Dhaka', routeTo: "Cox's Bazar", departureDate: '2025-06-22', departureTime: '11:00 AM', seatClass: 'Economy', price: 3500, platformFee: 70, totalAmount: 3570, status: 'sold' },
+   163→    { sellerId: sellers[4].id, transportType: 'flight', transportCompany: 'Biman Bangladesh Airlines', ticketType: 'online_copy', pnrNumber: 'BIM-2025-001', routeFrom: 'Dhaka', routeTo: 'Sylhet', departureDate: '2025-07-10', departureTime: '02:00 PM', seatClass: 'Economy', price: 2800, platformFee: 56, totalAmount: 2856, status: 'active' },
+   164→    { sellerId: sellers[3].id, transportType: 'flight', transportCompany: 'Novoair', ticketType: 'online_copy', pnrNumber: 'NOV-2025-001', routeFrom: 'Dhaka', routeTo: 'Chittagong', departureDate: '2025-07-12', departureTime: '04:00 PM', seatClass: 'Economy', price: 2500, platformFee: 50, totalAmount: 2550, status: 'active' },
+   165→    { sellerId: sellers[0].id, transportType: 'launch', transportCompany: 'BIWTC Launch Service', ticketType: 'counter_copy', routeFrom: 'Dhaka', routeTo: 'Barisal', departureDate: '2025-06-27', departureTime: '06:00 PM', seatClass: 'AC Double Decker', price: 800, platformFee: 24, totalAmount: 824, status: 'active', deliveryType: 'in_person', meetingPlace: 'Sadarghat Launch Terminal' },
+   166→    { sellerId: sellers[4].id, transportType: 'launch', transportCompany: 'Sadharan Bima Launch', ticketType: 'counter_copy', routeFrom: 'Barisal', routeTo: 'Dhaka', departureDate: '2025-07-01', departureTime: '08:00 PM', seatClass: 'AC Suite Class Sleeper', price: 1500, platformFee: 45, totalAmount: 1545, status: 'cancelled', deliveryType: 'courier', courierName: 'Steadfast', deliveryCharge: 60, deliveryChargePaidBy: 'seller' },
+   167→  ];
+   168→  for (const td of ticketDataList) {
+   169→    const ticketId = await generatePrefixedId('ETR');
+   170→    tickets.push(await db.ticket.create({ data: { ticketId, ...td, originalPrice: td.price } }));
+   171→  }
+   172→
+   173→  // 8. ORDERS
+   174→  console.log('8️⃣ Creating orders...');
+   175→  const orders = [];
+   176→  const orderDataList = [
+   177→    { ticketId: tickets[0].id, buyerId: buyers[0].id, sellerId: sellers[0].id, amount: 1350, platformFee: 27, totalAmount: 1377, escrowStatus: 'released', paymentStatus: 'paid', deliveryMethod: 'online_pdf', deliveryStatus: 'confirmed', status: 'completed', completedAt: new Date('2025-06-15T12:00:00') },
+   178→    { ticketId: tickets[1].id, buyerId: buyers[3].id, sellerId: sellers[1].id, amount: 550, platformFee: 11, totalAmount: 561, escrowStatus: 'released', paymentStatus: 'paid', deliveryMethod: 'online_pdf', deliveryStatus: 'confirmed', status: 'completed', completedAt: new Date('2025-06-20T12:00:00') },
+   179→    { ticketId: tickets[4].id, buyerId: buyers[0].id, sellerId: sellers[0].id, amount: 1100, platformFee: 22, totalAmount: 1122, escrowStatus: 'held', paymentStatus: 'paid', deliveryMethod: 'online_pdf', deliveryStatus: 'pending', status: 'confirmed' },
+   180→    { ticketId: tickets[5].id, buyerId: buyers[5].id, sellerId: sellers[4].id, amount: 700, platformFee: 14, totalAmount: 714, escrowStatus: 'held', paymentStatus: 'paid', deliveryMethod: 'online_pdf', deliveryStatus: 'pending', status: 'in_progress' },
+   181→    { ticketId: tickets[7].id, buyerId: buyers[2].id, sellerId: sellers[2].id, amount: 3500, platformFee: 70, totalAmount: 3570, escrowStatus: 'released', paymentStatus: 'paid', deliveryMethod: 'online_pdf', deliveryStatus: 'confirmed', status: 'completed', completedAt: new Date('2025-06-22T14:00:00') },
+   182→    { ticketId: tickets[3].id, buyerId: buyers[4].id, sellerId: sellers[3].id, amount: 850, platformFee: 25.5, totalAmount: 875.5, escrowStatus: 'refunded', paymentStatus: 'refunded', deliveryMethod: 'in_person', deliveryStatus: 'pending', status: 'cancelled', cancelledAt: new Date('2025-06-28') },
+   183→    { ticketId: tickets[10].id, buyerId: buyers[6].id, sellerId: sellers[0].id, amount: 800, platformFee: 24, totalAmount: 824, escrowStatus: 'held', paymentStatus: 'paid', deliveryMethod: 'in_person', deliveryStatus: 'pending', status: 'in_progress' },
+   184→    { ticketId: tickets[6].id, buyerId: buyers[1].id, sellerId: sellers[1].id, amount: 650, platformFee: 13, totalAmount: 663, escrowStatus: 'held', paymentStatus: 'pending', deliveryMethod: 'online_pdf', deliveryStatus: 'pending', status: 'pending' },
+   185→  ];
+   186→  for (const od of orderDataList) {
+   187→    const orderId = await generatePrefixedId('ORD');
+   188→    orders.push(await db.order.create({ data: { orderId, ...od } }));
+   189→  }
+   190→
+   191→  // 9. TRANSACTIONS
+   192→  console.log('9️⃣ Creating transactions...');
+   193→  const sellerWalletIds = sellers.map(s => wallets.find(w => w.userId === s.id)?.id || '');
+   194→  const buyerWalletIds = buyers.map(b => wallets.find(w => w.userId === b.id)?.id || '');
+   195→
+   196→  const transactionDataList = [
+   197→    { walletId: sellerWalletIds[0], type: 'credit', amount: 1350, balance: 25000, description: 'Payment received for ETR-1', orderId: orders[0].id },
+   198→    { walletId: sellerWalletIds[1], type: 'credit', amount: 550, balance: 23000, description: 'Payment received for ETR-2', orderId: orders[1].id },
+   199→    { walletId: sellerWalletIds[2], type: 'credit', amount: 3500, balance: 21000, description: 'Payment received for ETR-8', orderId: orders[4].id },
+   200→    { walletId: sellerWalletIds[0], type: 'escrow_hold', amount: 1100, balance: 23900, description: 'Escrow held for ETR-5', orderId: orders[2].id },
+   201→    { walletId: sellerWalletIds[4], type: 'escrow_hold', amount: 700, balance: 13000, description: 'Escrow held for ETR-6', orderId: orders[3].id },
+   202→    { walletId: sellerWalletIds[0], type: 'escrow_hold', amount: 800, balance: 23100, description: 'Escrow held for ETR-11', orderId: orders[6].id },
+   203→    { walletId: sellerWalletIds[0], type: 'escrow_release', amount: 1350, balance: 24450, description: 'Escrow released for ORD-1', orderId: orders[0].id },
+   204→    { walletId: sellerWalletIds[1], type: 'escrow_release', amount: 550, balance: 22450, description: 'Escrow released for ORD-2', orderId: orders[1].id },
+   205→    { walletId: buyerWalletIds[0], type: 'debit', amount: 1377, balance: 1623, description: 'Payment for ETR-1', orderId: orders[0].id },
+   206→    { walletId: buyerWalletIds[3], type: 'debit', amount: 1122, balance: 1878, description: 'Payment for ETR-5', orderId: orders[2].id },
+   207→    { walletId: buyerWalletIds[2], type: 'debit', amount: 3570, balance: -570, description: 'Payment for ETR-8', orderId: orders[4].id },
+   208→    { walletId: buyerWalletIds[4], type: 'credit', amount: 875.5, balance: 1875.5, description: 'Refund for cancelled ORD-6', orderId: orders[5].id },
+   209→    { walletId: sellerWalletIds[3], type: 'escrow_refund', amount: 850, balance: 15000, description: 'Escrow refunded for ORD-6', orderId: orders[5].id },
+   210→    { walletId: buyerWalletIds[0], type: 'credit', amount: 2500, balance: 2500, description: 'Wallet top-up via bKash' },
+   211→    { walletId: buyerWalletIds[3], type: 'credit', amount: 3000, balance: 3000, description: 'Wallet top-up via bKash' },
+   212→  ];
+   213→  for (const td of transactionDataList) {
+   214→    const txnId = await generatePrefixedId('TXN');
+   215→    const wltId = await generatePrefixedId('WLT');
+   216→    await db.transaction.create({ data: { txnId, wltId, ...td } });
+   217→  }
+   218→
+   219→  // 10. WITHDRAWALS
+   220→  console.log('🔟 Creating withdrawals...');
+   221→  const wdrDataList = [
+   222→    { walletId: sellerWalletIds[0], amount: 8000, method: 'bkash', accountDetails: '+8801711111111', status: 'completed' },
+   223→    { walletId: sellerWalletIds[1], amount: 5000, method: 'bkash', accountDetails: '+8801722222222', status: 'completed' },
+   224→    { walletId: sellerWalletIds[2], amount: 3000, method: 'bank_transfer', accountDetails: 'Dutch-Bangla Bank - 1234567890', status: 'pending' },
+   225→    { walletId: sellerWalletIds[3], amount: 2000, method: 'bkash', accountDetails: '+8801744444444', status: 'pending' },
+   226→    { walletId: sellerWalletIds[4], amount: 4000, method: 'bank_transfer', accountDetails: 'City Bank - 9876543210', status: 'rejected', reviewNote: 'Bank account verification failed.' },
+   227→  ];
+   228→  for (const wd of wdrDataList) {
+   229→    const wdrId = await generatePrefixedId('WDR');
+   230→    let payId: string | null = null;
+   231→    if (wd.status === 'completed') payId = await generatePrefixedId('PAY');
+   232→    await db.withdrawal.create({ data: { wdrId, payId, ...wd } });
+   233→  }
+   234→
+   235→  // 11. DISPUTES
+   236→  console.log('1️⃣1️⃣ Creating disputes...');
+   237→  const dspDataList = [
+   238→    { orderId: orders[5].id, initiatedBy: 'buyer', reason: 'Seller did not deliver the ticket on time', description: 'Counter copy ticket was promised via courier but never arrived.', status: 'resolved', resolution: 'Full refund issued to buyer.', resolvedBy: admin1.id },
+   239→    { orderId: orders[6].id, initiatedBy: 'seller', reason: 'Buyer not showing up for in-person delivery', description: 'Buyer agreed to meet at Sadarghat terminal but did not show up.', status: 'investigating' },
+   240→  ];
+   241→  for (const dd of dspDataList) {
+   242→    const dspId = await generatePrefixedId('DSP');
+   243→    await db.dispute.create({ data: { dspId, ...dd } });
+   244→  }
+   245→
+   246→  // 12. REFUNDS
+   247→  console.log('1️⃣2️⃣ Creating refunds...');
+   248→  const refDataList = [
+   249→    { orderId: orders[5].id, initiatedBy: 'buyer', reason: 'Ticket not delivered - courier failed', description: 'Counter copy ticket promised via Pathao courier but tracking was invalid.', amount: 875.5, status: 'completed', processedBy: admin1.id, processNote: 'Full refund processed.' },
+   250→    { orderId: orders[0].id, initiatedBy: 'admin', reason: 'Duplicate ticket detected', description: 'Admin detected this was a duplicate listing.', amount: 1377, status: 'rejected', processedBy: admin2.id, processNote: 'Investigation showed ticket was unique.' },
+   251→    { orderId: orders[6].id, initiatedBy: 'seller', reason: 'Buyer failed to appear for delivery', description: 'Buyer agreed to meet at terminal but did not show up.', amount: 824, status: 'pending' },
+   252→  ];
+   253→  for (const rd of refDataList) {
+   254→    const refId = await generatePrefixedId('REF');
+   255→    await db.refund.create({ data: { refId, ...rd } });
+   256→  }
+   257→
+   258→  // 13. SUPPORT TICKETS
+   259→  console.log('1️⃣3️⃣ Creating support tickets...');
+   260→  const supDataList = [
+   261→    { userId: buyers[0].id, fullName: 'Fatima Begum', phone: '+8801766666666', email: 'fatima@example.com', subject: 'Cannot find my purchased ticket', message: 'I bought a ticket ETR-1 but cannot find it in my dashboard.', status: 'resolved', priority: 'medium' },
+   262→    { userId: null, fullName: 'Guest User', email: 'guest@example.com', subject: 'How to sell tickets?', message: 'I want to sell my bus ticket but I don\'t know the process.', status: 'open', priority: 'low' },
+   263→    { userId: sellers[2].id, fullName: 'Zahid Hassan', phone: '+8801733333333', email: 'zahid@example.com', subject: 'KYC verification delay', message: 'My KYC has been pending for 5 days.', status: 'in_progress', priority: 'high' },
+   264→    { userId: buyers[3].id, fullName: 'Rumi Akter', phone: '+8801799999999', email: 'rumi@example.com', subject: 'Payment not reflecting in wallet', message: 'I made a payment of ৳1122 but my wallet still shows old balance.', status: 'open', priority: 'urgent' },
+   265→    { userId: sellers[4].id, fullName: 'Aminul Islam', phone: '+8801755555555', email: 'aminul@example.com', subject: 'Withdrawal rejected', message: 'My withdrawal was rejected but the reason is unclear.', status: 'closed', priority: 'medium' },
+   266→  ];
+   267→  for (const sd of supDataList) {
+   268→    const supId = await generatePrefixedId('SUP');
+   269→    await db.supportTicket.create({ data: { supId, ...sd } });
+   270→  }
+   271→
+   272→  // 14. REVIEWS
+   273→  console.log('1️⃣4️⃣ Creating reviews...');
+   274→  const reviewDataList = [
+   275→    { orderId: orders[0].id, authorId: buyers[0].id, targetId: sellers[0].id, rating: 5, comment: 'Great seller! Ticket was delivered instantly.' },
+   276→    { orderId: orders[1].id, authorId: buyers[3].id, targetId: sellers[1].id, rating: 4, comment: 'Good experience. Ticket received on time.' },
+   277→    { orderId: orders[4].id, authorId: buyers[2].id, targetId: sellers[2].id, rating: 3, comment: 'Flight ticket was overpriced but the process was smooth.' },
+   278→  ];
+   279→  for (const rd of reviewDataList) await db.review.create({ data: rd });
+   280→
+   281→  // 15. CHATS & MESSAGES
+   282→  console.log('1️⃣5️⃣ Creating chats and messages...');
+   283→  for (const order of [orders[0], orders[2], orders[4], orders[6]]) {
+   284→    const chat = await db.chat.create({ data: { orderId: order.id } });
+   285→    await db.chatParticipant.createMany({ data: [
+   286→      { chatId: chat.id, userId: order.buyerId },
+   287→      { chatId: chat.id, userId: order.sellerId },
+   288→    ] });
+   289→    await db.message.createMany({ data: [
+   290→      { chatId: chat.id, senderId: order.buyerId, content: 'Hi! I\'m interested in this ticket. Is it still available?', isRead: true },
+   291→      { chatId: chat.id, senderId: order.sellerId, content: 'Yes, it\'s available!', isRead: true },
+   292→      { chatId: chat.id, senderId: order.buyerId, content: 'Great, I\'ll proceed.', isRead: false },
+   293→    ] });
+   294→  }
+   295→
+   296→  // 16. JOURNEY VERIFICATIONS
+   297→  console.log('1️⃣6️⃣ Creating journey verifications...');
+   298→  await db.journeyVerification.create({ data: { orderId: orders[2].id, buyerId: buyers[0].id, status: 'submitted', photo: '/uploads/journey/jv-photo-1.jpg', gpsLat: 23.8103, gpsLng: 90.4125, submittedAt: new Date('2025-06-30T08:00:00') } });
+   299→  await db.journeyVerification.create({ data: { orderId: orders[6].id, buyerId: buyers[6].id, status: 'pending' } });
+   300→
+   301→  // 17. NOTIFICATIONS
+   302→  console.log('1️⃣7️⃣ Creating notifications...');
+   303→  await db.notification.create({ data: { userId: sellers[0].id, title: 'KYC Approved!', message: 'Your KYC has been approved.', type: 'success' } });
+   304→  await db.notification.create({ data: { userId: buyers[0].id, title: 'Ticket Delivered', message: 'Your ticket ETR-1 has been delivered.', type: 'success' } });
+   305→  await db.notification.create({ data: { userId: sellers[2].id, title: 'New Order', message: 'You have a new order for your flight ticket.', type: 'info' } });
+   306→
+   307→  // 18. ADS
+   308→  console.log('1️⃣8️⃣ Creating ads...');
+   309→  await db.ad.create({ data: { title: 'Eid Special - 10% Off All Bus Tickets', description: 'Limited time offer for Eid travel!', placement: 'homepage', type: 'banner', isActive: true, startDate: new Date('2025-06-01'), endDate: new Date('2025-07-15'), impressions: 15000, clicks: 450 } });
+   310→  await db.ad.create({ data: { title: 'Fly Safe with US-Bangla', description: 'Premium flight experience.', placement: 'sidebar', type: 'banner', isActive: true, impressions: 5000, clicks: 120 } });
+   311→
+   312→  // 19. FAQ CATEGORIES
+   313→  console.log('1️⃣9️⃣ Creating FAQ categories...');
+   314→  await db.faqCategory.createMany({ data: [
+   315→    { name: 'General', slug: 'general', order: 1 },
+   316→    { name: 'Buying Tickets', slug: 'buying', order: 2 },
+   317→    { name: 'Selling Tickets', slug: 'selling', order: 3 },
+   318→    { name: 'Payments & Wallet', slug: 'payments', order: 4 },
+   319→    { name: 'Delivery', slug: 'delivery', order: 5 },
+   320→  ] });
+   321→
+   322→  // 20. BLOG CATEGORIES & POSTS
+   323→  console.log('2️⃣0️⃣ Creating blog content...');
+   324→  const cat1 = await db.blogCategory.create({ data: { name: 'Travel Tips', slug: 'travel-tips' } });
+   325→  const cat2 = await db.blogCategory.create({ data: { name: 'Platform Updates', slug: 'platform-updates' } });
+   326→  await db.blogPost.create({ data: { title: '5 Tips for Safe Ticket Reselling', slug: '5-tips-safe-reselling', content: 'Always verify the ticket details before listing.', excerpt: 'Essential tips for safe ticket reselling.', categoryId: cat1.id, isPublished: true, publishedAt: new Date('2025-06-01'), author: 'Admin' } });
+   327→  await db.blogPost.create({ data: { title: 'New Feature: QR Code Delivery', slug: 'qr-code-delivery', content: 'We\'ve added QR code verification.', excerpt: 'Learn about QR code delivery.', categoryId: cat2.id, isPublished: true, publishedAt: new Date('2025-06-10'), author: 'Admin' } });
+   328→
+   329→  console.log('\n✅ Seed completed successfully!');
+   330→  console.log('📊 Summary:');
+   331→  console.log('   Admins: 3');
+   332→  console.log(`   Users: ${sellers.length + buyers.length} (5 sellers + 7 buyers)`);
+   333→  console.log(`   KYC: ${kycRecords.length} (KYC-1 through KYC-8)`);
+   334→  console.log(`   Wallets: ${wallets.length}`);
+   335→  console.log(`   Tickets: ${tickets.length} (ETR-1 through ETR-12)`);
+   336→  console.log(`   Orders: ${orders.length} (ORD-1 through ORD-8)`);
+   337→  console.log(`   Transactions: 15 (TXN-1..15 / WLT-1..15)`);
+   338→  console.log(`   Withdrawals: 5 (WDR-1..5, PAY-1..2)`);
+   339→  console.log(`   Disputes: 2 (DSP-1..2)`);
+   340→  console.log(`   Refunds: 3 (REF-1..3)`);
+   341→  console.log(`   Support Tickets: 5 (SUP-1..5)`);
+   342→  console.log(`   Reviews: 3`);
+   343→  console.log(`   Chats: 4`);
+   344→  console.log(`   Journey Verifications: 2`);
+   345→
+   346→  await db.$disconnect();
+   347→}
+   348→
+   349→main()
+   350→  .catch((e) => {
+   351→    console.error('❌ Seed error:', e);
+   352→    process.exit(1);
+   353→  });
+   354→

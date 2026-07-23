@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import {
   Moon, Sun, Monitor, Globe, Menu, ChevronDown,
@@ -109,11 +108,8 @@ export default function Header() {
   const userParams = user ? { username: user.username } : undefined;
 
   return (
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 animate-slide-down ${
         scrolled
           ? 'bg-background/95 backdrop-blur-md shadow-md border-b border-border'
           : 'bg-background/80 backdrop-blur-md border-b border-border/30'
@@ -124,18 +120,16 @@ export default function Header() {
         {/* ═══════════════════════════════════════════════════════════════
             LEFT COLUMN — Logo (always visible)
         ═══════════════════════════════════════════════════════════════ */}
-        <motion.button
+        <button
           onClick={() => handleNavigate('home')}
-          className="flex items-center gap-2.5 group shrink-0"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className="flex items-center gap-2.5 group shrink-0 hover:scale-[1.02] active:scale-[0.98] transition-transform"
         >
           <img
             src={language === 'bn' ? '/logo-bn.svg' : '/logo-en.svg'}
             alt={t('appName', language)}
             className="h-9 w-auto object-contain shrink-0 group-hover:scale-[1.02] transition-transform"
           />
-        </motion.button>
+        </button>
 
         {/* ═══════════════════════════════════════════════════════════════
             CENTER COLUMN — Desktop Navigation (lg+ only)
@@ -166,14 +160,9 @@ export default function Header() {
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${buyTicketsHover ? 'rotate-180' : ''}`} />
             </button>
 
-            <AnimatePresence>
               {buyTicketsHover && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl border bg-popover p-2 shadow-xl"
+                <div
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl border bg-popover p-2 shadow-xl animate-scale-in"
                   onMouseEnter={() => {
                     if (buyTicketsTimeoutRef.current) clearTimeout(buyTicketsTimeoutRef.current);
                     setBuyTicketsHover(true);
@@ -188,13 +177,11 @@ export default function Header() {
                     </p>
                   </div>
                   {transportItems.map((item, index) => (
-                    <motion.button
+                    <button
                       key={item.id}
                       onClick={() => handleNavigate(item.id)}
-                      className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-left ${item.hoverColor}`}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
+                      className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-left ${item.hoverColor} animate-fade-in`}
+                      style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <div className={`flex items-center justify-center w-10 h-10 rounded-lg shadow-sm ${item.color}`}>
                         <item.icon className="w-5 h-5" />
@@ -210,11 +197,10 @@ export default function Header() {
                         </p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                    </motion.button>
+                    </button>
                   ))}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
           </div>
 
           {/* Other Center Nav Items */}
@@ -235,7 +221,7 @@ export default function Header() {
         <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto lg:ml-0">
 
           {/* Language Switcher — always visible */}
-          <motion.div whileTap={{ scale: 0.95 }}>
+          <div className="active:scale-[0.95] transition-transform">
             <Button
               variant="ghost"
               size="sm"
@@ -245,7 +231,7 @@ export default function Header() {
               <Globe className="w-4 h-4 text-blue-500" />
               <span className="hidden sm:inline">{language === 'en' ? 'বাংলা' : 'EN'}</span>
             </Button>
-          </motion.div>
+          </div>
 
           {/* Theme Toggle Dropdown — always visible */}
           <DropdownMenu>
@@ -530,7 +516,7 @@ export default function Header() {
 
       {/* Accent line under header when scrolled */}
       {scrolled && <div className="h-0.5 bg-primary" />}
-    </motion.header>
+    </header>
   );
 }
 
@@ -547,25 +533,21 @@ function NavButton({
   lang: Language;
 }) {
   return (
-    <motion.button
+    <button
       onClick={onClick}
-      className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+      className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
         active
           ? 'text-primary bg-primary/10'
           : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
       } ${lang === 'bn' ? 'font-bangla' : ''}`}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
     >
       {label}
       {active && (
-        <motion.div
-          layoutId="activeNav"
+        <div
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 bg-primary rounded-full"
-          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
         />
       )}
-    </motion.button>
+    </button>
   );
 }
 
@@ -588,16 +570,15 @@ function MobileNavItem({
   iconBg?: string;
 }) {
   return (
-    <motion.button
+    <button
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left min-h-[44px] ${
+      className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left min-h-[44px] active:scale-[0.98] ${
         active
           ? 'bg-primary/10 text-primary'
           : destructive
           ? 'text-destructive hover:bg-destructive/10'
           : 'text-foreground hover:bg-accent'
       } ${lang === 'bn' ? 'font-bangla' : ''}`}
-      whileTap={{ scale: 0.98 }}
     >
       <span className={`flex items-center justify-center w-9 h-9 rounded-lg ${
         iconBg
@@ -611,6 +592,6 @@ function MobileNavItem({
         {icon}
       </span>
       {label}
-    </motion.button>
+    </button>
   );
 }

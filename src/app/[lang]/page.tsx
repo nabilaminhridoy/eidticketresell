@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 // Use dynamic import with ssr disabled for faster initial page load
 // The loading skeleton shows immediately while the component loads
 const HomePage = dynamic(() => import('@/components/pages/HomePage'), {
+  ssr: false,
   loading: () => (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">

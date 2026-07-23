@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import {
   Bus, TrainFront, Plane, Ship,
   Facebook, Instagram, Linkedin, Twitter, Youtube,
@@ -88,12 +87,8 @@ export default function Footer() {
           <div className="hidden lg:grid lg:grid-cols-4 gap-10 lg:gap-12">
 
             {/* Column 1 ─ Logo + Info + Social */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col"
+            <div
+              className="flex flex-col animate-slide-up"
             >
               {/* Logo */}
               <button
@@ -139,28 +134,23 @@ export default function Footer() {
               {/* Social Icons */}
               <div className="flex items-center gap-2">
                 {socialLinks.map((social) => (
-                  <motion.a
+                  <a
                     key={social.label}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`flex items-center justify-center w-9 h-9 rounded-lg bg-background border border-border text-muted-foreground transition-all duration-300 ${social.hoverColor}`}
+                    className={`flex items-center justify-center w-9 h-9 rounded-lg bg-background border border-border text-muted-foreground transition-all duration-300 hover:scale-110 active:scale-[0.9] ${social.hoverColor}`}
                     aria-label={social.label}
                   >
                     <social.icon className="w-4 h-4" />
-                  </motion.a>
+                  </a>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
             {/* Column 2 ─ TRANSPORT */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+            <div
+              className="animate-slide-up [animation-delay:0.1s]"
             >
               <h3 className={`text-sm font-semibold text-foreground mb-5 uppercase tracking-wider flex items-center gap-2 ${language === 'bn' ? 'font-bangla' : ''}`}>
                 <div className="w-1.5 h-5 rounded-full bg-green-600" />
@@ -189,14 +179,11 @@ export default function Footer() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
 
             {/* Column 3 ─ QUICK LINKS */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+            <div
+              className="animate-slide-up [animation-delay:0.2s]"
             >
               <h3 className={`text-sm font-semibold text-foreground mb-5 uppercase tracking-wider flex items-center gap-2 ${language === 'bn' ? 'font-bangla' : ''}`}>
                 <div className="w-1.5 h-5 rounded-full bg-green-600" />
@@ -215,14 +202,11 @@ export default function Footer() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
 
             {/* Column 4 ─ LEGAL */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+            <div
+              className="animate-slide-up [animation-delay:0.3s]"
             >
               <h3 className={`text-sm font-semibold text-foreground mb-5 uppercase tracking-wider flex items-center gap-2 ${language === 'bn' ? 'font-bangla' : ''}`}>
                 <div className="w-1.5 h-5 rounded-full bg-blue-600" />
@@ -241,7 +225,7 @@ export default function Footer() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
           </div>
 
           {/* ── Mobile/Tablet Layout: Logo info + Accordions ── */}
@@ -293,18 +277,16 @@ export default function Footer() {
               {/* Social Icons */}
               <div className="flex items-center gap-2">
                 {socialLinks.map((social) => (
-                  <motion.a
+                  <a
                     key={social.label}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`flex items-center justify-center w-9 h-9 rounded-lg bg-background border border-border text-muted-foreground transition-all duration-300 ${social.hoverColor}`}
+                    className={`flex items-center justify-center w-9 h-9 rounded-lg bg-background border border-border text-muted-foreground transition-all duration-300 hover:scale-110 active:scale-[0.9] ${social.hoverColor}`}
                     aria-label={social.label}
                   >
                     <social.icon className="w-4 h-4" />
-                  </motion.a>
+                  </a>
                 ))}
               </div>
             </div>
