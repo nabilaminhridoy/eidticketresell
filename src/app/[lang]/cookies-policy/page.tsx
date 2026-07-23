@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function CookiesPolicyPage() {
-  return <InfoPage section="cookies-policy" />;
+import dynamic from 'next/dynamic';
+const CookiesPolicyPage = dynamic(() => import('@/components/pages/CookiesPolicyPage'), { ssr: false });
+export default function CookiesPolicyRoute() {
+  return <CookiesPolicyPage />;
 }

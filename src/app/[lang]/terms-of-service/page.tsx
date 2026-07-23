@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function TermsOfServicePage() {
-  return <InfoPage section="terms" />;
+import dynamic from 'next/dynamic';
+const TermsOfServicePage = dynamic(() => import('@/components/pages/TermsOfServicePage'), { ssr: false });
+export default function TermsOfServiceRoute() {
+  return <TermsOfServicePage />;
 }

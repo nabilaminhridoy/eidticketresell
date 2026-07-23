@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function FaqsPage() {
-  return <InfoPage section="faq" />;
+import dynamic from 'next/dynamic';
+const FaqsPage = dynamic(() => import('@/components/pages/FaqsPage'), { ssr: false });
+export default function FaqsRoute() {
+  return <FaqsPage />;
 }

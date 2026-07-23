@@ -1,8 +1,10 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
+import dynamic from 'next/dynamic';
 import { use } from 'react';
+
+const BlogDetailPage = dynamic(() => import('@/components/pages/BlogDetailPage'), { ssr: false });
 
 export default function BlogPostRoute({ params }: { params: Promise<{ slug: string; lang: string }> }) {
   const { slug } = use(params);
-  return <InfoPage section="blog" slug={slug} />;
+  return <BlogDetailPage slug={slug} />;
 }

@@ -563,3 +563,113 @@ Stage Summary:
 - Server responds correctly with 200 status
 - Mobile filter sheet verified working with all 6 filter categories
 - No console errors detected
+
+---
+Task ID: 3-a
+Agent: informational-pages-agent
+Task: Create rich content for informational pages (How It Works, Safety Guidelines, FAQs, About Us, Contact Us)
+
+Work Log:
+- Created HowItWorksPage.tsx with hero, buyer steps (4), seller steps (4), benefits section (4), CTA section
+- Created SafetyGuidelinesPage.tsx with buyer tips (6), seller tips (6), transport-specific safety (4 types), emergency contacts (6), important warning
+- Created FaqsPage.tsx with 5 FAQ categories (General, Buying, Selling, Payment & Refunds, Account & Verification), 6 FAQs each using Accordion, plus "Still have questions?" CTA
+- Created AboutUsPage.tsx with Our Story, Mission & Vision, Stats (4), Core Values (4), Team (4 placeholder), Contact Info
+- Created ContactUsPage.tsx with contact methods (3), office hours (4), contact form with validation (6 fields), social media links, FAQ reference card
+- All components use 'use client', useLanguageStore, isBn/font-bangla pattern, shadcn/ui components, Lucide icons
+- All pages responsive (mobile-first grid breakpoints), container mx-auto px-4 py-8 max-w-5xl wrapper
+- No framer-motion used, only CSS animate-pulse for submit loading
+- All 5 routes verified returning 200 status codes
+- Lint passes clean for all new component files (existing BlogPage.tsx error not related to this task)
+
+Stage Summary:
+- 5 new page components created with rich bilingual content (English + Bengali)
+- Each component is self-contained with dedicated content, no longer using generic InfoPage
+- All components use shadcn/ui (Card, Badge, Button, Input, Label, Textarea, Accordion, Select, Separator)
+- Route files not modified (will be updated separately to import new components)
+- Contact form has validation for required fields and Bangladesh phone format
+
+---
+Task ID: 3-c-4
+Agent: blog-checkout-agent
+Task: Create Blog pages and Checkout page
+
+Work Log:
+- Created BlogPage.tsx with categorized blog listing, search bar, pagination
+- Created BlogDetailPage.tsx with full content per slug, share buttons, related posts
+- Created CheckoutPage.tsx with buyer info form and payment method selection
+- Desktop/Tablet uses 2-col lg:grid-cols-2, mobile stacked layout
+- BlogPage: 9 posts with 7 categories (All, Travel Tips, Safety, Buying Guide, Selling Guide, Transport News, Festival Travel)
+- BlogDetailPage: slug-based content mapping for all 9 posts, each with 5+ paragraphs in both EN and BN
+- CheckoutPage: phone field auto-prefix +88, Bangladesh 11-digit validation, District dropdown from ALL_BD_DISTRICTS
+- Payment methods: bKash and SSLCommerz only, selected method shown in "Pay with {method}" button
+- Escrow protection notice with Shield icon, Lock icon on pay button
+- All 3 components use useLanguageStore for bilingual, useNav for navigation
+- Fixed ESLint parsing errors with computed component references (assigned to variables before JSX use)
+- Lint passes clean
+
+Stage Summary:
+- 3 new page components created: BlogPage.tsx, BlogDetailPage.tsx, CheckoutPage.tsx
+- Blog has 9 posts with categories, search, pagination, responsive grid (3/2/1 cols)
+- BlogDetail has hero placeholder, content by slug, share buttons (Facebook, Twitter/X, WhatsApp), related posts
+- Checkout has responsive 2-col/stacked layout with bKash/SSLCommerz payment, escrow protection, form validation
+
+---
+Task ID: 3-b
+Agent: policy-pages-agent
+Task: Create rich content for policy pages (Payment, Refund, Terms, Privacy, Cookies)
+
+Work Log:
+- Created PaymentPolicyPage.tsx with 7 sections: Accepted Payment Methods (bKash + SSLCommerz with 6 sub-methods), Payment Process (6 steps), Escrow Protection System (6 points + 4 release conditions), Platform Service Fee (5% with 6 details), Payment Security (6 security features), Failed Payments (4 scenarios), International Payments (4 points)
+- Created RefundPolicyPage.tsx with 7 sections: Eligible Refund Scenarios (5 scenarios with green highlight cards), Non-Eligible Scenarios (5 scenarios with red highlight cards), Refund Process (5 numbered steps), Refund Timeline (3 payment methods with time ranges in grid), Partial Refunds (4 conditions), Escrow Release Conditions (4 conditions), Dispute Resolution (4 stages with lettered labels)
+- Created TermsOfServicePage.tsx with 11 sections: Acceptance of Terms, User Accounts (5 sub-items), Buying Tickets (4 obligations), Selling Tickets (4 obligations with orange styling), Platform Rules (5 prohibited activities with red highlight cards), Intellectual Property (3 points), Limitation of Liability (4 points), Dispute Resolution (4 stages), Account Termination (5 conditions with red icons), Changes to Terms (4 points), Governing Law (Bangladesh)
+- Created PrivacyPolicyPage.tsx with 10 sections: Information We Collect (4 categories with expandable cards), How We Use Information (5 purposes), Information Sharing (4 categories with color-coded cards), Data Security (4 measures), Cookies (3 types with Required/Optional badges), User Rights (4 rights), Data Retention (5 durations), Children's Privacy (orange warning), Changes to Policy (4 points), Contact (3 methods in grid)
+- Created CookiesPolicyPage.tsx with 7 sections: What Are Cookies (4 key points), Types of Cookies (4 types - Essential green, Performance primary, Functionality orange, Advertising gray-muted), How to Manage Cookies (4 browsers grid + warning card), Third-Party Cookies (3 services), Cookie Duration (2 types + 5 expiry details), Changes to Policy (4 points), Contact (3 methods in grid)
+- All components use 'use client', useLanguageStore, isBn/font-bangla pattern
+- All use shadcn/ui components (Card, CardContent, CardHeader, CardTitle, Badge, Separator) and Lucide icons
+- All pages responsive with container mx-auto px-4 py-8 max-w-4xl wrapper
+- No framer-motion used
+- All pages have "Last Updated: March 1, 2025" date at bottom
+- Lint passes clean
+
+Stage Summary:
+- 5 policy page components created with professional legal content
+- All bilingual (English + Bengali), responsive, no framer-motion
+- Route files not modified (will be updated separately to import new components)
+---
+Task ID: 15
+Agent: main
+Task: Create all informational/policy pages with rich content, fix 404 redirect, create checkout page with responsive layout
+
+Work Log:
+- Fixed 404 redirect issue: modified middleware.ts to check known route patterns and redirect unknown URLs to /[lang]/not-found
+- Modified [username] page.tsx to show 404 page when user is not authenticated (instead of redirecting to login)
+- Created /[lang]/not-found route with dedicated page component showing 404 Page Not Found content
+- Fixed redirect loop: added 'not-found' to KNOWN_STATIC_SEGMENTS in middleware
+- Fixed PrivacyPolicyPage.tsx: replaced non-existent 'Child' lucide icon with 'Baby'
+- Created 13 new page components with rich bilingual content:
+  - HowItWorksPage.tsx (buyer steps, seller steps, benefits)
+  - SafetyGuidelinesPage.tsx (buyer/seller tips, transport safety, emergency contacts)
+  - FaqsPage.tsx (5 categories, 6 FAQs each, Accordion UI)
+  - AboutUsPage.tsx (story, mission, stats, values, team)
+  - ContactUsPage.tsx (contact methods, form with validation)
+  - PaymentPolicyPage.tsx (payment methods, escrow, fees, security)
+  - RefundPolicyPage.tsx (refund scenarios, process, timeline, disputes)
+  - TermsOfServicePage.tsx (11 legal sections)
+  - PrivacyPolicyPage.tsx (10 sections covering data collection, rights, security)
+  - CookiesPolicyPage.tsx (7 sections covering cookie types, management)
+  - BlogPage.tsx (9 posts, categories, search, pagination)
+  - BlogDetailPage.tsx (full content per slug, sharing, related posts)
+  - CheckoutPage.tsx (buyer info form, ticket summary, bKash/SSLCommerz payment)
+- Updated all 13 route files to use dynamic imports of new page components
+- Verified all pages render correctly with Agent Browser
+- Verified 404 redirect works for wrong URLs (no longer redirects to login)
+- Verified checkout page has 2-column desktop layout and stacked mobile layout
+- Verified Bengali (bn) version works correctly
+- All lint checks pass clean
+
+Stage Summary:
+- 13 pages filled with rich, professional bilingual content
+- Wrong URLs now show 404 Page Not Found instead of redirecting to login
+- Checkout page has responsive layout: Desktop 2-col (Buyer Info left, Ticket Summary+Payment right), Mobile stacked
+- bKash and SSLCommerz as payment methods with secure payment button
+- All pages responsive, using shadcn/ui, Lucide icons, no framer-motion

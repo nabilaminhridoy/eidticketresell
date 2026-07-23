@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function AboutUsPage() {
-  return <InfoPage section="about" />;
+import dynamic from 'next/dynamic';
+const AboutUsPage = dynamic(() => import('@/components/pages/AboutUsPage'), { ssr: false });
+export default function AboutUsRoute() {
+  return <AboutUsPage />;
 }

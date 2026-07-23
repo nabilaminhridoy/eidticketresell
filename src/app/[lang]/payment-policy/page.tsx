@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function PaymentPolicyPage() {
-  return <InfoPage section="payment-policy" />;
+import dynamic from 'next/dynamic';
+const PaymentPolicyPage = dynamic(() => import('@/components/pages/PaymentPolicyPage'), { ssr: false });
+export default function PaymentPolicyRoute() {
+  return <PaymentPolicyPage />;
 }

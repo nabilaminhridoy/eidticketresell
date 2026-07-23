@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function RefundPolicyPage() {
-  return <InfoPage section="refund" />;
+import dynamic from 'next/dynamic';
+const RefundPolicyPage = dynamic(() => import('@/components/pages/RefundPolicyPage'), { ssr: false });
+export default function RefundPolicyRoute() {
+  return <RefundPolicyPage />;
 }

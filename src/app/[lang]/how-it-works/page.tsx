@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function HowItWorksPage() {
-  return <InfoPage section="how-it-works" />;
+import dynamic from 'next/dynamic';
+const HowItWorksPage = dynamic(() => import('@/components/pages/HowItWorksPage'), { ssr: false });
+export default function HowItWorksRoute() {
+  return <HowItWorksPage />;
 }

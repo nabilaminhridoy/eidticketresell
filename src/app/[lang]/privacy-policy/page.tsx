@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function PrivacyPolicyPage() {
-  return <InfoPage section="privacy" />;
+import dynamic from 'next/dynamic';
+const PrivacyPolicyPage = dynamic(() => import('@/components/pages/PrivacyPolicyPage'), { ssr: false });
+export default function PrivacyPolicyRoute() {
+  return <PrivacyPolicyPage />;
 }

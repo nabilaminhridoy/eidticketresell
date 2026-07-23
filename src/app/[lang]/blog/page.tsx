@@ -1,5 +1,6 @@
 'use client';
-import InfoPage from '@/components/pages/InfoPage';
-export default function BlogPage() {
-  return <InfoPage section="blog" />;
+import dynamic from 'next/dynamic';
+const BlogPage = dynamic(() => import('@/components/pages/BlogPage'), { ssr: false });
+export default function BlogRoute() {
+  return <BlogPage />;
 }
