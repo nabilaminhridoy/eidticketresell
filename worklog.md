@@ -51,7 +51,34 @@ Stage Summary:
 - AppShell uses next/dynamic for Header/Footer (ssr: false)
 - Payment.png spans full width from first to last column
 - All responsive layouts verified working
-Task ID: 6
+
+---
+Task ID: 9
+Agent: frontend-styling-expert + main
+Task: Redesign search form hero section per user's layout specs
+
+Work Log:
+- Analyzed 4 uploaded reference images using VLM for design guidance
+- Delegated search form redesign to frontend-styling-expert agent
+- Changed BD_CITIES import to ALL_BD_DISTRICTS (64 districts, A-Z sorted, bilingual)
+- Redesigned Desktop/PC/Tablet layout: 2-column grid with FROM+TO (Row 1), Transport+Date (Row 2), Search+Sell buttons (Row 3)
+- Redesigned Mobile layout: Single column with all fields stacked vertically + buttons stacked vertically
+- Added swap button between FROM and TO (circular, centered on desktop; centered below fields on mobile)
+- Color-coded icons: FROM=green MapPin, TO=orange MapPin, Transport=primary Bus, Date=blue CalendarDays
+- All inner fields full width within their column (w-full h-11 rounded-xl)
+- District dropdown shows bilingual labels (label for en, labelBn for bn)
+- Removed redundant CTA buttons below the form card (form already has Search+Sell inside)
+- Verified with Agent Browser: desktop 2-col layout, mobile single-col layout, district dropdown shows 64 entries A-Z
+- Lint passes clean
+
+Stage Summary:
+- Search form redesigned per user's exact layout specifications
+- Desktop: 2-column grid (FROM|TO, Transport|Date, Search|Sell)
+- Mobile: single column (FROM, TO, swap, Transport, Date, Search, Sell)
+- All 64 Bangladesh districts A-Z with bilingual labels
+- All fields full width within their column
+- Duplicate CTA buttons removed from hero section
+- Swap button positioned between FROM/TO columns on desktop, below TO on mobile
 Agent: main
 Task: Fix all navigation links/buttons on home page and across the app
 
@@ -213,3 +240,40 @@ Stage Summary:
 - Auth states handled: logged-out (Login/Register), logged-in (Avatar Dropdown)
 - Mobile Sheet bottom section: Login/Register or User info+menu with Separator divider
 - Build and TypeScript checks pass cleanly with no new errors
+
+---
+Task ID: 9
+Agent: frontend-styling-expert
+Task: Redesign search form layout in HomePage hero section
+
+Work Log:
+- Read worklog.md for project context — understood previous agent work on Header, Footer, navigation, and OOM fixes
+- Read current HomePage.tsx — search form was a 4-column grid (Transport Type | FROM | TO+Swap | Journey Date) with single Search button
+- Read constants.ts — confirmed ALL_BD_DISTRICTS exists as flattened array of 64 districts with bilingual labels (label + labelBn)
+- Replaced BD_CITIES import with ALL_BD_DISTRICTS in HomePage.tsx
+- Completely redesigned the search form section with new layout:
+  - Desktop (sm+): 2-column grid layout
+    - Row 1: FROM (green MapPin icon) | TO (orange MapPin icon) — circular swap button centered between columns using absolute positioning (left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2)
+    - Row 2: Transport Type (green Bus icon) | Journey Date (blue CalendarDays icon)
+    - Row 3: Search Tickets button (bright green primary) | Sell Tickets button (outlined variant with Ticket icon)
+  - Mobile (below sm): Single column, all fields and buttons stacked vertically
+    - FROM → TO → swap button (centered below fields) → Transport Type → Journey Date → Search Tickets → Sell Tickets
+- District dropdowns now show English labels (dist.label) when language is 'en', Bengali labels (dist.labelBn) when language is 'bn'
+- Color-coded icons per spec: FROM=green-600 MapPin, TO=orange MapPin, Bus=primary (green), CalendarDays=blue-500
+- All SelectTrigger/Input fields use w-full h-11 rounded-xl for consistent sizing
+- Swap button: w-9 h-9 rounded-full bg-card border-2 border-primary/20 with hover:bg-primary hover:text-primary-foreground
+- Search Tickets button: full width, green primary, with Search + ArrowRight icons
+- Sell Tickets button: full width, outline variant, with Ticket icon, hover:bg-primary/10 hover:text-primary
+- Form card container kept as: rounded-2xl bg-card border-2 border-primary/15 shadow-xl shadow-primary/5 p-5 sm:p-6
+- CTA section below the form kept intact per instructions
+- All other sections (transport types, how it works, stats, popular routes, CTA) kept unchanged
+- Lint passes clean, no TypeScript errors in HomePage.tsx
+
+Stage Summary:
+- Search form redesigned from 4-col single-row to 2-col grid (3 rows) on desktop, single column on mobile
+- BD_CITIES replaced with ALL_BD_DISTRICTS (64 districts, bilingual labels)
+- Bilingual dropdown labels: English (label) / Bengali (labelBn) based on language
+- Color-coded icons: FROM=green, TO=orange, Transport=green, Date=blue
+- Circular swap button positioned between FROM/TO columns on desktop, centered below on mobile
+- Search Tickets + Sell Tickets buttons now inside the form card in 2-col grid row
+- Lint passes clean, no new TypeScript errors

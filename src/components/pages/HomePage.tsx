@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { t } from '@/lib/i18n';
-import { POPULAR_ROUTES, BD_CITIES } from '@/lib/constants';
+import { POPULAR_ROUTES, ALL_BD_DISTRICTS } from '@/lib/constants';
 
 export default function HomePage() {
   const { navigate } = useAppStore();
@@ -147,14 +147,86 @@ export default function HomePage() {
               className="max-w-3xl mx-auto mb-8"
             >
               <div className="rounded-2xl bg-card border-2 border-primary/15 shadow-xl shadow-primary/5 p-5 sm:p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Row 1: FROM + TO with swap button */}
+                <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* FROM */}
+                  <div className="space-y-2">
+                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
+                      {t('from', language)}
+                    </Label>
+                    <Select value={fromCity} onValueChange={setFromCity}>
+                      <SelectTrigger className={`w-full h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-green-600 shrink-0" />
+                          <SelectValue placeholder={t('selectCity', language)} />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {ALL_BD_DISTRICTS.map((dist) => (
+                          <SelectItem key={dist.label} value={dist.label} className={fontClass}>
+                            {language === 'en' ? dist.label : dist.labelBn}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* TO */}
+                  <div className="space-y-2">
+                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
+                      {t('to', language)}
+                    </Label>
+                    <Select value={toCity} onValueChange={setToCity}>
+                      <SelectTrigger className={`w-full h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-orange shrink-0" />
+                          <SelectValue placeholder={t('selectCity', language)} />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {ALL_BD_DISTRICTS.map((dist) => (
+                          <SelectItem key={dist.label} value={dist.label} className={fontClass}>
+                            {language === 'en' ? dist.label : dist.labelBn}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Swap button — desktop: circular, centered between FROM & TO columns */}
+                  <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10">
+                    <button
+                      type="button"
+                      onClick={swapCities}
+                      className="w-9 h-9 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm hover:shadow-md"
+                      title={isBn ? 'শহর অদলাবদল' : 'Swap cities'}
+                    >
+                      <ArrowLeftRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Swap button — mobile: centered below TO field */}
+                <div className="sm:hidden flex justify-center mt-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={swapCities}
+                    className="w-9 h-9 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm hover:shadow-md"
+                    title={isBn ? 'শহর অদলাবদল' : 'Swap cities'}
+                  >
+                    <ArrowLeftRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Row 2: Transport Type + Journey Date */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   {/* Transport Type */}
                   <div className="space-y-2">
                     <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
                       {t('transportType', language)}
                     </Label>
                     <Select value={transportType} onValueChange={setTransportType}>
-                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
+                      <SelectTrigger className={`w-full h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
                         <div className="flex items-center gap-2">
                           <Bus className="w-4 h-4 text-primary shrink-0" />
                           <SelectValue placeholder={t('selectTransport', language)} />
@@ -173,109 +245,53 @@ export default function HomePage() {
                     </Select>
                   </div>
 
-                  {/* From */}
-                  <div className="space-y-2">
-                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
-                      {t('from', language)}
-                    </Label>
-                    <Select value={fromCity} onValueChange={setFromCity}>
-                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-primary shrink-0" />
-                          <SelectValue placeholder={t('selectCity', language)} />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {BD_CITIES.map((city) => (
-                          <SelectItem key={city} value={city} className={fontClass}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* To + Swap */}
-                  <div className="space-y-2 relative">
-                    <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
-                      {t('to', language)}
-                    </Label>
-                    <Select value={toCity} onValueChange={setToCity}>
-                      <SelectTrigger className={`h-11 rounded-xl border-primary/20 bg-background ${fontClass}`}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-orange shrink-0" />
-                          <SelectValue placeholder={t('selectCity', language)} />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {BD_CITIES.map((city) => (
-                          <SelectItem key={city} value={city} className={fontClass}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {/* Swap button */}
-                    <button
-                      type="button"
-                      onClick={swapCities}
-                      className="absolute -left-6 top-[38px] z-10 w-8 h-8 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm hover:shadow-md"
-                      title={isBn ? 'শহর অদলাবদল' : 'Swap cities'}
-                    >
-                      <ArrowLeftRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
                   {/* Journey Date */}
                   <div className="space-y-2">
                     <Label className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${fontClass}`}>
                       {t('journeyDate', language)}
                     </Label>
                     <div className="relative">
-                      <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue pointer-events-none" />
+                      <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 pointer-events-none" />
                       <Input
                         type="date"
                         value={journeyDate}
                         onChange={(e) => setJourneyDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
-                        className={`h-11 rounded-xl border-primary/20 bg-background pl-9 ${fontClass}`}
+                        className={`w-full h-11 rounded-xl border-primary/20 bg-background pl-9 ${fontClass}`}
                         placeholder={t('selectDate', language)}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Search Button */}
-                <div className="mt-5 flex justify-center">
+                {/* Row 3: Search Tickets + Sell Tickets buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                  {/* Search Tickets */}
                   <Button
                     size="lg"
                     onClick={handleSearch}
-                    className="rounded-xl text-base px-10 h-12 transition-all duration-300 w-full sm:w-auto"
+                    className="rounded-xl text-base h-12 transition-all duration-300 w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     <Search className="w-5 h-5 mr-2" />
                     {t('searchTickets', language)}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
+
+                  {/* Sell Tickets */}
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => navigate('sell-ticket')}
+                    className="rounded-xl text-base h-12 w-full border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40"
+                  >
+                    <Ticket className="w-5 h-5 mr-2" />
+                    {t('sellTickets', language)}
+                  </Button>
                 </div>
               </div>
             </motion.div>
 
-            {/* CTA Buttons */}
-            <motion.div
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <Button size="lg" onClick={() => navigate('search')} className="rounded-xl text-base px-8 h-12">
-                <Ticket className="w-5 h-5 mr-2" />
-                {t('searchTickets', language)}
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('sell-ticket')} className="text-base px-8 h-12 rounded-xl border-orange/30 hover:bg-orange/10 hover:text-orange hover:border-orange">
-                {t('sellTickets', language)}
-              </Button>
-            </motion.div>
+
           </div>
         </div>
 
