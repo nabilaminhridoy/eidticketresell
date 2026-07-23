@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import {
-  Moon, Sun, Monitor, Globe, Menu, ChevronDown, X,
+  Moon, Sun, Monitor, Globe, Menu, ChevronDown,
   Bus, TrainFront, Plane, Ship, Ticket, LogOut,
-  User, Wallet, Settings, Shield, Bell, LayoutDashboard,
-  MoonStar, HelpCircle, Info, HeadphonesIcon, ArrowRight
+  User, Wallet, Shield, LayoutDashboard,
+  HelpCircle, HeadphonesIcon, ArrowRight, ChevronRight,
+  ShieldCheck, FileText, Compass, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,22 +20,44 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/co
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useAppStore, useAuthStore, useLanguageStore } from '@/lib/store';
 import { useNav } from '@/lib/use-nav';
 import { t } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n';
 
+// ── Transport items for Buy Tickets dropdown ──────────────────────────────
 const transportItems = [
-  { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, desc: 'Bus Tickets' },
-  { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const, desc: 'Train Tickets' },
-  { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const, desc: 'Flight Tickets' },
-  { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, desc: 'Launch Tickets' },
+  { id: 'bus' as const, icon: Bus, labelKey: 'bus' as const, color: 'bg-green-500 text-white', hoverColor: 'hover:bg-green-500/10' },
+  { id: 'train' as const, icon: TrainFront, labelKey: 'train' as const, color: 'bg-teal-500 text-white', hoverColor: 'hover:bg-teal-500/10' },
+  { id: 'flight' as const, icon: Plane, labelKey: 'flight' as const, color: 'bg-sky-500 text-white', hoverColor: 'hover:bg-sky-500/10' },
+  { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, color: 'bg-violet-500 text-white', hoverColor: 'hover:bg-violet-500/10' },
 ];
 
+// ── Center nav items (excluding Buy Tickets which has dropdown) ──────────
+const centerNavItems = [
+  { id: 'sell-ticket' as const, labelKey: 'sellTickets' as const, icon: Ticket },
+  { id: 'how-it-works' as const, labelKey: 'howItWorks' as const, icon: Compass },
+  { id: 'safety-guidelines' as const, labelKey: 'safetyGuidelines' as const, icon: AlertTriangle },
+  { id: 'support' as const, labelKey: 'support' as const, icon: HeadphonesIcon },
+  { id: 'faq' as const, labelKey: 'faq' as const, icon: HelpCircle },
+];
+
+// ── User dropdown menu items (logged-in state) ──────────────────────────
+const userMenuItems = [
+  { id: 'dashboard' as const, labelKey: 'dashboard' as const, icon: LayoutDashboard, color: 'text-primary' },
+  { id: 'my-tickets' as const, labelKey: 'myTickets' as const, icon: Ticket, color: 'text-green-500' },
+  { id: 'my-orders' as const, labelKey: 'myOrders' as const, icon: FileText, color: 'text-blue-500' },
+  { id: 'wallet' as const, labelKey: 'wallet' as const, icon: Wallet, color: 'text-orange-500' },
+  { id: 'kyc' as const, labelKey: 'kyc' as const, icon: ShieldCheck, color: 'text-violet-500' },
+];
+
+// ── Main Header Component ────────────────────────────────────────────────
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [buyTicketsHover, setBuyTicketsHover] = useState(false);
+  const [mobileBuyTicketsOpen, setMobileBuyTicketsOpen] = useState(false);
   const buyTicketsRef = useRef<HTMLDivElement>(null);
   const buyTicketsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { theme, setTheme } = useTheme();
@@ -43,15 +66,14 @@ export default function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { language, setLanguage } = useLanguageStore();
 
+  // ── Scroll detection for sticky header backdrop ──────────────────────
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close dropdown on click outside
+  // ── Close Buy Tickets dropdown on click outside ─────────────────────
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (buyTicketsRef.current && !buyTicketsRef.current.contains(e.target as Node)) {
@@ -62,26 +84,29 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const toggleLanguage = () => {
+  // ── Language toggle ──────────────────────────────────────────────────
+  const toggleLanguage = useCallback(() => {
     setLanguage(language === 'en' ? 'bn' : 'en');
-  };
+  }, [language, setLanguage]);
 
-  const handleNavigate = (page: string, params?: Record<string, string>) => {
+  // ── Navigation handler ──────────────────────────────────────────────
+  const handleNavigate = useCallback((page: string, params?: Record<string, string>) => {
     navNavigate(page, params);
     setMobileOpen(false);
     setBuyTicketsHover(false);
-  };
+    setMobileBuyTicketsOpen(false);
+  }, [navNavigate]);
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  // ── Get user initials ────────────────────────────────────────────────
+  const getInitials = (name: string) =>
+    name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 
+  // ── Active page check ────────────────────────────────────────────────
   const isActive = (page: string) => currentPage === page;
+  const isBuyTicketsActive = ['bus', 'train', 'flight', 'launch', 'search'].includes(currentPage);
+
+  // ── User params for nav ──────────────────────────────────────────────
+  const userParams = user ? { username: user.username } : undefined;
 
   return (
     <motion.header
@@ -94,12 +119,14 @@ export default function Header() {
           : 'bg-background/80 backdrop-blur-md border-b border-border/30'
       }`}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
+      <div className="container mx-auto flex h-16 items-center px-4 lg:px-8">
 
-        {/* === LEFT: Logo === */}
+        {/* ═══════════════════════════════════════════════════════════════
+            LEFT COLUMN — Logo (always visible)
+        ═══════════════════════════════════════════════════════════════ */}
         <motion.button
           onClick={() => handleNavigate('home')}
-          className="flex items-center gap-2.5 group min-w-0 shrink-0"
+          className="flex items-center gap-2.5 group shrink-0"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -110,9 +137,11 @@ export default function Header() {
           />
         </motion.button>
 
-        {/* === CENTER: Desktop Navigation === */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {/* Buy Tickets - Hover Dropdown + Clickable */}
+        {/* ═══════════════════════════════════════════════════════════════
+            CENTER COLUMN — Desktop Navigation (lg+ only)
+        ═══════════════════════════════════════════════════════════════ */}
+        <nav className="hidden lg:flex items-center gap-1 mx-auto">
+          {/* Buy Tickets — Hover Dropdown + Clickable */}
           <div
             ref={buyTicketsRef}
             className="relative"
@@ -127,7 +156,7 @@ export default function Header() {
             <button
               onClick={() => handleNavigate('search')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                ['bus', 'train', 'flight', 'launch', 'search'].includes(currentPage)
+                isBuyTicketsActive
                   ? 'text-primary bg-primary/10'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               } ${language === 'bn' ? 'font-bangla' : ''}`}
@@ -162,17 +191,12 @@ export default function Header() {
                     <motion.button
                       key={item.id}
                       onClick={() => handleNavigate(item.id)}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-accent transition-colors text-left"
+                      className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-left ${item.hoverColor}`}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg shadow-sm ${
-                        index === 0 ? 'bg-primary text-primary-foreground' :
-                        index === 1 ? 'bg-blue text-blue-foreground' :
-                        index === 2 ? 'bg-orange text-orange-foreground' :
-                        'bg-primary text-primary-foreground'
-                      }`}>
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg shadow-sm ${item.color}`}>
                         <item.icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
@@ -193,38 +217,24 @@ export default function Header() {
             </AnimatePresence>
           </div>
 
-          <NavButton
-            active={isActive('sell-ticket') || isActive('create-ticket')}
-            onClick={() => handleNavigate('sell-ticket')}
-            label={t('sellTickets', language)}
-            lang={language}
-          />
-
-          <NavButton
-            active={isActive('how-it-works')}
-            onClick={() => handleNavigate('how-it-works')}
-            label={t('howItWorks', language)}
-            lang={language}
-          />
-
-          <NavButton
-            active={isActive('support')}
-            onClick={() => handleNavigate('support')}
-            label={t('support', language)}
-            lang={language}
-          />
-
-          <NavButton
-            active={isActive('faq')}
-            onClick={() => handleNavigate('faq')}
-            label={t('faq', language)}
-            lang={language}
-          />
+          {/* Other Center Nav Items */}
+          {centerNavItems.map((item) => (
+            <NavButton
+              key={item.id}
+              active={isActive(item.id)}
+              onClick={() => handleNavigate(item.id)}
+              label={t(item.labelKey, language)}
+              lang={language}
+            />
+          ))}
         </nav>
 
-        {/* === RIGHT: Language + Theme + Auth === */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          {/* Language Switcher */}
+        {/* ═══════════════════════════════════════════════════════════════
+            RIGHT COLUMN — Language | Theme | Auth (lg+) or Language | Theme | Menu (mobile)
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto lg:ml-0">
+
+          {/* Language Switcher — always visible */}
           <motion.div whileTap={{ scale: 0.95 }}>
             <Button
               variant="ghost"
@@ -232,44 +242,44 @@ export default function Header() {
               onClick={toggleLanguage}
               className="gap-1.5 text-sm font-medium min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 hover:bg-primary/10 hover:text-primary"
             >
-              <Globe className="w-4 h-4 text-blue" />
+              <Globe className="w-4 h-4 text-blue-500" />
               <span className="hidden sm:inline">{language === 'en' ? 'বাংলা' : 'EN'}</span>
             </Button>
           </motion.div>
 
-          {/* Theme Toggle */}
+          {/* Theme Toggle Dropdown — always visible */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 hover:bg-primary/10">
-                <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-orange" />
-                <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-blue" />
+                <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-orange-500" />
+                <Moon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-blue-500" />
                 <span className="sr-only">Toggle theme</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setTheme('light')} className={language === 'bn' ? 'font-bangla' : ''}>
-                <Sun className="w-4 h-4 mr-2 text-orange" />
-                {t('lightMode', language)}
+                <Sun className="w-4 h-4 mr-2 text-orange-500" />
+                {t('light', language)}
                 {theme === 'light' && <Badge variant="secondary" className="ml-auto text-[10px] bg-primary/10 text-primary">Active</Badge>}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setTheme('dark')} className={language === 'bn' ? 'font-bangla' : ''}>
-                <Moon className="w-4 h-4 mr-2 text-blue" />
-                {t('darkMode', language)}
+                <Moon className="w-4 h-4 mr-2 text-blue-500" />
+                {t('dark', language)}
                 {theme === 'dark' && <Badge variant="secondary" className="ml-auto text-[10px] bg-primary/10 text-primary">Active</Badge>}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setTheme('system')} className={language === 'bn' ? 'font-bangla' : ''}>
                 <Monitor className="w-4 h-4 mr-2 text-primary" />
-                {t('systemMode', language)}
+                {t('system', language)}
                 {theme === 'system' && <Badge variant="secondary" className="ml-auto text-[10px] bg-primary/10 text-primary">Active</Badge>}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Auth Buttons or User Menu */}
+          {/* ─── Desktop Auth Buttons / User Menu (lg+ only) ────────── */}
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full hidden lg:flex">
                   <Avatar className="h-8 w-8 ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
@@ -297,36 +307,16 @@ export default function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleNavigate('profile')} className={language === 'bn' ? 'font-bangla' : ''}>
-                  <User className="w-4 h-4 mr-2 text-primary" />
-                  {t('profile', language)}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigate('settings')} className={language === 'bn' ? 'font-bangla' : ''}>
-                  <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
-                  {t('settings', language)}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigate('wallet')} className={language === 'bn' ? 'font-bangla' : ''}>
-                  <Wallet className="w-4 h-4 mr-2 text-orange" />
-                  {t('wallet', language)}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigate('my-tickets')} className={language === 'bn' ? 'font-bangla' : ''}>
-                  <Ticket className="w-4 h-4 mr-2 text-primary" />
-                  {t('myTickets', language)}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigate('my-orders')} className={language === 'bn' ? 'font-bangla' : ''}>
-                  <LayoutDashboard className="w-4 h-4 mr-2 text-blue" />
-                  {t('myOrders', language)}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigate('notifications')} className={language === 'bn' ? 'font-bangla' : ''}>
-                  <Bell className="w-4 h-4 mr-2 text-orange" />
-                  {t('notifications', language)}
-                </DropdownMenuItem>
-                {!user.isKycVerified && (
-                  <DropdownMenuItem onClick={() => handleNavigate('kyc')} className={language === 'bn' ? 'font-bangla' : ''}>
-                    <Shield className="w-4 h-4 mr-2 text-primary" />
-                    {t('kycVerification', language)}
+                {userMenuItems.map((menuItem) => (
+                  <DropdownMenuItem
+                    key={menuItem.id}
+                    onClick={() => handleNavigate(menuItem.id, menuItem.id === 'dashboard' || menuItem.id === 'my-tickets' || menuItem.id === 'my-orders' || menuItem.id === 'wallet' || menuItem.id === 'kyc' ? userParams : undefined)}
+                    className={language === 'bn' ? 'font-bangla' : ''}
+                  >
+                    <menuItem.icon className={`w-4 h-4 mr-2 ${menuItem.color}`} />
+                    {t(menuItem.labelKey, language)}
                   </DropdownMenuItem>
-                )}
+                ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
@@ -341,7 +331,7 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -360,7 +350,7 @@ export default function Header() {
             </div>
           )}
 
-          {/* Mobile Menu Button */}
+          {/* ─── Mobile Menu Button (below lg only) ──────────────────── */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="lg:hidden min-h-[44px] min-w-[44px] hover:bg-primary/10">
@@ -379,11 +369,99 @@ export default function Header() {
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
-                {/* Mobile User Info */}
-                {isAuthenticated && user && (
-                  <div className="px-5 py-4 border-b bg-primary/5">
-                    <div className="flex items-center gap-3">
+              <div className="flex flex-col h-[calc(100%-80px)]">
+                {/* ─── Top Section: Navigation Links ──────────────── */}
+                <nav className="flex-1 overflow-y-auto px-3 py-3">
+                  {/* Buy Tickets — Collapsible Dropdown */}
+                  <Collapsible
+                    open={mobileBuyTicketsOpen}
+                    onOpenChange={setMobileBuyTicketsOpen}
+                  >
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => handleNavigate('search')}
+                        className={`flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-medium transition-colors flex-1 min-h-[44px] ${
+                          isBuyTicketsActive
+                            ? 'text-primary bg-primary/10'
+                            : 'text-foreground hover:bg-accent'
+                        } ${language === 'bn' ? 'font-bangla' : ''}`}
+                      >
+                        <span className={`flex items-center justify-center w-9 h-9 rounded-lg ${isBuyTicketsActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          <Ticket className="w-5 h-5" />
+                        </span>
+                        {t('buyTickets', language)}
+                      </button>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-11 w-11 min-h-[44px] min-w-[44px] shrink-0"
+                        >
+                          <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${mobileBuyTicketsOpen ? 'rotate-90' : ''}`} />
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                    <CollapsibleContent>
+                      <div className="pl-4 mt-1 mb-2">
+                        {transportItems.map((item) => (
+                          <MobileNavItem
+                            key={item.id}
+                            icon={<item.icon className="w-5 h-5" />}
+                            label={`${t(item.labelKey, language)} ${t('tickets', language)}`}
+                            active={isActive(item.id)}
+                            onClick={() => handleNavigate(item.id)}
+                            lang={language}
+                            iconBg={item.color}
+                          />
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Other Center Nav Items */}
+                  <MobileNavItem
+                    icon={<Ticket className="w-5 h-5" />}
+                    label={t('sellTickets', language)}
+                    active={isActive('sell-ticket') || isActive('create-ticket')}
+                    onClick={() => handleNavigate('sell-ticket')}
+                    lang={language}
+                  />
+                  <MobileNavItem
+                    icon={<Compass className="w-5 h-5" />}
+                    label={t('howItWorks', language)}
+                    active={isActive('how-it-works')}
+                    onClick={() => handleNavigate('how-it-works')}
+                    lang={language}
+                  />
+                  <MobileNavItem
+                    icon={<AlertTriangle className="w-5 h-5" />}
+                    label={t('safetyGuidelines', language)}
+                    active={isActive('safety-guidelines')}
+                    onClick={() => handleNavigate('safety-guidelines')}
+                    lang={language}
+                  />
+                  <MobileNavItem
+                    icon={<HeadphonesIcon className="w-5 h-5" />}
+                    label={t('support', language)}
+                    active={isActive('support')}
+                    onClick={() => handleNavigate('support')}
+                    lang={language}
+                  />
+                  <MobileNavItem
+                    icon={<HelpCircle className="w-5 h-5" />}
+                    label={t('faq', language)}
+                    active={isActive('faq')}
+                    onClick={() => handleNavigate('faq')}
+                    lang={language}
+                  />
+                </nav>
+
+                {/* ─── Bottom Section: Auth or User Menu ──────────── */}
+                <Separator />
+                {isAuthenticated && user ? (
+                  <div className="px-4 py-3">
+                    {/* User Info */}
+                    <div className="flex items-center gap-3 mb-3">
                       <Avatar className="h-10 w-10 ring-2 ring-primary/20">
                         <AvatarImage src={user.avatar} alt={user.name} />
                         <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
@@ -401,153 +479,34 @@ export default function Header() {
                         </Badge>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* Mobile Nav Links */}
-                <nav className="flex flex-col px-3 py-2">
-                  <MobileNavItem
-                    icon={<MoonStar className="w-5 h-5" />}
-                    label={t('home', language)}
-                    active={isActive('home')}
-                    onClick={() => handleNavigate('home')}
-                    lang={language}
-                  />
-
-                  {/* Buy Tickets Section */}
-                  <div className="px-3 py-2 mt-2">
-                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
-                      {t('buyTickets', language)}
-                    </p>
-                  </div>
-                  {transportItems.map((item, index) => (
-                    <MobileNavItem
-                      key={item.id}
-                      icon={<item.icon className="w-5 h-5" />}
-                      label={`${t(item.labelKey, language)} ${t('tickets', language)}`}
-                      active={isActive(item.id)}
-                      onClick={() => handleNavigate(item.id)}
-                      lang={language}
-                      iconBg={index === 0 ? 'bg-primary text-primary-foreground' : index === 1 ? 'bg-blue text-blue-foreground' : index === 2 ? 'bg-orange text-orange-foreground' : 'bg-primary text-primary-foreground'}
-                    />
-                  ))}
-
-                  <div className="px-3 py-2 mt-2">
-                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider ${language === 'bn' ? 'font-bangla' : ''}`}>
-                      {t('sellTickets', language)}
-                    </p>
-                  </div>
-                  <MobileNavItem
-                    icon={<Ticket className="w-5 h-5" />}
-                    label={t('sellTickets', language)}
-                    active={isActive('sell-ticket') || isActive('create-ticket')}
-                    onClick={() => handleNavigate('sell-ticket')}
-                    lang={language}
-                    iconBg="bg-orange text-orange-foreground"
-                  />
-
-                  <div className="px-3 py-2 mt-2">
-                    <p className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider`}>
-                      Info
-                    </p>
-                  </div>
-                  <MobileNavItem
-                    icon={<Info className="w-5 h-5" />}
-                    label={t('howItWorks', language)}
-                    active={isActive('how-it-works')}
-                    onClick={() => handleNavigate('how-it-works')}
-                    lang={language}
-                  />
-                  <MobileNavItem
-                    icon={<HelpCircle className="w-5 h-5" />}
-                    label={t('faq', language)}
-                    active={isActive('faq')}
-                    onClick={() => handleNavigate('faq')}
-                    lang={language}
-                  />
-                  <MobileNavItem
-                    icon={<HeadphonesIcon className="w-5 h-5" />}
-                    label={t('support', language)}
-                    active={isActive('support')}
-                    onClick={() => handleNavigate('support')}
-                    lang={language}
-                  />
-                </nav>
-
-                {/* Mobile Auth / User Actions */}
-                <Separator className="my-1" />
-                {isAuthenticated && user ? (
-                  <nav className="flex flex-col px-3 py-2">
-                    <MobileNavItem
-                      icon={<User className="w-5 h-5" />}
-                      label={t('profile', language)}
-                      active={isActive('profile')}
-                      onClick={() => handleNavigate('profile')}
-                      lang={language}
-                    />
-                    <MobileNavItem
-                      icon={<Wallet className="w-5 h-5" />}
-                      label={t('wallet', language)}
-                      active={isActive('wallet')}
-                      onClick={() => handleNavigate('wallet')}
-                      lang={language}
-                      iconBg="bg-orange text-orange-foreground"
-                    />
-                    <MobileNavItem
-                      icon={<Ticket className="w-5 h-5" />}
-                      label={t('myTickets', language)}
-                      active={isActive('my-tickets')}
-                      onClick={() => handleNavigate('my-tickets')}
-                      lang={language}
-                      iconBg="bg-primary text-primary-foreground"
-                    />
-                    <MobileNavItem
-                      icon={<LayoutDashboard className="w-5 h-5" />}
-                      label={t('myOrders', language)}
-                      active={isActive('my-orders')}
-                      onClick={() => handleNavigate('my-orders')}
-                      lang={language}
-                      iconBg="bg-blue text-blue-foreground"
-                    />
-                    <MobileNavItem
-                      icon={<Bell className="w-5 h-5" />}
-                      label={t('notifications', language)}
-                      active={isActive('notifications')}
-                      onClick={() => handleNavigate('notifications')}
-                      lang={language}
-                      iconBg="bg-orange text-orange-foreground"
-                    />
-                    {!user.isKycVerified && (
+                    {/* User Menu Items */}
+                    <div className="space-y-1">
+                      {userMenuItems.map((menuItem) => (
+                        <MobileNavItem
+                          key={menuItem.id}
+                          icon={<menuItem.icon className="w-5 h-5" />}
+                          label={t(menuItem.labelKey, language)}
+                          active={isActive(menuItem.id)}
+                          onClick={() => handleNavigate(menuItem.id, userParams)}
+                          lang={language}
+                        />
+                      ))}
+                      <Separator className="my-2" />
                       <MobileNavItem
-                        icon={<Shield className="w-5 h-5" />}
-                        label={t('kycVerification', language)}
-                        active={isActive('kyc')}
-                        onClick={() => handleNavigate('kyc')}
+                        icon={<LogOut className="w-5 h-5" />}
+                        label={t('logout', language)}
+                        active={false}
+                        onClick={() => {
+                          logout();
+                          handleNavigate('home');
+                        }}
                         lang={language}
+                        destructive
                       />
-                    )}
-                    <MobileNavItem
-                      icon={<Settings className="w-5 h-5" />}
-                      label={t('settings', language)}
-                      active={isActive('settings')}
-                      onClick={() => handleNavigate('settings')}
-                      lang={language}
-                    />
-                    <Separator className="my-1" />
-                    <MobileNavItem
-                      icon={<LogOut className="w-5 h-5" />}
-                      label={t('logout', language)}
-                      active={false}
-                      onClick={() => {
-                        logout();
-                        handleNavigate('home');
-                      }}
-                      lang={language}
-                      destructive
-                    />
-                  </nav>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="px-5 py-4 flex flex-col gap-3">
+                  <div className="px-5 py-4 flex gap-3">
                     <Button
                       variant="outline"
                       className="w-full min-h-[44px] border-primary/30 hover:bg-primary/10 hover:text-primary hover:border-primary"
@@ -563,49 +522,19 @@ export default function Header() {
                     </Button>
                   </div>
                 )}
-
-                {/* Mobile Footer Controls */}
-                <div className="mt-auto border-t px-5 py-4 flex items-center justify-between gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleLanguage}
-                    className="gap-1.5 min-h-[44px] border-blue/30 hover:bg-blue/10 hover:text-blue hover:border-blue"
-                  >
-                    <Globe className="w-4 h-4 text-blue" />
-                    {language === 'en' ? 'বাংলা' : 'English'}
-                  </Button>
-                  <div className="flex items-center gap-1">
-                    {([
-                      { mode: 'light' as const, icon: Sun, color: 'text-orange hover:bg-orange/10' },
-                      { mode: 'dark' as const, icon: Moon, color: 'text-blue hover:bg-blue/10' },
-                      { mode: 'system' as const, icon: Monitor, color: 'text-primary hover:bg-primary/10' }
-                    ]).map(({ mode, icon: Icon, color }) => (
-                      <Button
-                        key={mode}
-                        variant={theme === mode ? 'default' : 'ghost'}
-                        size="icon"
-                        className={`h-10 w-10 min-h-[44px] min-w-[44px] ${theme !== mode ? color : ''}`}
-                        onClick={() => setTheme(mode)}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </Button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
 
-      {/* Solid divider line under header when scrolled */}
+      {/* Accent line under header when scrolled */}
       {scrolled && <div className="h-0.5 bg-primary" />}
     </motion.header>
   );
 }
 
-// Desktop Nav Button
+// ── Desktop Nav Button ────────────────────────────────────────────────────
 function NavButton({
   active,
   onClick,
@@ -640,7 +569,7 @@ function NavButton({
   );
 }
 
-// Mobile Nav Item
+// ── Mobile Nav Item ───────────────────────────────────────────────────────
 function MobileNavItem({
   icon,
   label,

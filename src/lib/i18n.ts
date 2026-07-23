@@ -275,6 +275,15 @@ type TranslationKeys = {
   refund: string;
   paymentPolicy: string;
   allRightsReserved: string;
+  cookiesPolicy: string;
+  safetyGuidelines: string;
+  verifyTicket: string;
+  aboutUs: string;
+  contactUs: string;
+  tagLine: string;
+  light: string;
+  dark: string;
+  system: string;
 
   // Admin
   users: string;
@@ -582,6 +591,15 @@ const en: TranslationKeys = {
   refund: 'Refund Policy',
   paymentPolicy: 'Payment Policy',
   allRightsReserved: 'All rights reserved',
+  cookiesPolicy: 'Cookies Policy',
+  safetyGuidelines: 'Safety Guidelines',
+  verifyTicket: 'Verify Ticket',
+  aboutUs: 'About Us',
+  contactUs: 'Contact Us',
+  tagLine: 'The most trusted marketplace for buying and selling Bus, Train, Flight & Launch tickets in Bangladesh. Secure transactions with escrow protection.',
+  light: 'Light',
+  dark: 'Dark',
+  system: 'System',
 
   users: 'Users',
   kyc: 'KYC',
@@ -887,6 +905,15 @@ const bn: TranslationKeys = {
   refund: 'ফেরত নীতি',
   paymentPolicy: 'পেমেন্ট নীতি',
   allRightsReserved: 'সর্বস্বত্ব সংরক্ষিত',
+  cookiesPolicy: 'কুকিজ নীতি',
+  safetyGuidelines: 'নিরাপত্তা নির্দেশিকা',
+  verifyTicket: 'টিকেট যাচাই',
+  aboutUs: 'আমাদের সম্পর্কে',
+  contactUs: 'যোগাযোগ করুন',
+  tagLine: 'বাংলাদেশে বাস, ট্রেন, ফ্লাইট ও লঞ্চ টিকেট কেনাবেচার সবচেয়ে বিশ্বস্ত মার্কেটপ্লেস। এসক্রো সুরক্ষায় নিরাপদ লেনদেন।',
+  light: 'লাইট',
+  dark: 'ডার্ক',
+  system: 'সিস্টেম',
 
   users: 'ব্যবহারকারী',
   kyc: 'কেওয়াইসি',

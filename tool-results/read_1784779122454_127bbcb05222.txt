@@ -1,0 +1,964 @@
+     1→export type Language = 'en' | 'bn';
+     2→
+     3→type TranslationKeys = {
+     4→  // Common
+     5→  appName: string;
+     6→  appSlogan: string;
+     7→  home: string;
+     8→  about: string;
+     9→  contact: string;
+    10→  login: string;
+    11→  register: string;
+    12→  logout: string;
+    13→  profile: string;
+    14→  settings: string;
+    15→  search: string;
+    16→  searchPlaceholder: string;
+    17→  filter: string;
+    18→  sort: string;
+    19→  loading: string;
+    20→  noResults: string;
+    21→  save: string;
+    22→  cancel: string;
+    23→  delete: string;
+    24→  edit: string;
+    25→  submit: string;
+    26→  confirm: string;
+    27→  back: string;
+    28→  next: string;
+    29→  previous: string;
+    30→  viewAll: string;
+    31→  viewDetails: string;
+    32→  readMore: string;
+    33→  showMore: string;
+    34→  showLess: string;
+    35→
+    36→  // Navigation
+    37→  buyTickets: string;
+    38→  sellTickets: string;
+    39→  myTickets: string;
+    40→  myOrders: string;
+    41→  dashboard: string;
+    42→  adminPanel: string;
+    43→  howItWorks: string;
+    44→  faq: string;
+    45→  support: string;
+    46→  blog: string;
+    47→
+    48→  // Transport
+    49→  bus: string;
+    50→  train: string;
+    51→  flight: string;
+    52→  launch: string;
+    53→  transport: string;
+    54→  allTransport: string;
+    55→  transportType: string;
+    56→  journeyDate: string;
+    57→  selectTransport: string;
+    58→  selectCity: string;
+    59→  selectDate: string;
+    60→
+    61→  // Tickets
+    62→  tickets: string;
+    63→  ticketDetails: string;
+    64→  ticketId: string;
+    65→  createTicket: string;
+    66→  editTicket: string;
+    67→  sellTicket: string;
+    68→  ticketType: string;
+    69→  onlineCopy: string;
+    70→  counterCopy: string;
+    71→  transportCompany: string;
+    72→  routeFrom: string;
+    73→  routeTo: string;
+    74→  departureDate: string;
+    75→  departureTime: string;
+    76→  seatNumber: string;
+    77→  seatType: string;
+    78→  coachNumber: string;
+    79→  price: string;
+    80→  platformFee: string;
+    81→  totalAmount: string;
+    82→  description: string;
+    83→  featured: string;
+    84→  active: string;
+    85→  sold: string;
+    86→  expired: string;
+    87→  cancelled: string;
+    88→  pendingReview: string;
+    89→
+    90→  // Auth
+    91→  email: string;
+    92→  password: string;
+    93→  confirmPassword: string;
+    94→  phone: string;
+    95→  name: string;
+    96→  fullName: string;
+    97→  username: string;
+    98→  gender: string;
+    99→  dateOfBirth: string;
+   100→  male: string;
+   101→  female: string;
+   102→  other: string;
+   103→  forgotPassword: string;
+   104→  resetPassword: string;
+   105→  emailOtp: string;
+   106→  mobileOtp: string;
+   107→  alreadyHaveAccount: string;
+   108→  dontHaveAccount: string;
+   109→  createAccount: string;
+   110→  createNow: string;
+   111→  loginWithOtp: string;
+   112→  ageAgreement: string;
+   113→  termsAgreement: string;
+   114→  notificationsAgreement: string;
+   115→  phoneEmailUsername: string;
+   116→  otpVerification: string;
+   117→  sendOtp: string;
+   118→  verifyOtp: string;
+   119→  resendOtp: string;
+   120→  otpSent: string;
+   121→  otpSentToEmail: string;
+   122→  otpSentToPhone: string;
+   123→  invalidOtp: string;
+   124→  otpExpired: string;
+   125→  usernameAvailable: string;
+   126→  usernameTaken: string;
+   127→  passwordRequirements: string;
+   128→  passwordMinLength: string;
+   129→  passwordUppercase: string;
+   130→  passwordLowercase: string;
+   131→  passwordNumber: string;
+   132→  passwordSpecial: string;
+   133→  passwordMismatch: string;
+   134→  registrationSuccess: string;
+   135→  verifyEmailFirst: string;
+   136→  verifyPhoneFirst: string;
+   137→  passwordStrength: string;
+   138→  weak: string;
+   139→  fair: string;
+   140→  good: string;
+   141→  strong: string;
+   142→  personalInfo: string;
+   143→  agreement: string;
+   144→  securityVerification: string;
+   145→  step: string;
+   146→  of: string;
+   147→  continueBtn: string;
+   148→
+   149→  // KYC
+   150→  kycVerification: string;
+   151→  kycPending: string;
+   152→  kycApproved: string;
+   153→  kycRejected: string;
+   154→  nid: string;
+   155→  drivingLicence: string;
+   156→  passport: string;
+   157→  selfiePhoto: string;
+   158→  documentFront: string;
+   159→  documentBack: string;
+   160→  gpsVerification: string;
+   161→  becomeVerifiedSeller: string;
+   162→  kycPersonalInfo: string;
+   163→  kycNameChangeWarning: string;
+   164→  kycDobChangeWarning: string;
+   165→  kycGenderChangeWarning: string;
+   166→  kycChangedOnce: string;
+   167→  documentType: string;
+   168→  documentNumber: string;
+   169→  nidNumber: string;
+   170→  drivingLicenceNumber: string;
+   171→  passportNumber: string;
+   172→  uploadFront: string;
+   173→  uploadBack: string;
+   174→  uploadFrontOnly: string;
+   175→  frontSide: string;
+   176→  backSide: string;
+   177→  presentAddress: string;
+   178→  houseRoadVillage: string;
+   179→  upazilaThana: string;
+   180→  district: string;
+   181→  division: string;
+   182→  postalCode: string;
+   183→  liveSelfie: string;
+   184→  selfieInstructions: string;
+   185→  faceRight: string;
+   186→  faceLeft: string;
+   187→  faceSmile: string;
+   188→  eyeBlink: string;
+   189→  mustBeInLight: string;
+   190→  gpsLocationOn: string;
+   191→  capturingSelfie: string;
+   192→  captureSelfie: string;
+   193→  retake: string;
+   194→  kycSubmitSuccess: string;
+   195→  kycPendingMessage: string;
+   196→  kycRejectedMessage: string;
+   197→  kycApprovedMessage: string;
+   198→  kycResubmit: string;
+   199→  verifiedBadge: string;
+   200→  canSellTickets: string;
+   201→  canUseWallet: string;
+   202→  canWithdraw: string;
+   203→  nidDigitsWarning: string;
+   204→  uploadDocument: string;
+   205→  selectDivision: string;
+   206→  selectDistrict: string;
+   207→
+   208→  // Wallet
+   209→  wallet: string;
+   210→  availableBalance: string;
+   211→  pendingBalance: string;
+   212→  escrowBalance: string;
+   213→  totalEarnings: string;
+   214→  totalWithdrawn: string;
+   215→  withdraw: string;
+   216→  withdrawMethod: string;
+   217→  bkash: string;
+   218→  bankTransfer: string;
+   219→  transactionHistory: string;
+   220→
+   221→  // Orders
+   222→  orders: string;
+   223→  orderId: string;
+   224→  orderDetails: string;
+   225→  escrowStatus: string;
+   226→  paymentStatus: string;
+   227→  deliveryStatus: string;
+   228→  deliveryMethod: string;
+   229→  onlinePdf: string;
+   230→  inPerson: string;
+   231→  courier: string;
+   232→  held: string;
+   233→  released: string;
+   234→  refunded: string;
+   235→  paid: string;
+   236→  pending: string;
+   237→  failed: string;
+   238→  confirmed: string;
+   239→  inProgress: string;
+   240→  completed: string;
+   241→  disputed: string;
+   242→
+   243→  // Chat
+   244→  chat: string;
+   245→  messages: string;
+   246→  sendMessage: string;
+   247→  typeMessage: string;
+   248→
+   249→  // Reviews
+   250→  reviews: string;
+   251→  writeReview: string;
+   252→  rating: string;
+   253→
+   254→  // Home
+   255→  heroTitle: string;
+   256→  heroSubtitle: string;
+   257→  searchTickets: string;
+   258→  popularRoutes: string;
+   259→  howItWorksTitle: string;
+   260→  step1Title: string;
+   261→  step1Desc: string;
+   262→  step2Title: string;
+   263→  step2Desc: string;
+   264→  step3Title: string;
+   265→  step3Desc: string;
+   266→  step4Title: string;
+   267→  step4Desc: string;
+   268→  whyChooseUs: string;
+   269→  featuredTickets: string;
+   270→  recentTickets: string;
+   271→
+   272→  // Footer
+   273→  terms: string;
+   274→  privacy: string;
+   275→  refund: string;
+   276→  paymentPolicy: string;
+   277→  allRightsReserved: string;
+   278→  cookiesPolicy: string;
+   279→  safetyGuidelines: string;
+   280→  verifyTicket: string;
+   281→  aboutUs: string;
+   282→  contactUs: string;
+   283→  tagLine: string;
+   284→  light: string;
+   285→  dark: string;
+   286→  system: string;
+   287→
+   288→  // Admin
+   289→  users: string;
+   290→  kyc: string;
+   291→  payments: string;
+   292→  escrow: string;
+   293→  withdrawals: string;
+   294→  fraudReports: string;
+   295→  notifications: string;
+   296→  reports: string;
+   297→  marketing: string;
+   298→  seo: string;
+   299→  cms: string;
+   300→  businessSettings: string;
+   301→  roles: string;
+   302→  permissions: string;
+   303→  activityLogs: string;
+   304→
+   305→  // Misc
+   306→  bdt: string;
+   307→  verified: string;
+   308→  unverified: string;
+   309→  seller: string;
+   310→  buyer: string;
+   311→  from: string;
+   312→  to: string;
+   313→  date: string;
+   314→  time: string;
+   315→  status: string;
+   316→  actions: string;
+   317→  noData: string;
+   318→  success: string;
+   319→  error: string;
+   320→  warning: string;
+   321→  info: string;
+   322→  language: string;
+   323→  appearance: string;
+   324→  lightMode: string;
+   325→  darkMode: string;
+   326→  systemMode: string;
+   327→  security: string;
+   328→  notificationsSettings: string;
+   329→};
+   330→
+   331→const en: TranslationKeys = {
+   332→  appName: 'Eid Ticket Resell',
+   333→  appSlogan: 'Buy & Sell Tickets Safely',
+   334→  home: 'Home',
+   335→  about: 'About',
+   336→  contact: 'Contact',
+   337→  login: 'Login',
+   338→  register: 'Register',
+   339→  logout: 'Logout',
+   340→  profile: 'Profile',
+   341→  settings: 'Settings',
+   342→  search: 'Search',
+   343→  searchPlaceholder: 'Search tickets, routes, companies...',
+   344→  filter: 'Filter',
+   345→  sort: 'Sort',
+   346→  loading: 'Loading...',
+   347→  noResults: 'No results found',
+   348→  save: 'Save',
+   349→  cancel: 'Cancel',
+   350→  delete: 'Delete',
+   351→  edit: 'Edit',
+   352→  submit: 'Submit',
+   353→  confirm: 'Confirm',
+   354→  back: 'Back',
+   355→  next: 'Next',
+   356→  previous: 'Previous',
+   357→  viewAll: 'View All',
+   358→  viewDetails: 'View Details',
+   359→  readMore: 'Read More',
+   360→  showMore: 'Show More',
+   361→  showLess: 'Show Less',
+   362→
+   363→  buyTickets: 'Buy Tickets',
+   364→  sellTickets: 'Sell Tickets',
+   365→  myTickets: 'My Tickets',
+   366→  myOrders: 'My Orders',
+   367→  dashboard: 'Dashboard',
+   368→  adminPanel: 'Admin Panel',
+   369→  howItWorks: 'How It Works',
+   370→  faq: 'FAQ',
+   371→  support: 'Support',
+   372→  blog: 'Blog',
+   373→
+   374→  bus: 'Bus',
+   375→  train: 'Train',
+   376→  flight: 'Flight',
+   377→  launch: 'Launch',
+   378→  transport: 'Transport',
+   379→  allTransport: 'All Transport',
+   380→  transportType: 'Transport Type',
+   381→  journeyDate: 'Journey Date',
+   382→  selectTransport: 'Select transport',
+   383→  selectCity: 'Select city',
+   384→  selectDate: 'Select date',
+   385→
+   386→  tickets: 'Tickets',
+   387→  ticketDetails: 'Ticket Details',
+   388→  ticketId: 'Ticket ID',
+   389→  createTicket: 'Create Ticket',
+   390→  editTicket: 'Edit Ticket',
+   391→  sellTicket: 'Sell Ticket',
+   392→  ticketType: 'Ticket Type',
+   393→  onlineCopy: 'Online Copy',
+   394→  counterCopy: 'Counter Copy',
+   395→  transportCompany: 'Transport Company',
+   396→  routeFrom: 'From',
+   397→  routeTo: 'To',
+   398→  departureDate: 'Departure Date',
+   399→  departureTime: 'Departure Time',
+   400→  seatNumber: 'Seat Number',
+   401→  seatType: 'Seat Type',
+   402→  coachNumber: 'Coach Number',
+   403→  price: 'Price',
+   404→  platformFee: 'Platform Fee',
+   405→  totalAmount: 'Total Amount',
+   406→  description: 'Description',
+   407→  featured: 'Featured',
+   408→  active: 'Active',
+   409→  sold: 'Sold',
+   410→  expired: 'Expired',
+   411→  cancelled: 'Cancelled',
+   412→  pendingReview: 'Pending Review',
+   413→
+   414→  email: 'Email',
+   415→  password: 'Password',
+   416→  confirmPassword: 'Confirm Password',
+   417→  phone: 'Phone',
+   418→  name: 'Name',
+   419→  fullName: 'Full Name (as per NID/Driving Licence/Passport)',
+   420→  username: 'Username',
+   421→  gender: 'Gender',
+   422→  dateOfBirth: 'Date of Birth',
+   423→  male: 'Male',
+   424→  female: 'Female',
+   425→  other: 'Other',
+   426→  forgotPassword: 'Forgot Password?',
+   427→  resetPassword: 'Reset Password',
+   428→  emailOtp: 'Email OTP',
+   429→  mobileOtp: 'Mobile OTP',
+   430→  alreadyHaveAccount: 'Already have an account?',
+   431→  dontHaveAccount: "Don't have an account?",
+   432→  createAccount: 'Create Account',
+   433→  createNow: 'Create Now',
+   434→  loginWithOtp: 'Login with OTP',
+   435→  ageAgreement: 'I am at least 18 years old.',
+   436→  termsAgreement: 'I agree to the Terms & Conditions and Privacy Policy.',
+   437→  notificationsAgreement: 'I agree to receive account-related notifications.',
+   438→  phoneEmailUsername: 'Phone / Email / Username',
+   439→  otpVerification: 'OTP Verification',
+   440→  sendOtp: 'Send OTP',
+   441→  verifyOtp: 'Verify OTP',
+   442→  resendOtp: 'Resend OTP',
+   443→  otpSent: 'OTP Sent!',
+   444→  otpSentToEmail: 'OTP has been sent to your email',
+   445→  otpSentToPhone: 'OTP has been sent to your phone',
+   446→  invalidOtp: 'Invalid OTP code',
+   447→  otpExpired: 'OTP has expired. Please request a new one.',
+   448→  usernameAvailable: 'Username is available',
+   449→  usernameTaken: 'Username is already taken',
+   450→  passwordRequirements: 'Password Requirements',
+   451→  passwordMinLength: 'At least 8 characters',
+   452→  passwordUppercase: 'At least one uppercase letter (A-Z)',
+   453→  passwordLowercase: 'At least one lowercase letter (a-z)',
+   454→  passwordNumber: 'At least one number (0-9)',
+   455→  passwordSpecial: 'At least one special character (!@#$...)',
+   456→  passwordMismatch: 'Passwords do not match',
+   457→  registrationSuccess: 'Account created successfully!',
+   458→  verifyEmailFirst: 'Please verify your email first',
+   459→  verifyPhoneFirst: 'Please verify your phone first',
+   460→  passwordStrength: 'Password Strength',
+   461→  weak: 'Weak',
+   462→  fair: 'Fair',
+   463→  good: 'Good',
+   464→  strong: 'Strong',
+   465→  personalInfo: 'Personal Information',
+   466→  agreement: 'Agreement',
+   467→  securityVerification: 'Security Verification',
+   468→  step: 'Step',
+   469→  of: 'of',
+   470→  continueBtn: 'Continue',
+   471→
+   472→  kycVerification: 'KYC Verification',
+   473→  kycPending: 'KYC Pending',
+   474→  kycApproved: 'KYC Approved',
+   475→  kycRejected: 'KYC Rejected',
+   476→  nid: 'National ID',
+   477→  drivingLicence: 'Driving Licence',
+   478→  passport: 'Passport',
+   479→  selfiePhoto: 'Live Selfie',
+   480→  documentFront: 'Document Front',
+   481→  documentBack: 'Document Back',
+   482→  gpsVerification: 'GPS Verification',
+   483→  becomeVerifiedSeller: 'Become a Verified Seller',
+   484→  kycPersonalInfo: 'Personal Information',
+   485→  kycNameChangeWarning: 'Name can only be changed once. After that, it cannot be changed again.',
+   486→  kycDobChangeWarning: 'Date of birth can only be changed once. After that, it cannot be changed again.',
+   487→  kycGenderChangeWarning: 'Gender can only be changed once. After that, it cannot be changed again.',
+   488→  kycChangedOnce: 'Already changed once — cannot be changed again',
+   489→  documentType: 'Document Type',
+   490→  documentNumber: 'Document Number',
+   491→  nidNumber: 'NID Number',
+   492→  drivingLicenceNumber: 'Driving Licence Number',
+   493→  passportNumber: 'Passport Number',
+   494→  uploadFront: 'Upload Front Side',
+   495→  uploadBack: 'Upload Back Side',
+   496→  uploadFrontOnly: 'Upload Photo Page',
+   497→  frontSide: 'Front Side',
+   498→  backSide: 'Back Side',
+   499→  presentAddress: 'Present Address',
+   500→  houseRoadVillage: 'House/Road/Village',
+   501→  upazilaThana: 'Upazila/Thana',
+   502→  district: 'District',
+   503→  division: 'Division',
+   504→  postalCode: 'Postal Code',
+   505→  liveSelfie: 'Take a Live Selfie',
+   506→  selfieInstructions: 'Follow the instructions below to capture your selfie',
+   507→  faceRight: 'Face Right',
+   508→  faceLeft: 'Face Left',
+   509→  faceSmile: 'Face Smile',
+   510→  eyeBlink: 'Eye Blink',
+   511→  mustBeInLight: 'Must be in good lighting',
+   512→  gpsLocationOn: 'GPS Location must be enabled',
+   513→  capturingSelfie: 'Capturing...',
+   514→  captureSelfie: 'Capture',
+   515→  retake: 'Retake',
+   516→  kycSubmitSuccess: 'KYC submitted successfully! We will review your documents.',
+   517→  kycPendingMessage: 'Your KYC is under review. We will notify you once it\'s approved.',
+   518→  kycRejectedMessage: 'Your KYC was rejected. Please review the reason and resubmit.',
+   519→  kycApprovedMessage: 'Your KYC has been approved! You can now sell tickets and use wallet features.',
+   520→  kycResubmit: 'Resubmit KYC',
+   521→  verifiedBadge: 'Verified Badge',
+   522→  canSellTickets: 'Sell Tickets',
+   523→  canUseWallet: 'Use Wallet',
+   524→  canWithdraw: 'Withdraw Funds',
+   525→  nidDigitsWarning: 'NID must be 10, 13, or 17 digits',
+   526→  uploadDocument: 'Upload Document',
+   527→  selectDivision: 'Select Division',
+   528→  selectDistrict: 'Select District',
+   529→
+   530→  wallet: 'Wallet',
+   531→  availableBalance: 'Available Balance',
+   532→  pendingBalance: 'Pending Balance',
+   533→  escrowBalance: 'Escrow Balance',
+   534→  totalEarnings: 'Total Earnings',
+   535→  totalWithdrawn: 'Total Withdrawn',
+   536→  withdraw: 'Withdraw',
+   537→  withdrawMethod: 'Withdrawal Method',
+   538→  bkash: 'bKash',
+   539→  bankTransfer: 'Bank Transfer',
+   540→  transactionHistory: 'Transaction History',
+   541→
+   542→  orders: 'Orders',
+   543→  orderId: 'Order ID',
+   544→  orderDetails: 'Order Details',
+   545→  escrowStatus: 'Escrow Status',
+   546→  paymentStatus: 'Payment Status',
+   547→  deliveryStatus: 'Delivery Status',
+   548→  deliveryMethod: 'Delivery Method',
+   549→  onlinePdf: 'Online PDF',
+   550→  inPerson: 'In Person',
+   551→  courier: 'Courier',
+   552→  held: 'Held',
+   553→  released: 'Released',
+   554→  refunded: 'Refunded',
+   555→  paid: 'Paid',
+   556→  pending: 'Pending',
+   557→  failed: 'Failed',
+   558→  confirmed: 'Confirmed',
+   559→  inProgress: 'In Progress',
+   560→  completed: 'Completed',
+   561→  disputed: 'Disputed',
+   562→
+   563→  chat: 'Chat',
+   564→  messages: 'Messages',
+   565→  sendMessage: 'Send Message',
+   566→  typeMessage: 'Type a message...',
+   567→
+   568→  reviews: 'Reviews',
+   569→  writeReview: 'Write a Review',
+   570→  rating: 'Rating',
+   571→
+   572→  heroTitle: 'Buy & Sell Tickets Safely',
+   573→  heroSubtitle: 'The most trusted marketplace for Bus, Train, Flight & Launch tickets in Bangladesh',
+   574→  searchTickets: 'Search Tickets',
+   575→  popularRoutes: 'Popular Routes',
+   576→  howItWorksTitle: 'How It Works',
+   577→  step1Title: 'Search Tickets',
+   578→  step1Desc: 'Find tickets for your desired route and transport type',
+   579→  step2Title: 'Pay Securely',
+   580→  step2Desc: 'Your payment is held in escrow until journey completion',
+   581→  step3Title: 'Receive Ticket',
+   582→  step3Desc: 'Get your ticket delivered instantly or in person',
+   583→  step4Title: 'Complete Journey',
+   584→  step4Desc: 'After successful journey, seller receives payment',
+   585→  whyChooseUs: 'Why Choose Us',
+   586→  featuredTickets: 'Featured Tickets',
+   587→  recentTickets: 'Recent Tickets',
+   588→
+   589→  terms: 'Terms of Service',
+   590→  privacy: 'Privacy Policy',
+   591→  refund: 'Refund Policy',
+   592→  paymentPolicy: 'Payment Policy',
+   593→  allRightsReserved: 'All rights reserved',
+   594→  cookiesPolicy: 'Cookies Policy',
+   595→  safetyGuidelines: 'Safety Guidelines',
+   596→  verifyTicket: 'Verify Ticket',
+   597→  aboutUs: 'About Us',
+   598→  contactUs: 'Contact Us',
+   599→  tagLine: 'The most trusted marketplace for buying and selling Bus, Train, Flight & Launch tickets in Bangladesh. Secure transactions with escrow protection.',
+   600→  light: 'Light',
+   601→  dark: 'Dark',
+   602→  system: 'System',
+   603→
+   604→  users: 'Users',
+   605→  kyc: 'KYC',
+   606→  payments: 'Payments',
+   607→  escrow: 'Escrow',
+   608→  withdrawals: 'Withdrawals',
+   609→  fraudReports: 'Fraud Reports',
+   610→  notifications: 'Notifications',
+   611→  reports: 'Reports',
+   612→  marketing: 'Marketing',
+   613→  seo: 'SEO',
+   614→  cms: 'CMS',
+   615→  businessSettings: 'Business Settings',
+   616→  roles: 'Roles',
+   617→  permissions: 'Permissions',
+   618→  activityLogs: 'Activity Logs',
+   619→
+   620→  bdt: '৳',
+   621→  verified: 'Verified',
+   622→  unverified: 'Unverified',
+   623→  seller: 'Seller',
+   624→  buyer: 'Buyer',
+   625→  from: 'From',
+   626→  to: 'To',
+   627→  date: 'Date',
+   628→  time: 'Time',
+   629→  status: 'Status',
+   630→  actions: 'Actions',
+   631→  noData: 'No data available',
+   632→  success: 'Success',
+   633→  error: 'Error',
+   634→  warning: 'Warning',
+   635→  info: 'Info',
+   636→  language: 'Language',
+   637→  appearance: 'Appearance',
+   638→  lightMode: 'Light',
+   639→  darkMode: 'Dark',
+   640→  systemMode: 'System',
+   641→  security: 'Security',
+   642→  notificationsSettings: 'Notifications',
+   643→};
+   644→
+   645→const bn: TranslationKeys = {
+   646→  appName: 'ঈদ টিকেট রিসেল',
+   647→  appSlogan: 'নিরাপদে টিকেট কিনুন ও বিক্রি করুন',
+   648→  home: 'হোম',
+   649→  about: 'সম্পর্কে',
+   650→  contact: 'যোগাযোগ',
+   651→  login: 'লগইন',
+   652→  register: 'নিবন্ধন',
+   653→  logout: 'লগআউট',
+   654→  profile: 'প্রোফাইল',
+   655→  settings: 'সেটিংস',
+   656→  search: 'অনুসন্ধান',
+   657→  searchPlaceholder: 'টিকেট, রুট, কোম্পানি খুঁজুন...',
+   658→  filter: 'ফিল্টার',
+   659→  sort: 'সাজান',
+   660→  loading: 'লোড হচ্ছে...',
+   661→  noResults: 'কোনো ফলাফল পাওয়া যায়নি',
+   662→  save: 'সংরক্ষণ',
+   663→  cancel: 'বাতিল',
+   664→  delete: 'মুছুন',
+   665→  edit: 'সম্পাদনা',
+   666→  submit: 'জমা দিন',
+   667→  confirm: 'নিশ্চিত করুন',
+   668→  back: 'পিছনে',
+   669→  next: 'পরবর্তী',
+   670→  previous: 'পূর্ববর্তী',
+   671→  viewAll: 'সব দেখুন',
+   672→  viewDetails: 'বিস্তারিত দেখুন',
+   673→  readMore: 'আরও পড়ুন',
+   674→  showMore: 'আরও দেখুন',
+   675→  showLess: 'কম দেখুন',
+   676→
+   677→  buyTickets: 'টিকেট কিনুন',
+   678→  sellTickets: 'টিকেট বিক্রি করুন',
+   679→  myTickets: 'আমার টিকেট',
+   680→  myOrders: 'আমার অর্ডার',
+   681→  dashboard: 'ড্যাশবোর্ড',
+   682→  adminPanel: 'অ্যাডমিন প্যানেল',
+   683→  howItWorks: 'কিভাবে কাজ করে',
+   684→  faq: 'সাধারণ জিজ্ঞাসা',
+   685→  support: 'সাহায্য',
+   686→  blog: 'ব্লগ',
+   687→
+   688→  bus: 'বাস',
+   689→  train: 'ট্রেন',
+   690→  flight: 'ফ্লাইট',
+   691→  launch: 'লঞ্চ',
+   692→  transport: 'যানবাহন',
+   693→  allTransport: 'সকল যানবাহন',
+   694→  transportType: 'যানবাহনের ধরন',
+   695→  journeyDate: 'যাত্রার তারিখ',
+   696→  selectTransport: 'যানবাহন বেছে নিন',
+   697→  selectCity: 'শহর বেছে নিন',
+   698→  selectDate: 'তারিখ বেছে নিন',
+   699→
+   700→  tickets: 'টিকেট',
+   701→  ticketDetails: 'টিকেট বিস্তারিত',
+   702→  ticketId: 'টিকেট আইডি',
+   703→  createTicket: 'টিকেট তৈরি করুন',
+   704→  editTicket: 'টিকেট সম্পাদনা',
+   705→  sellTicket: 'টিকেট বিক্রি',
+   706→  ticketType: 'টিকেট ধরন',
+   707→  onlineCopy: 'অনলাইন কপি',
+   708→  counterCopy: 'কাউন্টার কপি',
+   709→  transportCompany: 'পরিবহন কোম্পানি',
+   710→  routeFrom: 'থেকে',
+   711→  routeTo: 'যাত্রা',
+   712→  departureDate: 'যাত্যা তারিখ',
+   713→  departureTime: 'যাত্যা সময়',
+   714→  seatNumber: 'আসন নম্বর',
+   715→  seatType: 'আসন ধরন',
+   716→  coachNumber: 'কোচ নম্বর',
+   717→  price: 'মূল্য',
+   718→  platformFee: 'প্ল্যাটফর্ম ফি',
+   719→  totalAmount: 'সর্বমোট',
+   720→  description: 'বিবরণ',
+   721→  featured: 'বিশেষ',
+   722→  active: 'সক্রিয়',
+   723→  sold: 'বিক্রি হয়েছে',
+   724→  expired: 'মেয়াদোত্তীর্ণ',
+   725→  cancelled: 'বাতিল',
+   726→  pendingReview: 'পর্যালোচনাধীন',
+   727→
+   728→  email: 'ইমেইল',
+   729→  password: 'পাসওয়ার্ড',
+   730→  confirmPassword: 'পাসওয়ার্ড নিশ্চিত করুন',
+   731→  phone: 'ফোন',
+   732→  name: 'নাম',
+   733→  fullName: 'পূর্ণ নাম (এনআইডি/ড্রাইভিং লাইসেন্স/পাসপোর্ট অনুযায়ী)',
+   734→  username: 'ইউজারনেম',
+   735→  gender: 'লিঙ্গ',
+   736→  dateOfBirth: 'জন্ম তারিখ',
+   737→  male: 'পুরুষ',
+   738→  female: 'মহিলা',
+   739→  other: 'অন্যান্য',
+   740→  forgotPassword: 'পাসওয়ার্ড ভুলে গেছেন?',
+   741→  resetPassword: 'পাসওয়ার্ড রিসেট',
+   742→  emailOtp: 'ইমেইল ওটিপি',
+   743→  mobileOtp: 'মোবাইল ওটিপি',
+   744→  alreadyHaveAccount: 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
+   745→  dontHaveAccount: 'অ্যাকাউন্ট নেই?',
+   746→  createAccount: 'অ্যাকাউন্ট তৈরি করুন',
+   747→  createNow: 'এখনই তৈরি করুন',
+   748→  loginWithOtp: 'ওটিপি দিয়ে লগইন',
+   749→  ageAgreement: 'আমি কমপক্ষে ১৮ বছরের।',
+   750→  termsAgreement: 'আমি শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত।',
+   751→  notificationsAgreement: 'আমি অ্যাকাউন্ট সম্পর্কিত বিজ্ঞপ্তি পেতে সম্মত।',
+   752→  phoneEmailUsername: 'ফোন / ইমেইল / ইউজারনেম',
+   753→  otpVerification: 'ওটিপি যাচাই',
+   754→  sendOtp: 'ওটিপি পাঠান',
+   755→  verifyOtp: 'ওটিপি যাচাই করুন',
+   756→  resendOtp: 'ওটিপি পুনঃপ্রেরণ',
+   757→  otpSent: 'ওটিপি পাঠানো হয়েছে!',
+   758→  otpSentToEmail: 'আপনার ইমেইলে ওটিপি পাঠানো হয়েছে',
+   759→  otpSentToPhone: 'আপনার ফোনে ওটিপি পাঠানো হয়েছে',
+   760→  invalidOtp: 'ওটিপি কোড সঠিক নয়',
+   761→  otpExpired: 'ওটিপি মেয়াদোত্তীর্ণ। অনুগ্রহ করে নতুন করে অনুরোধ করুন।',
+   762→  usernameAvailable: 'ইউজারনেম পাওয়া যাচ্ছে',
+   763→  usernameTaken: 'ইউজারনেম ইতিমধ্যে নেওয়া হয়েছে',
+   764→  passwordRequirements: 'পাসওয়ার্ড শর্তাবলী',
+   765→  passwordMinLength: 'কমপক্ষে ৮ অক্ষর',
+   766→  passwordUppercase: 'কমপক্ষে একটি বড় হাতের অক্ষর (A-Z)',
+   767→  passwordLowercase: 'কমপক্ষে একটি ছোট হাতের অক্ষর (a-z)',
+   768→  passwordNumber: 'কমপক্ষে একটি সংখ্যা (0-9)',
+   769→  passwordSpecial: 'কমপক্ষে একটি বিশেষ অক্ষর (!@#$...)',
+   770→  passwordMismatch: 'পাসওয়ার্ড মিলছে না',
+   771→  registrationSuccess: 'অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!',
+   772→  verifyEmailFirst: 'অনুগ্রহ করে প্রথমে আপনার ইমেইল যাচাই করুন',
+   773→  verifyPhoneFirst: 'অনুগ্রহ করে প্রথমে আপনার ফোন যাচাই করুন',
+   774→  passwordStrength: 'পাসওয়ার্ড শক্তি',
+   775→  weak: 'দুর্বল',
+   776→  fair: 'মাঝারি',
+   777→  good: 'ভালো',
+   778→  strong: 'শক্তিশালী',
+   779→  personalInfo: 'ব্যক্তিগত তথ্য',
+   780→  agreement: 'চুক্তি',
+   781→  securityVerification: 'নিরাপত্তা যাচাই',
+   782→  step: 'ধাপ',
+   783→  of: 'এর মধ্যে',
+   784→  continueBtn: 'চালিয়ে যান',
+   785→
+   786→  kycVerification: 'কেওয়াইসি যাচাই',
+   787→  kycPending: 'কেওয়াইসি অপেক্ষমাণ',
+   788→  kycApproved: 'কেওয়াইসি অনুমোদিত',
+   789→  kycRejected: 'কেওয়াইসি প্রত্যাখ্যাত',
+   790→  nid: 'জাতীয় পরিচয়পত্র',
+   791→  drivingLicence: 'ড্রাইভিং লাইসেন্স',
+   792→  passport: 'পাসপোর্ট',
+   793→  selfiePhoto: 'লাইভ সেলফি',
+   794→  documentFront: 'নথি সামনে',
+   795→  documentBack: 'নথি পেছনে',
+   796→  gpsVerification: 'জিপিএস যাচাই',
+   797→  becomeVerifiedSeller: 'যাচাইকৃত বিক্রেতা হন',
+   798→  kycPersonalInfo: 'ব্যক্তিগত তথ্য',
+   799→  kycNameChangeWarning: 'নাম শুধুমাত্র একবার পরিবর্তন করা যাবে। এরপর আর পরিবর্তন করা যাবে না।',
+   800→  kycDobChangeWarning: 'জন্ম তারিখ শুধুমাত্র একবার পরিবর্তন করা যাবে। এরপর আর পরিবর্তন করা যাবে না।',
+   801→  kycGenderChangeWarning: 'লিঙ্গ শুধুমাত্র একবার পরিবর্তন করা যাবে। এরপর আর পরিবর্তন করা যাবে না।',
+   802→  kycChangedOnce: 'একবার পরিবর্তিত — আর পরিবর্তন করা যাবে না',
+   803→  documentType: 'নথি ধরন',
+   804→  documentNumber: 'নথি নম্বর',
+   805→  nidNumber: 'এনআইডি নম্বর',
+   806→  drivingLicenceNumber: 'ড্রাইভিং লাইসেন্স নম্বর',
+   807→  passportNumber: 'পাসপোর্ট নম্বর',
+   808→  uploadFront: 'সামনের দিক আপলোড',
+   809→  uploadBack: 'পেছনের দিক আপলোড',
+   810→  uploadFrontOnly: 'ফটো পৃষ্ঠা আপলোড',
+   811→  frontSide: 'সামনের দিক',
+   812→  backSide: 'পেছনের দিক',
+   813→  presentAddress: 'বর্তমান ঠিকানা',
+   814→  houseRoadVillage: 'বাড়ি/রাস্তা/গ্রাম',
+   815→  upazilaThana: 'উপজেলা/থানা',
+   816→  district: 'জেলা',
+   817→  division: 'বিভাগ',
+   818→  postalCode: 'পোস্টাল কোড',
+   819→  liveSelfie: 'লাইভ সেলফি তুলুন',
+   820→  selfieInstructions: 'সেলফি ক্যাপচার করতে নিচের নির্দেশনা অনুসরণ করুন',
+   821→  faceRight: 'ডানদিকে মুখ',
+   822→  faceLeft: 'বামদিকে মুখ',
+   823→  faceSmile: 'হাসিমুখ',
+   824→  eyeBlink: 'চোখ পিটপিট',
+   825→  mustBeInLight: 'আলোর মধ্যে থাকতে হবে',
+   826→  gpsLocationOn: 'জিপিএস লোকেশন চালু থাকতে হবে',
+   827→  capturingSelfie: 'ক্যাপচার হচ্ছে...',
+   828→  captureSelfie: 'ক্যাপচার',
+   829→  retake: 'পুনরায় তুলুন',
+   830→  kycSubmitSuccess: 'কেওয়াইসি সফলভাবে জমা হয়েছে! আমরা আপনার নথি পর্যালোচনা করব।',
+   831→  kycPendingMessage: 'আপনার কেওয়াইসি পর্যালোচনাধীন। অনুমোদিত হলে আমরা জানাব।',
+   832→  kycRejectedMessage: 'আপনার কেওয়াইসি প্রত্যাখ্যাত। কারণ পর্যালোচনা করে পুনঃজমা দিন।',
+   833→  kycApprovedMessage: 'আপনার কেওয়াইসি অনুমোদিত! এখন আপনি টিকেট বিক্রি ও ওয়ালেট ব্যবহার করতে পারবেন।',
+   834→  kycResubmit: 'কেওয়াইসি পুনঃজমা',
+   835→  verifiedBadge: 'যাচাইকৃত ব্যাজ',
+   836→  canSellTickets: 'টিকেট বিক্রি',
+   837→  canUseWallet: 'ওয়ালেট ব্যবহার',
+   838→  canWithdraw: 'টাকা উত্তোলন',
+   839→  nidDigitsWarning: 'এনআইডি ১০, ১৩ বা ১৭ সংখ্যার হতে হবে',
+   840→  uploadDocument: 'নথি আপলোড',
+   841→  selectDivision: 'বিভাগ নির্বাচন',
+   842→  selectDistrict: 'জেলা নির্বাচন',
+   843→
+   844→  wallet: 'ওয়ালেট',
+   845→  availableBalance: 'উপলব্ধ ব্যালেন্স',
+   846→  pendingBalance: 'অপেক্ষমাণ ব্যালেন্স',
+   847→  escrowBalance: 'এসক্রো ব্যালেন্স',
+   848→  totalEarnings: 'মোট আয়',
+   849→  totalWithdrawn: 'মোট উত্তোলন',
+   850→  withdraw: 'উত্তোলন',
+   851→  withdrawMethod: 'উত্তোলন পদ্ধতি',
+   852→  bkash: 'বিকাশ',
+   853→  bankTransfer: 'ব্যাংক ট্রান্সফার',
+   854→  transactionHistory: 'লেনদেনের ইতিহাস',
+   855→
+   856→  orders: 'অর্ডার',
+   857→  orderId: 'অর্ডার আইডি',
+   858→  orderDetails: 'অর্ডার বিস্তারিত',
+   859→  escrowStatus: 'এসক্রো স্ট্যাটাস',
+   860→  paymentStatus: 'পেমেন্ট স্ট্যাটাস',
+   861→  deliveryStatus: 'ডেলিভারি স্ট্যাটাস',
+   862→  deliveryMethod: 'ডেলিভারি পদ্ধতি',
+   863→  onlinePdf: 'অনলাইন পিডিএফ',
+   864→  inPerson: 'সরাসরি',
+   865→  courier: 'কুরিয়ার',
+   866→  held: 'অধীরক্ষিত',
+   867→  released: 'মুক্ত',
+   868→  refunded: 'ফেরত',
+   869→  paid: 'পরিশোধিত',
+   870→  pending: 'অপেক্ষমাণ',
+   871→  failed: 'ব্যর্থ',
+   872→  confirmed: 'নিশ্চিত',
+   873→  inProgress: 'চলমান',
+   874→  completed: 'সম্পন্ন',
+   875→  disputed: 'বিরোধিত',
+   876→
+   877→  chat: 'চ্যাট',
+   878→  messages: 'বার্তা',
+   879→  sendMessage: 'বার্তা পাঠান',
+   880→  typeMessage: 'একটি বার্তা লিখুন...',
+   881→
+   882→  reviews: 'রিভিউ',
+   883→  writeReview: 'রিভিউ লিখুন',
+   884→  rating: 'রেটিং',
+   885→
+   886→  heroTitle: 'নিরাপদে টিকেট কিনুন ও বিক্রি করুন',
+   887→  heroSubtitle: 'বাংলাদেশে বাস, ট্রেন, ফ্লাইট ও লঞ্চ টিকেটের সবচেয়ে বিশ্বস্ত মার্কেটপ্লেস',
+   888→  searchTickets: 'টিকেট অনুসন্ধান',
+   889→  popularRoutes: 'জনপ্রিয় রুট',
+   890→  howItWorksTitle: 'কিভাবে কাজ করে',
+   891→  step1Title: 'টিকেট খুঁজুন',
+   892→  step1Desc: 'আপনার পছন্দের রুট ও যানবাহনের টিকেট খুঁজুন',
+   893→  step2Title: 'নিরাপদে পেমেন্ট',
+   894→  step2Desc: 'যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট এসক্রোতে থাকে',
+   895→  step3Title: 'টিকেট পান',
+   896→  step3Desc: 'তাৎক্ষণিক বা সরাসরি টিকেট পান',
+   897→  step4Title: 'যাত্রা সম্পন্ন',
+   898→  step4Desc: 'সফল যাত্রার পর বিক্রেতা পেমেন্ট পান',
+   899→  whyChooseUs: 'কেন আমাদের বেছে নেবেন',
+   900→  featuredTickets: 'বিশেষ টিকেট',
+   901→  recentTickets: 'সাম্প্রতিক টিকেট',
+   902→
+   903→  terms: 'সেবার শর্তাবলী',
+   904→  privacy: 'গোপনীয়তা নীতি',
+   905→  refund: 'ফেরত নীতি',
+   906→  paymentPolicy: 'পেমেন্ট নীতি',
+   907→  allRightsReserved: 'সর্বস্বত্ব সংরক্ষিত',
+   908→  cookiesPolicy: 'কুকিজ নীতি',
+   909→  safetyGuidelines: 'নিরাপত্তা নির্দেশিকা',
+   910→  verifyTicket: 'টিকেট যাচাই',
+   911→  aboutUs: 'আমাদের সম্পর্কে',
+   912→  contactUs: 'যোগাযোগ করুন',
+   913→  tagLine: 'বাংলাদেশে বাস, ট্রেন, ফ্লাইট ও লঞ্চ টিকেট কেনাবেচার সবচেয়ে বিশ্বস্ত মার্কেটপ্লেস। এসক্রো সুরক্ষায় নিরাপদ লেনদেন।',
+   914→  light: 'লাইট',
+   915→  dark: 'ডার্ক',
+   916→  system: 'সিস্টেম',
+   917→
+   918→  users: 'ব্যবহারকারী',
+   919→  kyc: 'কেওয়াইসি',
+   920→  payments: 'পেমেন্ট',
+   921→  escrow: 'এসক্রো',
+   922→  withdrawals: 'উত্তোলন',
+   923→  fraudReports: 'প্রতারণা রিপোর্ট',
+   924→  notifications: 'বিজ্ঞপ্তি',
+   925→  reports: 'রিপোর্ট',
+   926→  marketing: 'মার্কেটিং',
+   927→  seo: 'এসইও',
+   928→  cms: 'সিএমএস',
+   929→  businessSettings: 'ব্যবসায়িক সেটিংস',
+   930→  roles: 'ভূমিকা',
+   931→  permissions: 'অনুমতি',
+   932→  activityLogs: 'কার্যকলাপ লগ',
+   933→
+   934→  bdt: '৳',
+   935→  verified: 'যাচাইকৃত',
+   936→  unverified: 'অযাচাইকৃত',
+   937→  seller: 'বিক্রেতা',
+   938→  buyer: 'ক্রেতা',
+   939→  from: 'থেকে',
+   940→  to: 'যাত্রা',
+   941→  date: 'তারিখ',
+   942→  time: 'সময়',
+   943→  status: 'স্ট্যাটাস',
+   944→  actions: 'কার্যক্রম',
+   945→  noData: 'কোনো তথ্য নেই',
+   946→  success: 'সফল',
+   947→  error: 'ত্রুটি',
+   948→  warning: 'সতর্কতা',
+   949→  info: 'তথ্য',
+   950→  language: 'ভাষা',
+   951→  appearance: 'অবয়ব',
+   952→  lightMode: 'লাইট',
+   953→  darkMode: 'ডার্ক',
+   954→  systemMode: 'সিস্টেম',
+   955→  security: 'নিরাপত্তা',
+   956→  notificationsSettings: 'বিজ্ঞপ্তি',
+   957→};
+   958→
+   959→export const translations = { en, bn } as const;
+   960→
+   961→export function t(key: keyof TranslationKeys, lang: Language = 'en'): string {
+   962→  return translations[lang]?.[key] || translations.en[key] || key;
+   963→}
+   964→
