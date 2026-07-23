@@ -1,7 +1,6 @@
 'use client';
 
 import { lazy, Suspense, ComponentType } from 'react';
-import { motion } from 'framer-motion';
 import AppShell from '@/components/layout/AppShell';
 import { useAppStore } from '@/lib/store';
 import PageLoader from '@/components/ui/PageLoader';
@@ -85,9 +84,7 @@ function PageRouter() {
   if (currentPage === 'home') {
     return (
       <AppShell>
-        <motion.div key="home" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-          <LazyPage pageName="home" />
-        </motion.div>
+        <LazyPage pageName="home" />
       </AppShell>
     );
   }
@@ -96,9 +93,7 @@ function PageRouter() {
   if (authPages.has(currentPage)) {
     return (
       <Suspense fallback={<PageLoader />}>
-        <motion.div key={currentPage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-          <LazyPage pageName={currentPage} />
-        </motion.div>
+        <LazyPage pageName={currentPage} />
       </Suspense>
     );
   }
@@ -108,9 +103,7 @@ function PageRouter() {
     return (
       <AppShell>
         <Suspense fallback={<PageLoader />}>
-          <motion.div key={currentPage} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-            <LazyPage pageName={currentPage} />
-          </motion.div>
+          <LazyPage pageName={currentPage} />
         </Suspense>
       </AppShell>
     );

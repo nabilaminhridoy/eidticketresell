@@ -542,3 +542,24 @@ Stage Summary:
 - No console errors or server-side errors
 - Filter sidebar, sort dropdown, pagination, and mobile sheet all functional
 - Loading screen component created and integrated
+
+---
+Task ID: 10
+Agent: main
+Task: Fix server crash permanently and keep mobile filter design
+
+Work Log:
+- Diagnosed root cause: OOM crashes from framer-motion and heavy JS bundles in 4GB RAM sandbox
+- Removed framer-motion from page.tsx (was wrapping every page with motion.div)
+- Removed AnimatePresence from SearchPage.tsx (memory-heavy animation library)
+- Created health-check.sh script that auto-restarts server when it crashes
+- Created server-monitor.sh background process that checks server health every 30 seconds
+- Server is now running with NODE_OPTIONS="--max-old-space-size=1024"
+- Mobile filter design kept as-is (user confirmed it's "perfectly designed")
+
+Stage Summary:
+- Server stability: Removed framer-motion from page router, removed AnimatePresence from SearchPage
+- Auto-recovery: health-check.sh + server-monitor.sh running in background
+- Server responds correctly with 200 status
+- Mobile filter sheet verified working with all 6 filter categories
+- No console errors detected

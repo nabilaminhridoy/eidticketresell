@@ -38,7 +38,7 @@ import {
   Tag, ChevronRight, SlidersHorizontal, X, Sun, Moon as MoonIcon,
   Sunset, Sunrise,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+// Removed framer-motion AnimatePresence for memory optimization - using simple grid rendering
 
 /* ─── Static Maps ────────────────────────────────────── */
 
@@ -854,26 +854,16 @@ export default function SearchPage() {
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  <AnimatePresence mode="popLayout">
                     {tickets.map((tk) => (
-                      <motion.div
+                      <TicketCard
                         key={tk.id}
-                        layout
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <TicketCard
-                          tk={tk}
-                          language={language}
-                          isBn={isBn}
-                          fontClass={fontClass}
-                          navigate={navigate}
-                        />
-                      </motion.div>
+                        tk={tk}
+                        language={language}
+                        isBn={isBn}
+                        fontClass={fontClass}
+                        navigate={navigate}
+                      />
                     ))}
-                  </AnimatePresence>
                 </div>
 
                 {/* ── Pagination ── */}
