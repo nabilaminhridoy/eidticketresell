@@ -13,11 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import {
   CreditCard, Eye, ChevronLeft, ChevronRight, Loader2,
-  DollarSign, User, Calendar, Smartphone
+  DollarSign, User, Calendar, Smartphone, AlertCircle
 } from 'lucide-react';
 
 interface PaymentRecord {
   id: string;
+  txnId: string;
   orderId: string;
   buyerId: string;
   buyerName: string;
@@ -28,14 +29,10 @@ interface PaymentRecord {
   createdAt: string;
 }
 
-const MOCK_PAYMENTS: PaymentRecord[] = [
-  { id: 'pay1', orderId: 'ORD-00000001', buyerId: '5', buyerName: 'Nasir Ahmed', amount: 918, gateway: 'bkash', gatewayTransactionId: 'BK-TX-12345', status: 'success', createdAt: '2025-01-15T12:05:00Z' },
-  { id: 'pay2', orderId: 'ORD-00000002', buyerId: '4', buyerName: 'Arif Khan', amount: 1326, gateway: 'sslcommerz', gatewayTransactionId: 'SSL-TX-67890', status: 'success', createdAt: '2025-01-16T14:10:00Z' },
-  { id: 'pay3', orderId: 'ORD-00000003', buyerId: '5', buyerName: 'Nasir Ahmed', amount: 721, gateway: 'bkash', gatewayTransactionId: 'BK-TX-11111', status: 'success', createdAt: '2025-01-10T16:05:00Z' },
-  { id: 'pay4', orderId: 'ORD-00000004', buyerId: '2', buyerName: 'Karim Hasan', amount: 5100, gateway: 'sslcommerz', gatewayTransactionId: 'SSL-TX-22222', status: 'pending', createdAt: '2025-01-18T11:05:00Z' },
-  { id: 'pay5', orderId: 'ORD-00000005', buyerId: '4', buyerName: 'Arif Khan', amount: 566.5, gateway: 'bkash', gatewayTransactionId: 'BK-TX-33333', status: 'refunded', createdAt: '2025-01-08T13:05:00Z' },
-  { id: 'pay6', orderId: 'ORD-00000006', buyerId: '6', buyerName: 'Test User', amount: 850, gateway: 'sslcommerz', gatewayTransactionId: 'SSL-TX-FAIL1', status: 'failed', createdAt: '2025-01-19T10:00:00Z' },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 const STATUS_TABS = ['all', 'pending', 'success', 'cancelled', 'failed', 'refunded'];
 const GATEWAY_OPTIONS = ['all', 'bkash', 'sslcommerz'];
@@ -43,6 +40,7 @@ const GATEWAY_OPTIONS = ['all', 'bkash', 'sslcommerz'];
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState('all');
   const [gatewayFilter, setGatewayFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -60,24 +58,28 @@ export default function AdminPaymentsPage() {
     params.set('page', String(page));
     params.set('limit', '20');
 
-    fetch(`/api/admin/payments?${params.toString()}`)
-      .then(r => r.json())
+    fetch(`/api/admin/payments?${params.toString()}`, { headers: getAuthHeaders() })
+      .then(r => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`);
+        return r.json();
+      })
       .then(d => {
-        if (d.payments && d.payments.length > 0) {
-          setPayments(d.payments);
+        if (d.error) {
+          setError(d.error);
+          setPayments([]);
+        } else {
+          setError(null);
+          setPayments(d.payments || []);
           setTotalPages(d.pagination?.totalPages || 1);
           setTotal(d.pagination?.total || 0);
-        } else {
-          setPayments(MOCK_PAYMENTS);
-          setTotalPages(1);
-          setTotal(MOCK_PAYMENTS.length);
         }
         setLoading(false);
       })
-      .catch(() => {
-        setPayments(MOCK_PAYMENTS);
+      .catch(err => {
+        setError(err.message || 'Failed to fetch payments');
+        setPayments([]);
         setTotalPages(1);
-        setTotal(MOCK_PAYMENTS.length);
+        setTotal(0);
         setLoading(false);
       });
   }, [statusTab, gatewayFilter, search, page]);
@@ -121,6 +123,17 @@ export default function AdminPaymentsPage() {
           <p className="text-sm text-muted-foreground">{total} total payments</p>
         </div>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-700">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => { setError(null); setPage(1); }}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-4 space-y-4">
@@ -176,7 +189,7 @@ export default function AdminPaymentsPage() {
                       <TableBody>
                         {filteredPayments.map(payment => (
                           <TableRow key={payment.id}>
-                            <TableCell className="font-medium">{payment.id.slice(0, 8)}</TableCell>
+                            <TableCell className="font-medium">{payment.txnId}</TableCell>
                             <TableCell>{payment.orderId}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
@@ -236,7 +249,7 @@ export default function AdminPaymentsPage() {
           {selectedPayment && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs text-muted-foreground">Payment ID</Label><p className="font-medium">{selectedPayment.id}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Payment ID</Label><p className="font-medium">{selectedPayment.txnId}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Order ID</Label><p className="font-medium">{selectedPayment.orderId}</p></div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Buyer</Label>

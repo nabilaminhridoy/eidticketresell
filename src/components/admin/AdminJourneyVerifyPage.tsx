@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import {
   ClipboardCheck, Clock, CheckCircle, XCircle, MapPin, Camera, Video,
-  Search, Eye, RefreshCw, AlertTriangle, ShieldCheck, Timer, ArrowRight
+  Search, Eye, RefreshCw, AlertTriangle, ShieldCheck, Timer, ArrowRight, Loader2
 } from 'lucide-react';
 
 interface JourneyVerification {
@@ -35,10 +35,16 @@ interface JourneyVerification {
   };
 }
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
+
 export default function AdminJourneyVerifyPage() {
   const [verifications, setVerifications] = useState<JourneyVerification[]>([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, submitted: 0, verified: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('submitted');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVerification, setSelectedVerification] = useState<JourneyVerification | null>(null);
@@ -50,21 +56,22 @@ export default function AdminJourneyVerifyPage() {
 
   const fetchVerifications = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const token = localStorage.getItem('etr_admin_token');
       const res = await fetch(`/api/admin/journey-verifications?status=${activeTab}&limit=50`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getAuthHeaders(),
       });
-      if (res.ok) {
+      if (!res.ok) {
         const data = await res.json();
-        setVerifications(data.verifications || []);
-        setStats(data.stats || { total: 0, pending: 0, submitted: 0, verified: 0, rejected: 0 });
+        throw new Error(data.error || 'Failed to fetch journey verifications');
       }
+      const data = await res.json();
+      setVerifications(data.verifications || []);
+      setStats(data.stats || { total: 0, pending: 0, submitted: 0, verified: 0, rejected: 0 });
     } catch (err) {
-      console.error('Fetch journey verifications error:', err);
-      // Mock data fallback
+      setError(err instanceof Error ? err.message : 'Failed to load journey verifications');
       setVerifications([]);
-      setStats({ total: 3, pending: 1, submitted: 1, verified: 1, rejected: 0 });
+      setStats({ total: 0, pending: 0, submitted: 0, verified: 0, rejected: 0 });
     } finally {
       setLoading(false);
     }
@@ -162,6 +169,15 @@ export default function AdminJourneyVerifyPage() {
         </div>
       </Card>
 
+      {/* Error state */}
+      {error && (
+        <Card className="p-6 text-center border-red-200">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+          <p className="text-red-500 mb-2">{error}</p>
+          <Button variant="outline" onClick={fetchVerifications}>Try Again</Button>
+        </Card>
+      )}
+
       {/* Tabs & Search */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center gap-4 mb-4">
@@ -184,14 +200,14 @@ export default function AdminJourneyVerifyPage() {
         <TabsContent value={activeTab}>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filteredVerifications.length === 0 ? (
+          ) : !error && filteredVerifications.length === 0 ? (
             <Card className="p-8 text-center">
               <ClipboardCheck className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">No journey verifications found for this filter.</p>
             </Card>
-          ) : (
+          ) : !error && (
             <Card>
               <CardContent className="p-0">
                 <Table>

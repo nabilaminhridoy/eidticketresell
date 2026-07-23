@@ -70,6 +70,8 @@ export async function GET(req: NextRequest) {
     // Map transactions to payment-like format
     const payments = transactions.map(tx => ({
       id: tx.id,
+      txnId: tx.txnId,
+      wltId: tx.wltId,
       orderId: tx.orderId || '',
       buyerId: tx.wallet.user.id,
       buyerName: tx.wallet.user.name,

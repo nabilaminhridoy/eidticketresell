@@ -152,7 +152,7 @@ export default function AdminMessagesPage() {
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-lg">
               {selectedChat
-                ? `Chat - ${selectedChat.orderId}`
+                ? `Chat CH-${selectedChat.id.slice(-6)} - ${selectedChat.orderId}`
                 : 'Select a conversation'
               }
             </CardTitle>

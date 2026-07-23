@@ -46,6 +46,7 @@ model User {
 
 model Kyc {
   id              String   @id @default(cuid())
+  kycId           String   @unique // KYC-1, KYC-2, KYC-3
   userId          String   @unique
   // Personal info (can be changed once from profile)
   kycName         String
@@ -104,6 +105,8 @@ model Wallet {
 
 model Transaction {
   id              String   @id @default(cuid())
+  txnId           String   @unique // TXN-1, TXN-2, TXN-3 (Payment Transaction)
+  wltId           String   @unique // WLT-1, WLT-2, WLT-3 (Wallet Transaction)
   walletId        String
   type            String   // credit, debit, escrow_hold, escrow_release, escrow_refund
   amount          Float
@@ -117,6 +120,8 @@ model Transaction {
 
 model Withdrawal {
   id              String   @id @default(cuid())
+  wdrId           String   @unique // WDR-1, WDR-2, WDR-3 (Withdrawal)
+  payId           String?  @unique // PAY-1, PAY-2, PAY-3 (Payout - set when approved)
   walletId        String
   amount          Float
   method          String   // bkash, bank_transfer
@@ -132,7 +137,7 @@ model Withdrawal {
 
 model Ticket {
   id              String   @id @default(cuid())
-  ticketId        String   @unique // ETR-00000001
+  ticketId        String   @unique // ETR-1, ETR-2, ETR-3
   sellerId        String
   transportType   String   // bus, train, flight, launch
   transportCompany String
@@ -175,7 +180,7 @@ model Ticket {
 
 model Order {
   id              String   @id @default(cuid())
-  orderId         String   @unique // ORD-00000001
+  orderId         String   @unique // ORD-1, ORD-2, ORD-3
   ticketId        String
   buyerId         String
   sellerId        String
@@ -201,6 +206,7 @@ model Order {
   chat    Chat?
   dispute Dispute?
   journeyVerification JourneyVerification?
+  refund  Refund?
 }
 
 model Chat {
@@ -278,6 +284,7 @@ model ActivityLog {
 
 model SupportTicket {
   id          String   @id @default(cuid())
+  supId       String   @unique // SUP-1, SUP-2, SUP-3
   userId      String?  // optional for guest submissions
   fullName    String
   phone       String?  // BD format: +88XXXXXXXXXXX
@@ -303,6 +310,23 @@ model SupportReply {
   createdAt DateTime @default(now())
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id])
+}
+
+model Refund {
+  id          String   @id @default(cuid())
+  refId       String   @unique // REF-1, REF-2, REF-3
+  orderId     String   @unique
+  initiatedBy String   // buyer, seller, admin
+  reason      String
+  description String?
+  amount      Float
+  status      String   @default("pending") // pending, processing, completed, rejected
+  processedBy String?
+  processNote String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model BlogPost {
@@ -443,6 +467,7 @@ model JourneyVerification {
 
 model Dispute {
   id          String   @id @default(cuid())
+  dspId       String   @unique // DSP-1, DSP-2, DSP-3
   orderId     String   @unique
   initiatedBy String   // buyer or seller
   reason      String

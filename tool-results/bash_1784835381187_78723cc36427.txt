@@ -1,0 +1,570 @@
+=== src/app/admin/activity-log/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminActivityLogPage = dynamic(() => import('@/components/admin/AdminActivityLogPage'), { ssr: false });
+export default function Page() { return <AdminActivityLogPage />; }
+=== src/app/admin/admins/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminAdminsPage = dynamic(() => import('@/components/admin/AdminAdminsPage'), { ssr: false });
+export default function Page() { return <AdminAdminsPage />; }
+=== src/app/admin/ads/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminAdsPage = dynamic(() => import('@/components/admin/AdminAdsPage'), { ssr: false });
+export default function Page() { return <AdminAdsPage />; }
+=== src/app/admin/analytics/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminAnalyticsPage = dynamic(() => import('@/components/admin/AdminAnalyticsPage'), { ssr: false });
+export default function Page() { return <AdminAnalyticsPage />; }
+=== src/app/admin/backups/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSystemPage = dynamic(() => import('@/components/admin/AdminSystemPage'), { ssr: false });
+export default function Page() { return <AdminSystemPage section="backups" />; }
+=== src/app/admin/blog/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminBlogPage = dynamic(() => import('@/components/admin/AdminBlogPage'), { ssr: false });
+export default function Page() { return <AdminBlogPage />; }
+=== src/app/admin/cache/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSystemPage = dynamic(() => import('@/components/admin/AdminSystemPage'), { ssr: false });
+export default function Page() { return <AdminSystemPage section="cache" />; }
+=== src/app/admin/cron-jobs/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSystemPage = dynamic(() => import('@/components/admin/AdminSystemPage'), { ssr: false });
+export default function Page() { return <AdminSystemPage section="cron-jobs" />; }
+=== src/app/admin/dashboard/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminDashboard = dynamic(() => import('@/components/admin/AdminDashboard'), { ssr: false });
+export default function AdminDashboardRoute() {
+=== src/app/admin/disputes/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminRefundsPage = dynamic(() => import('@/components/admin/AdminRefundsPage'), { ssr: false });
+export default function DisputesPage() { return <AdminRefundsPage />; }
+=== src/app/admin/faqs/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminFaqsPage = dynamic(() => import('@/components/admin/AdminFaqsPage'), { ssr: false });
+export default function Page() { return <AdminFaqsPage />; }
+=== src/app/admin/fraud-reports/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminVerifyTicketPage = dynamic(() => import('@/components/admin/AdminVerifyTicketPage'), { ssr: false });
+export default function Page() { return <AdminVerifyTicketPage section="fraud-reports" />; }
+=== src/app/admin/homepage/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage />; }
+=== src/app/admin/journey-verify/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminJourneyVerifyPage = dynamic(() => import('@/components/admin/AdminJourneyVerifyPage'), { ssr: false });
+export default function JourneyVerifyPage() {
+=== src/app/admin/kyc/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminKycPage = dynamic(() => import('@/components/admin/AdminKycPage'), { ssr: false });
+export default function KycPage() { return <AdminKycPage />; }
+=== src/app/admin/login/page.tsx ===
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+=== src/app/admin/logs/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSystemPage = dynamic(() => import('@/components/admin/AdminSystemPage'), { ssr: false });
+export default function Page() { return <AdminSystemPage section="logs" />; }
+=== src/app/admin/marketing/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage />; }
+=== src/app/admin/media/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMediaPage = dynamic(() => import('@/components/admin/AdminMediaPage'), { ssr: false });
+export default function Page() { return <AdminMediaPage />; }
+=== src/app/admin/messages/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMessagesPage = dynamic(() => import('@/components/admin/AdminMessagesPage'), { ssr: false });
+export default function MessagesPage() { return <AdminMessagesPage />; }
+=== src/app/admin/orders/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminOrdersPage = dynamic(() => import('@/components/admin/AdminOrdersPage'), { ssr: false });
+export default function OrdersPage() { return <AdminOrdersPage />; }
+=== src/app/admin/pages/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminPagesPage = dynamic(() => import('@/components/admin/AdminPagesPage'), { ssr: false });
+export default function Page() { return <AdminPagesPage />; }
+=== src/app/admin/payments/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminPaymentsPage = dynamic(() => import('@/components/admin/AdminPaymentsPage'), { ssr: false });
+export default function PaymentsPage() { return <AdminPaymentsPage />; }
+=== src/app/admin/permissions/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminRolesPage = dynamic(() => import('@/components/admin/AdminRolesPage'), { ssr: false });
+export default function Page() { return <AdminRolesPage section="permissions" />; }
+=== src/app/admin/refunds/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminRefundsPage = dynamic(() => import('@/components/admin/AdminRefundsPage'), { ssr: false });
+export default function RefundsPage() { return <AdminRefundsPage />; }
+=== src/app/admin/reports/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage />; }
+=== src/app/admin/reviews/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReviewsPage = dynamic(() => import('@/components/admin/AdminReviewsPage'), { ssr: false });
+export default function ReviewsPage() { return <AdminReviewsPage />; }
+=== src/app/admin/roles/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminRolesPage = dynamic(() => import('@/components/admin/AdminRolesPage'), { ssr: false });
+export default function Page() { return <AdminRolesPage />; }
+=== src/app/admin/security/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSecurityPage = dynamic(() => import('@/components/admin/AdminSecurityPage'), { ssr: false });
+export default function Page() { return <AdminSecurityPage />; }
+=== src/app/admin/seo/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage />; }
+=== src/app/admin/tickets/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminTicketsPage = dynamic(() => import('@/components/admin/AdminTicketsPage'), { ssr: false });
+export default function TicketsPage() { return <AdminTicketsPage />; }
+=== src/app/admin/users/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminUsersPage = dynamic(() => import('@/components/admin/AdminUsersPage'), { ssr: false });
+export default function UsersPage() { return <AdminUsersPage />; }
+=== src/app/admin/verify-otp/page.tsx ===
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+=== src/app/admin/verify-ticket/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminVerifyTicketPage = dynamic(() => import('@/components/admin/AdminVerifyTicketPage'), { ssr: false });
+export default function Page() { return <AdminVerifyTicketPage />; }
+=== src/app/admin/admins/[id]/page.tsx ===
+'use client';
+import { use } from 'react';
+import dynamic from 'next/dynamic';
+const AdminAdminsPage = dynamic(() => import('@/components/admin/AdminAdminsPage'), { ssr: false });
+=== src/app/admin/admins/create/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminAdminsPage = dynamic(() => import('@/components/admin/AdminAdminsPage'), { ssr: false });
+export default function Page() { return <AdminAdminsPage action="create" />; }
+=== src/app/admin/ads/[id]/page.tsx ===
+'use client';
+import { use } from 'react';
+import dynamic from 'next/dynamic';
+const AdminAdsPage = dynamic(() => import('@/components/admin/AdminAdsPage'), { ssr: false });
+=== src/app/admin/ads/create/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminAdsPage = dynamic(() => import('@/components/admin/AdminAdsPage'), { ssr: false });
+export default function Page() { return <AdminAdsPage action="create" />; }
+=== src/app/admin/blog/[id]/page.tsx ===
+'use client';
+import { use } from 'react';
+import dynamic from 'next/dynamic';
+const AdminBlogPage = dynamic(() => import('@/components/admin/AdminBlogPage'), { ssr: false });
+=== src/app/admin/blog/categories/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminBlogPage = dynamic(() => import('@/components/admin/AdminBlogPage'), { ssr: false });
+export default function Page() { return <AdminBlogPage section="categories" />; }
+=== src/app/admin/blog/create/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminBlogPage = dynamic(() => import('@/components/admin/AdminBlogPage'), { ssr: false });
+export default function Page() { return <AdminBlogPage action="create" />; }
+=== src/app/admin/blog/tags/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminBlogPage = dynamic(() => import('@/components/admin/AdminBlogPage'), { ssr: false });
+export default function Page() { return <AdminBlogPage section="tags" />; }
+=== src/app/admin/faqs/categories/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminFaqsPage = dynamic(() => import('@/components/admin/AdminFaqsPage'), { ssr: false });
+export default function Page() { return <AdminFaqsPage section="categories" />; }
+=== src/app/admin/faqs/create/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminFaqsPage = dynamic(() => import('@/components/admin/AdminFaqsPage'), { ssr: false });
+export default function Page() { return <AdminFaqsPage action="create" />; }
+=== src/app/admin/homepage/categories/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="categories" />; }
+=== src/app/admin/homepage/faqs/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="faqs" />; }
+=== src/app/admin/homepage/featured-tickets/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="featured-tickets" />; }
+=== src/app/admin/homepage/footer/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="footer" />; }
+=== src/app/admin/homepage/hero/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="hero" />; }
+=== src/app/admin/homepage/how-it-works/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="how-it-works" />; }
+=== src/app/admin/homepage/search/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="search" />; }
+=== src/app/admin/homepage/statistics/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="statistics" />; }
+=== src/app/admin/homepage/testimonials/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminHomepagePage = dynamic(() => import('@/components/admin/AdminHomepagePage'), { ssr: false });
+export default function Page() { return <AdminHomepagePage section="testimonials" />; }
+=== src/app/admin/marketing/announcements/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="announcements" />; }
+=== src/app/admin/marketing/coupons/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="coupons" />; }
+=== src/app/admin/marketing/email-campaigns/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="email-campaigns" />; }
+=== src/app/admin/marketing/newsletters/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="newsletters" />; }
+=== src/app/admin/marketing/promo-codes/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="promo-codes" />; }
+=== src/app/admin/marketing/push-notifications/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="push-notifications" />; }
+=== src/app/admin/marketing/referrals/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="referrals" />; }
+=== src/app/admin/marketing/sms-campaigns/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMarketingPage = dynamic(() => import('@/components/admin/AdminMarketingPage'), { ssr: false });
+export default function Page() { return <AdminMarketingPage section="sms-campaigns" />; }
+=== src/app/admin/media/folders/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMediaPage = dynamic(() => import('@/components/admin/AdminMediaPage'), { ssr: false });
+export default function Page() { return <AdminMediaPage section="folders" />; }
+=== src/app/admin/media/upload/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminMediaPage = dynamic(() => import('@/components/admin/AdminMediaPage'), { ssr: false });
+export default function Page() { return <AdminMediaPage section="upload" />; }
+=== src/app/admin/pages/[pageSlug]/page.tsx ===
+'use client';
+import { use } from 'react';
+import dynamic from 'next/dynamic';
+const AdminPagesPage = dynamic(() => import('@/components/admin/AdminPagesPage'), { ssr: false });
+=== src/app/admin/payout/withdraws/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminPayoutPage = dynamic(() => import('@/components/admin/AdminPayoutPage'), { ssr: false });
+export default function PayoutWithdrawsPage() { return <AdminPayoutPage />; }
+=== src/app/admin/reports/payments/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage section="payments" />; }
+=== src/app/admin/reports/refunds/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage section="refunds" />; }
+=== src/app/admin/reports/revenue/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage section="revenue" />; }
+=== src/app/admin/reports/sales/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage section="sales" />; }
+=== src/app/admin/reports/tickets/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage section="tickets" />; }
+=== src/app/admin/reports/users/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage section="users" />; }
+=== src/app/admin/reports/withdrawals/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), { ssr: false });
+export default function Page() { return <AdminReportsPage section="withdrawals" />; }
+=== src/app/admin/security/api-keys/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSecurityPage = dynamic(() => import('@/components/admin/AdminSecurityPage'), { ssr: false });
+export default function Page() { return <AdminSecurityPage section="api-keys" />; }
+=== src/app/admin/security/ip-blocklist/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSecurityPage = dynamic(() => import('@/components/admin/AdminSecurityPage'), { ssr: false });
+export default function Page() { return <AdminSecurityPage section="ip-blocklist" />; }
+=== src/app/admin/security/login-history/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSecurityPage = dynamic(() => import('@/components/admin/AdminSecurityPage'), { ssr: false });
+export default function Page() { return <AdminSecurityPage section="login-history" />; }
+=== src/app/admin/security/two-factor/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSecurityPage = dynamic(() => import('@/components/admin/AdminSecurityPage'), { ssr: false });
+export default function Page() { return <AdminSecurityPage section="two-factor" />; }
+=== src/app/admin/seo/404-monitor/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="404-monitor" />; }
+=== src/app/admin/seo/blog/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="blog" />; }
+=== src/app/admin/seo/homepage/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="homepage" />; }
+=== src/app/admin/seo/open-graph/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="open-graph" />; }
+=== src/app/admin/seo/pages/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="pages" />; }
+=== src/app/admin/seo/redirects/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="redirects" />; }
+=== src/app/admin/seo/robots-txt/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="robots-txt" />; }
+=== src/app/admin/seo/schema/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="schema" />; }
+=== src/app/admin/seo/sitemap/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="sitemap" />; }
+=== src/app/admin/seo/twitter-card/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSeoPage = dynamic(() => import('@/components/admin/AdminSeoPage'), { ssr: false });
+export default function Page() { return <AdminSeoPage section="twitter-card" />; }
+=== src/app/admin/settings/currency/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsGeneralPage = dynamic(() => import('@/components/admin/AdminSettingsGeneralPage'), { ssr: false });
+export default function Page() { return <AdminSettingsGeneralPage section="currency" />; }
+=== src/app/admin/settings/email/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsEmailPage = dynamic(() => import('@/components/admin/AdminSettingsEmailPage'), { ssr: false });
+export default function Page() { return <AdminSettingsEmailPage section="smtp" />; }
+=== src/app/admin/settings/favicon/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsGeneralPage = dynamic(() => import('@/components/admin/AdminSettingsGeneralPage'), { ssr: false });
+export default function Page() { return <AdminSettingsGeneralPage section="favicon" />; }
+=== src/app/admin/settings/general/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsGeneralPage = dynamic(() => import('@/components/admin/AdminSettingsGeneralPage'), { ssr: false });
+export default function Page() { return <AdminSettingsGeneralPage section="general" />; }
+=== src/app/admin/settings/languages/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsGeneralPage = dynamic(() => import('@/components/admin/AdminSettingsGeneralPage'), { ssr: false });
+export default function Page() { return <AdminSettingsGeneralPage section="languages" />; }
+=== src/app/admin/settings/localization/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsGeneralPage = dynamic(() => import('@/components/admin/AdminSettingsGeneralPage'), { ssr: false });
+export default function Page() { return <AdminSettingsGeneralPage section="localization" />; }
+=== src/app/admin/settings/logo/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsGeneralPage = dynamic(() => import('@/components/admin/AdminSettingsGeneralPage'), { ssr: false });
+export default function Page() { return <AdminSettingsGeneralPage section="logo" />; }
+=== src/app/admin/settings/payments/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsPaymentsPage = dynamic(() => import('@/components/admin/AdminSettingsPaymentsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsPaymentsPage />; }
+=== src/app/admin/settings/sms/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsSmsPage = dynamic(() => import('@/components/admin/AdminSettingsSmsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsSmsPage section="provider" />; }
+=== src/app/admin/settings/timezone/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsGeneralPage = dynamic(() => import('@/components/admin/AdminSettingsGeneralPage'), { ssr: false });
+export default function Page() { return <AdminSettingsGeneralPage section="timezone" />; }
+=== src/app/admin/system/update/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSystemPage = dynamic(() => import('@/components/admin/AdminSystemPage'), { ssr: false });
+export default function Page() { return <AdminSystemPage section="update" />; }
+=== src/app/admin/admins/[id]/edit/page.tsx ===
+'use client';
+import { use } from 'react';
+import dynamic from 'next/dynamic';
+const AdminAdminsPage = dynamic(() => import('@/components/admin/AdminAdminsPage'), { ssr: false });
+=== src/app/admin/blog/[id]/edit/page.tsx ===
+'use client';
+import { use } from 'react';
+import dynamic from 'next/dynamic';
+const AdminBlogPage = dynamic(() => import('@/components/admin/AdminBlogPage'), { ssr: false });
+=== src/app/admin/faqs/[id]/edit/page.tsx ===
+'use client';
+import { use } from 'react';
+import dynamic from 'next/dynamic';
+const AdminFaqsPage = dynamic(() => import('@/components/admin/AdminFaqsPage'), { ssr: false });
+=== src/app/admin/settings/email/logs/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsEmailPage = dynamic(() => import('@/components/admin/AdminSettingsEmailPage'), { ssr: false });
+export default function Page() { return <AdminSettingsEmailPage section="logs" />; }
+=== src/app/admin/settings/email/smtp/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsEmailPage = dynamic(() => import('@/components/admin/AdminSettingsEmailPage'), { ssr: false });
+export default function Page() { return <AdminSettingsEmailPage section="smtp" />; }
+=== src/app/admin/settings/email/templates/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsEmailPage = dynamic(() => import('@/components/admin/AdminSettingsEmailPage'), { ssr: false });
+export default function Page() { return <AdminSettingsEmailPage section="templates" />; }
+=== src/app/admin/settings/email/test/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsEmailPage = dynamic(() => import('@/components/admin/AdminSettingsEmailPage'), { ssr: false });
+export default function Page() { return <AdminSettingsEmailPage section="test" />; }
+=== src/app/admin/settings/payments/bkash/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsPaymentsPage = dynamic(() => import('@/components/admin/AdminSettingsPaymentsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsPaymentsPage section="bkash" />; }
+=== src/app/admin/settings/payments/payout-settings/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsPaymentsPage = dynamic(() => import('@/components/admin/AdminSettingsPaymentsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsPaymentsPage section="payout-settings" />; }
+=== src/app/admin/settings/payments/platform-fee/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsPaymentsPage = dynamic(() => import('@/components/admin/AdminSettingsPaymentsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsPaymentsPage section="platform-fee" />; }
+=== src/app/admin/settings/payments/sslcommerz/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsPaymentsPage = dynamic(() => import('@/components/admin/AdminSettingsPaymentsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsPaymentsPage section="sslcommerz" />; }
+=== src/app/admin/settings/payments/webhooks/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsPaymentsPage = dynamic(() => import('@/components/admin/AdminSettingsPaymentsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsPaymentsPage section="webhooks" />; }
+=== src/app/admin/settings/sms/logs/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsSmsPage = dynamic(() => import('@/components/admin/AdminSettingsSmsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsSmsPage section="logs" />; }
+=== src/app/admin/settings/sms/provider/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsSmsPage = dynamic(() => import('@/components/admin/AdminSettingsSmsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsSmsPage section="provider" />; }
+=== src/app/admin/settings/sms/templates/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsSmsPage = dynamic(() => import('@/components/admin/AdminSettingsSmsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsSmsPage section="templates" />; }
+=== src/app/admin/settings/sms/test/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminSettingsSmsPage = dynamic(() => import('@/components/admin/AdminSettingsSmsPage'), { ssr: false });
+export default function Page() { return <AdminSettingsSmsPage section="test" />; }
+=== src/app/admin/page.tsx ===
+'use client';
+import dynamic from 'next/dynamic';
+const AdminDashboard = dynamic(() => import('@/components/admin/AdminDashboard'), { ssr: false });
+export default function AdminDashboardPage() {

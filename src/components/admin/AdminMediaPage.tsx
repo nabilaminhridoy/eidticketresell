@@ -5,11 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  ImageIcon, Upload, FolderOpen, Plus, Trash2, Search, Grid3X3, List,
-  Eye, Download, MoreHorizontal, Calendar, File
+  ImageIcon, Upload, FolderOpen, Plus, Trash2, Search, Eye, File
 } from 'lucide-react';
 
 interface MediaItem {
@@ -19,7 +17,6 @@ interface MediaItem {
   size: string;
   folder: string;
   uploadedAt: string;
-  url: string;
 }
 
 interface MediaFolder {
@@ -29,27 +26,13 @@ interface MediaFolder {
   createdAt: string;
 }
 
+// Placeholder data for media management UI - will be replaced when file upload API is implemented
+const placeholderMedia: MediaItem[] = [];
+const placeholderFolders: MediaFolder[] = [];
+
 export default function AdminMediaPage({ section }: { section?: string }) {
   const [searchQuery, setSearchQuery] = useState('');
   const currentSection = section || null;
-
-  const mockMedia: MediaItem[] = [
-    { id: '1', name: 'hero-bg.jpg', type: 'image', size: '2.4 MB', folder: 'Homepage', uploadedAt: '2024-01-15', url: '/images/hero-bg.jpg' },
-    { id: '2', name: 'bus-icon.png', type: 'image', size: '45 KB', folder: 'Icons', uploadedAt: '2024-01-10', url: '/images/bus-icon.png' },
-    { id: '3', name: 'payment-methods.png', type: 'image', size: '120 KB', folder: 'Footer', uploadedAt: '2024-01-08', url: '/images/payment-methods.png' },
-    { id: '4', name: 'og-image.jpg', type: 'image', size: '500 KB', folder: 'SEO', uploadedAt: '2024-01-05', url: '/images/og-image.jpg' },
-    { id: '5', name: 'terms.pdf', type: 'document', size: '1.2 MB', folder: 'Documents', uploadedAt: '2024-01-01', url: '/docs/terms.pdf' },
-    { id: '6', name: 'logo.svg', type: 'image', size: '15 KB', folder: 'Brand', uploadedAt: '2023-12-20', url: '/images/logo.svg' },
-  ];
-
-  const mockFolders: MediaFolder[] = [
-    { id: '1', name: 'Homepage', count: 5, createdAt: '2024-01-15' },
-    { id: '2', name: 'Icons', count: 8, createdAt: '2024-01-10' },
-    { id: '3', name: 'Footer', count: 3, createdAt: '2024-01-08' },
-    { id: '4', name: 'SEO', count: 2, createdAt: '2024-01-05' },
-    { id: '5', name: 'Documents', count: 4, createdAt: '2024-01-01' },
-    { id: '6', name: 'Brand', count: 6, createdAt: '2023-12-20' },
-  ];
 
   // Upload view
   if (currentSection === 'upload') {
@@ -84,25 +67,32 @@ export default function AdminMediaPage({ section }: { section?: string }) {
           <h1 className="text-2xl font-bold flex items-center gap-2"><FolderOpen className="w-6 h-6" />Media Folders</h1>
           <Button size="sm" className="gap-1"><Plus className="w-4 h-4" />Create Folder</Button>
         </div>
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader><TableRow><TableHead>Folder Name</TableHead><TableHead>Files</TableHead><TableHead className="hidden md:table-cell">Created</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {mockFolders.map(folder => (
-                  <TableRow key={folder.id}>
-                    <TableCell className="font-medium flex items-center gap-2"><FolderOpen className="w-4 h-4 text-muted-foreground" />{folder.name}</TableCell>
-                    <TableCell><Badge variant="secondary">{folder.count}</Badge></TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{folder.createdAt}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-3.5 h-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button></div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {placeholderFolders.length === 0 ? (
+          <Card className="p-8 text-center">
+            <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No media folders found. Create a folder to organize your files.</p>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader><TableRow><TableHead>Folder Name</TableHead><TableHead>Files</TableHead><TableHead className="hidden md:table-cell">Created</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {placeholderFolders.map(folder => (
+                    <TableRow key={folder.id}>
+                      <TableCell className="font-medium flex items-center gap-2"><FolderOpen className="w-4 h-4 text-muted-foreground" />{folder.name}</TableCell>
+                      <TableCell><Badge variant="secondary">{folder.count}</Badge></TableCell>
+                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{folder.createdAt}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-3.5 h-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button></div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
@@ -125,25 +115,32 @@ export default function AdminMediaPage({ section }: { section?: string }) {
         </div>
       </div>
 
-      {/* Grid view */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {mockMedia.map(item => (
-          <Card key={item.id} className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-3">
-              <div className="aspect-square rounded-lg bg-muted/30 flex items-center justify-center mb-2 overflow-hidden">
-                {item.type === 'image' ? (
-                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                ) : (
-                  <File className="w-8 h-8 text-muted-foreground" />
-                )}
-              </div>
-              <p className="text-sm font-medium truncate">{item.name}</p>
-              <p className="text-xs text-muted-foreground">{item.size}</p>
-              <Badge variant="outline" className="text-xs mt-1">{item.folder}</Badge>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {placeholderMedia.length === 0 ? (
+        <Card className="p-8 text-center">
+          <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">No media files uploaded yet. Upload files to start building your media library.</p>
+        </Card>
+      ) : (
+        /* Grid view */
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {placeholderMedia.map(item => (
+            <Card key={item.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-3">
+                <div className="aspect-square rounded-lg bg-muted/30 flex items-center justify-center mb-2 overflow-hidden">
+                  {item.type === 'image' ? (
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  ) : (
+                    <File className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+                <p className="text-sm font-medium truncate">{item.name}</p>
+                <p className="text-xs text-muted-foreground">{item.size}</p>
+                <Badge variant="outline" className="text-xs mt-1">{item.folder}</Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

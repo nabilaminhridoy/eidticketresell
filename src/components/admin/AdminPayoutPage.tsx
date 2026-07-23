@@ -12,11 +12,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Separator } from '@/components/ui/separator';
 import {
   Wallet, Eye, CheckCircle, XCircle, ChevronLeft,
-  ChevronRight, Loader2, User, DollarSign, Smartphone, Banknote
+  ChevronRight, Loader2, User, DollarSign, Smartphone, Banknote, AlertCircle
 } from 'lucide-react';
 
 interface WithdrawalRecord {
   id: string;
+  wdrId: string;
+  payId: string | null;
   walletId: string;
   amount: number;
   method: string;
@@ -29,23 +31,22 @@ interface WithdrawalRecord {
   seller?: { id: string; name: string; username: string; email: string };
 }
 
-const MOCK_WITHDRAWALS: WithdrawalRecord[] = [
-  { id: 'w1', walletId: 'wallet1', amount: 5000, method: 'bkash', accountDetails: 'bkash: +880171234567 (Rahim Uddin)', status: 'pending', reviewedBy: null, reviewNote: null, createdAt: '2025-01-15T09:00:00Z', updatedAt: '2025-01-15T09:00:00Z', seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin', email: 'rahim@example.com' } },
-  { id: 'w2', walletId: 'wallet3', amount: 3500, method: 'bkash', accountDetails: 'bkash: +880155566677 (Fatima Begum)', status: 'pending', reviewedBy: null, reviewNote: null, createdAt: '2025-01-16T10:00:00Z', updatedAt: '2025-01-16T10:00:00Z', seller: { id: '3', name: 'Fatima Begum', username: 'fatima_begum', email: 'fatima@example.com' } },
-  { id: 'w3', walletId: 'wallet1', amount: 2000, method: 'bank_transfer', accountDetails: 'Bank: Dutch-Bangla Bank, A/C: 1234567890, Name: Rahim Uddin', status: 'approved', reviewedBy: 'admin1', reviewNote: 'Verified and processed', createdAt: '2025-01-10T08:00:00Z', updatedAt: '2025-01-11T12:00:00Z', seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin', email: 'rahim@example.com' } },
-  { id: 'w4', walletId: 'wallet2', amount: 1000, method: 'bkash', accountDetails: 'bkash: +880189876543 (Karim Hasan)', status: 'rejected', reviewedBy: 'admin1', reviewNote: 'Insufficient escrow balance verification needed', createdAt: '2025-01-12T14:00:00Z', updatedAt: '2025-01-13T09:00:00Z', seller: { id: '2', name: 'Karim Hasan', username: 'karim_hasan', email: 'karim@example.com' } },
-  { id: 'w5', walletId: 'wallet1', amount: 8000, method: 'bank_transfer', accountDetails: 'Bank: Sonali Bank, A/C: 9876543210, Name: Rahim Uddin', status: 'completed', reviewedBy: 'admin1', reviewNote: 'Transfer completed', createdAt: '2025-01-08T06:00:00Z', updatedAt: '2025-01-09T15:00:00Z', seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin', email: 'rahim@example.com' } },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 const STATUS_TABS = ['all', 'pending', 'approved', 'rejected', 'completed'];
 
 export default function AdminPayoutPage() {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState('pending');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalRecord | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewNote, setReviewNote] = useState('');
@@ -56,32 +57,46 @@ export default function AdminPayoutPage() {
     params.set('page', String(page));
     params.set('limit', '20');
 
-    fetch(`/api/admin/payout?${params.toString()}`)
-      .then(r => r.json())
+    fetch(`/api/admin/payout?${params.toString()}`, { headers: getAuthHeaders() })
+      .then(r => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`);
+        return r.json();
+      })
       .then(d => {
-        if (d.withdrawals && d.withdrawals.length > 0) {
-          setWithdrawals(d.withdrawals);
+        if (d.error) {
+          setError(d.error);
+          setWithdrawals([]);
+        } else {
+          setError(null);
+          setWithdrawals(d.withdrawals || []);
           setTotalPages(d.pagination?.totalPages || 1);
           setTotal(d.pagination?.total || 0);
-        } else {
-          setWithdrawals(MOCK_WITHDRAWALS);
-          setTotalPages(1);
-          setTotal(MOCK_WITHDRAWALS.length);
+          if (statusTab === 'pending') {
+            setPendingCount(d.pagination?.total || (d.withdrawals || []).length);
+          }
         }
         setLoading(false);
       })
-      .catch(() => {
-        setWithdrawals(MOCK_WITHDRAWALS);
+      .catch(err => {
+        setError(err.message || 'Failed to fetch withdrawals');
+        setWithdrawals([]);
         setTotalPages(1);
-        setTotal(MOCK_WITHDRAWALS.length);
+        setTotal(0);
         setLoading(false);
       });
   }, [statusTab, page]);
 
-  const filteredWithdrawals = withdrawals.filter(w => {
-    if (statusTab !== 'all' && w.status !== statusTab) return false;
-    return true;
-  });
+  // Fetch pending count separately when on non-pending tab
+  useEffect(() => {
+    if (statusTab !== 'pending') {
+      fetch(`/api/admin/payout?status=pending&limit=1`, { headers: getAuthHeaders() })
+        .then(r => r.json())
+        .then(d => {
+          setPendingCount(d.pagination?.total || 0);
+        })
+        .catch(() => {});
+    }
+  }, [statusTab]);
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, { bg: string; label: string }> = {
@@ -107,20 +122,42 @@ export default function AdminPayoutPage() {
 
   const handleApprove = () => {
     if (selectedWithdrawal) {
-      setWithdrawals(prev => prev.map(w =>
-        w.id === selectedWithdrawal.id ? { ...w, status: 'approved', reviewNote, reviewedAt: new Date().toISOString() } : w
-      ));
+      fetch(`/api/admin/payout?id=${selectedWithdrawal.id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved', reviewNote }),
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.error) {
+            setWithdrawals(prev => prev.map(w =>
+              w.id === selectedWithdrawal.id ? { ...w, status: 'approved', reviewNote } : w
+            ));
+          }
+          setReviewModalOpen(false);
+        })
+        .catch(() => setReviewModalOpen(false));
     }
-    setReviewModalOpen(false);
   };
 
   const handleReject = () => {
     if (selectedWithdrawal) {
-      setWithdrawals(prev => prev.map(w =>
-        w.id === selectedWithdrawal.id ? { ...w, status: 'rejected', reviewNote, reviewedAt: new Date().toISOString() } : w
-      ));
+      fetch(`/api/admin/payout?id=${selectedWithdrawal.id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected', reviewNote }),
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.error) {
+            setWithdrawals(prev => prev.map(w =>
+              w.id === selectedWithdrawal.id ? { ...w, status: 'rejected', reviewNote } : w
+            ));
+          }
+          setReviewModalOpen(false);
+        })
+        .catch(() => setReviewModalOpen(false));
     }
-    setReviewModalOpen(false);
   };
 
   return (
@@ -134,6 +171,17 @@ export default function AdminPayoutPage() {
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-700">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => { setError(null); setPage(1); }}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="p-4 space-y-4">
           <Tabs value={statusTab} onValueChange={setStatusTab}>
@@ -143,7 +191,7 @@ export default function AdminPayoutPage() {
                   {tab === 'all' ? 'All' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                   {tab === 'pending' && (
                     <Badge variant="secondary" className="ml-1 text-xs">
-                      {MOCK_WITHDRAWALS.filter(w => w.status === 'pending').length}
+                      {pendingCount}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -156,7 +204,7 @@ export default function AdminPayoutPage() {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
-                ) : filteredWithdrawals.length === 0 ? (
+                ) : withdrawals.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Wallet className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No withdrawals found for this filter</p>
@@ -176,9 +224,9 @@ export default function AdminPayoutPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredWithdrawals.map(w => (
+                        {withdrawals.map(w => (
                           <TableRow key={w.id}>
-                            <TableCell className="font-medium">{w.id.slice(0, 8)}</TableCell>
+                            <TableCell className="font-medium">{w.wdrId}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
                                 <User className="w-3 h-3 text-muted-foreground" />
@@ -230,7 +278,7 @@ export default function AdminPayoutPage() {
       </Card>
 
       {/* Pagination */}
-      {!loading && filteredWithdrawals.length > 0 && totalPages > 1 && (
+      {!loading && withdrawals.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
           <div className="flex items-center gap-2">
@@ -248,12 +296,12 @@ export default function AdminPayoutPage() {
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Withdrawal Review</DialogTitle>
+            <DialogTitle>Withdrawal Review - {selectedWithdrawal?.wdrId}</DialogTitle>
           </DialogHeader>
           {selectedWithdrawal && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs text-muted-foreground">Withdrawal ID</Label><p className="font-medium">{selectedWithdrawal.id}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Withdrawal ID</Label><p className="font-medium">{selectedWithdrawal.wdrId}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Seller</Label><p className="font-medium">{selectedWithdrawal.seller?.name || 'Unknown'}</p></div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Amount</Label>

@@ -175,7 +175,7 @@ export default function AdminRefundsPage() {
                       <TableBody>
                         {filteredRefunds.map(refund => (
                           <TableRow key={refund.id}>
-                            <TableCell className="font-medium">{refund.orderId}</TableCell>
+                            <TableCell className="font-medium">REF-{refund.id.slice(-6)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1"><User className="w-3 h-3 text-muted-foreground" />{refund.buyerName}</div>
                             </TableCell>
@@ -234,7 +234,7 @@ export default function AdminRefundsPage() {
                       <TableBody>
                         {filteredDisputes.map(dispute => (
                           <TableRow key={dispute.id}>
-                            <TableCell className="font-medium">{dispute.orderId}</TableCell>
+                            <TableCell className="font-medium">DSP-{dispute.id.slice(-6)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
                                 <User className="w-3 h-3 text-muted-foreground" />
@@ -290,7 +290,7 @@ export default function AdminRefundsPage() {
           {selectedItem && isRefund(selectedItem) && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs text-muted-foreground">Refund ID</Label><p className="font-medium">{selectedItem.id}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Refund ID</Label><p className="font-medium">REF-{selectedItem.id.slice(-6)}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Order</Label><p className="font-medium">{selectedItem.orderId}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Buyer</Label><p className="font-medium">{selectedItem.buyerName}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Seller</Label><p className="font-medium">{selectedItem.sellerName}</p></div>
@@ -308,7 +308,7 @@ export default function AdminRefundsPage() {
           {selectedItem && !isRefund(selectedItem) && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs text-muted-foreground">Dispute ID</Label><p className="font-medium">{selectedItem.id}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Dispute ID</Label><p className="font-medium">DSP-{selectedItem.id.slice(-6)}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Order</Label><p className="font-medium">{selectedItem.orderId}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Initiator</Label><p className="font-medium">{selectedItem.initiatorName} ({selectedItem.initiatedBy})</p></div>
                 <div><Label className="text-xs text-muted-foreground">Status</Label><div>{getDisputeStatusBadge(selectedItem.status)}</div></div>

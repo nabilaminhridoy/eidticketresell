@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import {
   Users, Search, Plus, Eye, Edit, Ban, UserCheck, UserX,
-  ChevronLeft, ChevronRight, Loader2, ShieldCheck, Mail, Phone
+  ChevronLeft, ChevronRight, Loader2, ShieldCheck, Mail, Phone, AlertCircle
 } from 'lucide-react';
 
 interface UserRecord {
@@ -33,19 +33,17 @@ interface UserRecord {
   _count?: { tickets: number; orders: number; soldOrders: number };
 }
 
-const MOCK_USERS: UserRecord[] = [
-  { id: '1', name: 'Rahim Uddin', email: 'rahim@example.com', phone: '+880171234567', username: 'rahim_uddin', role: 'verified_seller', isKycVerified: true, isActive: true, emailVerified: true, phoneVerified: true, avatar: null, createdAt: '2024-12-01T10:00:00Z', lastLogin: '2025-01-15T08:30:00Z', _count: { tickets: 5, orders: 3, soldOrders: 8 } },
-  { id: '2', name: 'Karim Hasan', email: 'karim@example.com', phone: '+880189876543', username: 'karim_hasan', role: 'user', isKycVerified: false, isActive: true, emailVerified: true, phoneVerified: false, avatar: null, createdAt: '2024-12-05T12:00:00Z', lastLogin: '2025-01-10T14:00:00Z', _count: { tickets: 0, orders: 2, soldOrders: 0 } },
-  { id: '3', name: 'Fatima Begum', email: 'fatima@example.com', phone: '+880155566677', username: 'fatima_begum', role: 'verified_seller', isKycVerified: true, isActive: false, emailVerified: true, phoneVerified: true, avatar: null, createdAt: '2024-11-20T09:00:00Z', lastLogin: null, _count: { tickets: 3, orders: 1, soldOrders: 4 } },
-  { id: '4', name: 'Arif Khan', email: 'arif@example.com', phone: null, username: 'arif_khan', role: 'guest', isKycVerified: false, isActive: true, emailVerified: false, phoneVerified: false, avatar: null, createdAt: '2025-01-01T06:00:00Z', lastLogin: '2025-01-12T11:00:00Z', _count: { tickets: 0, orders: 0, soldOrders: 0 } },
-  { id: '5', name: 'Nasir Ahmed', email: 'nasir@example.com', phone: '+880133344455', username: 'nasir_ahmed', role: 'user', isKycVerified: false, isActive: true, emailVerified: true, phoneVerified: true, avatar: null, createdAt: '2024-12-15T15:00:00Z', lastLogin: '2025-01-14T09:30:00Z', _count: { tickets: 0, orders: 5, soldOrders: 0 } },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 const STATUS_TABS = ['all', 'active', 'inactive', 'suspended', 'banned'];
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusTab, setStatusTab] = useState('all');
   const [page, setPage] = useState(1);
@@ -68,30 +66,33 @@ export default function AdminUsersPage() {
     if (search) params.set('search', search);
     if (statusTab !== 'all') {
       if (statusTab === 'active') params.set('isActive', 'true');
-      // inactive/suspended/banned would need custom handling
+      else if (statusTab === 'inactive') params.set('isActive', 'false');
     }
     params.set('page', String(page));
     params.set('limit', String(pageSize));
 
-    fetch(`/api/admin/users?${params.toString()}`)
-      .then(r => r.json())
+    fetch(`/api/admin/users?${params.toString()}`, { headers: getAuthHeaders() })
+      .then(r => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`);
+        return r.json();
+      })
       .then(d => {
-        if (d.users && d.users.length > 0) {
-          setUsers(d.users);
+        if (d.error) {
+          setError(d.error);
+          setUsers([]);
+        } else {
+          setError(null);
+          setUsers(d.users || []);
           setTotalPages(d.pagination?.totalPages || 1);
           setTotal(d.pagination?.total || 0);
-        } else {
-          // Use mock data if API returns empty
-          setUsers(MOCK_USERS);
-          setTotalPages(1);
-          setTotal(MOCK_USERS.length);
         }
         setLoading(false);
       })
-      .catch(() => {
-        setUsers(MOCK_USERS);
+      .catch(err => {
+        setError(err.message || 'Failed to fetch users');
+        setUsers([]);
         setTotalPages(1);
-        setTotal(MOCK_USERS.length);
+        setTotal(0);
         setLoading(false);
       });
   }, [search, statusTab, page]);
@@ -100,7 +101,7 @@ export default function AdminUsersPage() {
     if (statusTab === 'active') return u.isActive;
     if (statusTab === 'inactive') return !u.isActive;
     if (statusTab === 'suspended') return !u.isActive && u.role !== 'banned';
-    if (statusTab === 'banned') return false; // no banned in mock
+    if (statusTab === 'banned') return u.role === 'banned';
     return true;
   });
 
@@ -157,6 +158,17 @@ export default function AdminUsersPage() {
           <Plus className="w-4 h-4" /> Create User
         </Button>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-700">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => { setError(null); setPage(1); }}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search + Tabs */}
       <Card>

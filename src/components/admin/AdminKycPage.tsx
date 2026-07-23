@@ -12,11 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Separator } from '@/components/ui/separator';
 import {
   ShieldCheck, Eye, CheckCircle, XCircle, MapPin, Calendar,
-  ChevronLeft, ChevronRight, Loader2, User, FileText, Camera
+  ChevronLeft, ChevronRight, Loader2, User, FileText, Camera, AlertCircle
 } from 'lucide-react';
 
 interface KycApplication {
   id: string;
+  kycId: string;
   userId: string;
   kycName: string;
   kycDob: string | null;
@@ -53,54 +54,22 @@ interface KycApplication {
   };
 }
 
-const MOCK_KYC: KycApplication[] = [
-  {
-    id: 'kyc1', userId: '1', kycName: 'Rahim Uddin', kycDob: '1990-05-15', kycGender: 'male',
-    documentType: 'nid', documentNumber: '1990123456789', documentFront: '/placeholder-front.jpg', documentBack: '/placeholder-back.jpg',
-    selfiePhoto: '/placeholder-selfie.jpg', selfieRight: null, selfieLeft: null, selfieSmile: null, selfieBlink: null,
-    houseRoadVillage: '123 Mirpur Road', upazilaThana: 'Mirpur', district: 'Dhaka', division: 'Dhaka', postalCode: '1216',
-    gpsLatitude: 23.8061, gpsLongitude: 90.3679,
-    status: 'pending', reviewNote: null, reviewedBy: null, submittedAt: '2025-01-10T10:00:00Z', reviewedAt: null,
-    user: { id: '1', name: 'Rahim Uddin', email: 'rahim@example.com', phone: '+880171234567', username: 'rahim_uddin', avatar: null, createdAt: '2024-12-01T10:00:00Z' }
-  },
-  {
-    id: 'kyc2', userId: '2', kycName: 'Karim Hasan', kycDob: '1985-08-20', kycGender: 'male',
-    documentType: 'nid', documentNumber: '198512345678', documentFront: '/placeholder-front2.jpg', documentBack: '/placeholder-back2.jpg',
-    selfiePhoto: '/placeholder-selfie2.jpg', selfieRight: '/placeholder-selfie-right.jpg', selfieLeft: null, selfieSmile: null, selfieBlink: null,
-    houseRoadVillage: '456 Gulshan Avenue', upazilaThana: 'Gulshan', district: 'Dhaka', division: 'Dhaka', postalCode: '1212',
-    gpsLatitude: 23.7935, gpsLongitude: 90.4153,
-    status: 'pending', reviewNote: null, reviewedBy: null, submittedAt: '2025-01-12T14:00:00Z', reviewedAt: null,
-    user: { id: '2', name: 'Karim Hasan', email: 'karim@example.com', phone: '+880189876543', username: 'karim_hasan', avatar: null, createdAt: '2024-12-05T12:00:00Z' }
-  },
-  {
-    id: 'kyc3', userId: '5', kycName: 'Fatima Begum', kycDob: '1992-03-10', kycGender: 'female',
-    documentType: 'passport', documentNumber: 'AB1234567', documentFront: '/placeholder-front3.jpg', documentBack: null,
-    selfiePhoto: '/placeholder-selfie3.jpg', selfieRight: null, selfieLeft: null, selfieSmile: null, selfieBlink: null,
-    houseRoadVillage: '789 Uttara Sector 7', upazilaThana: 'Uttara', district: 'Dhaka', division: 'Dhaka', postalCode: '1230',
-    gpsLatitude: 23.8728, gpsLongitude: 90.3973,
-    status: 'approved', reviewNote: 'All documents verified successfully', reviewedBy: 'admin1', submittedAt: '2024-12-20T09:00:00Z', reviewedAt: '2024-12-22T11:00:00Z',
-    user: { id: '5', name: 'Fatima Begum', email: 'fatima@example.com', phone: '+880155566677', username: 'fatima_begum', avatar: null, createdAt: '2024-11-20T09:00:00Z' }
-  },
-  {
-    id: 'kyc4', userId: '6', kycName: 'Arif Khan', kycDob: '1988-11-25', kycGender: 'male',
-    documentType: 'driving_licence', documentNumber: 'DL-12345', documentFront: '/placeholder-front4.jpg', documentBack: '/placeholder-back4.jpg',
-    selfiePhoto: '/placeholder-selfie4.jpg', selfieRight: null, selfieLeft: null, selfieSmile: null, selfieBlink: null,
-    houseRoadVillage: '55 Chittagong Road', upazilaThana: 'Panchlaish', district: 'Chittagong', division: 'Chittagong', postalCode: '4000',
-    gpsLatitude: 22.3193, gpsLongitude: 91.8133,
-    status: 'rejected', reviewNote: 'Selfie photo is blurry and does not match document', reviewedBy: 'admin1', submittedAt: '2024-12-25T16:00:00Z', reviewedAt: '2024-12-27T10:00:00Z',
-    user: { id: '6', name: 'Arif Khan', email: 'arif@example.com', phone: '+880133344455', username: 'arif_khan', avatar: null, createdAt: '2025-01-01T06:00:00Z' }
-  },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 const STATUS_TABS = ['all', 'pending', 'approved', 'rejected'];
 
 export default function AdminKycPage() {
   const [applications, setApplications] = useState<KycApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState('pending');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
   const [selectedKyc, setSelectedKyc] = useState<KycApplication | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewNote, setReviewNote] = useState('');
@@ -111,32 +80,47 @@ export default function AdminKycPage() {
     params.set('page', String(page));
     params.set('limit', '20');
 
-    fetch(`/api/admin/kyc?${params.toString()}`)
-      .then(r => r.json())
+    fetch(`/api/admin/kyc?${params.toString()}`, { headers: getAuthHeaders() })
+      .then(r => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`);
+        return r.json();
+      })
       .then(d => {
-        if (d.applications && d.applications.length > 0) {
-          setApplications(d.applications);
+        if (d.error) {
+          setError(d.error);
+          setApplications([]);
+        } else {
+          setError(null);
+          setApplications(d.applications || []);
           setTotalPages(d.pagination?.totalPages || 1);
           setTotal(d.pagination?.total || 0);
-        } else {
-          setApplications(MOCK_KYC);
-          setTotalPages(1);
-          setTotal(MOCK_KYC.length);
+          // Calculate pending count from data
+          if (statusTab === 'pending') {
+            setPendingCount(d.pagination?.total || (d.applications || []).length);
+          }
         }
         setLoading(false);
       })
-      .catch(() => {
-        setApplications(MOCK_KYC);
+      .catch(err => {
+        setError(err.message || 'Failed to fetch KYC applications');
+        setApplications([]);
         setTotalPages(1);
-        setTotal(MOCK_KYC.length);
+        setTotal(0);
         setLoading(false);
       });
   }, [statusTab, page]);
 
-  const filteredApps = applications.filter(a => {
-    if (statusTab === 'all') return true;
-    return a.status === statusTab;
-  });
+  // Fetch pending count separately when on non-pending tab
+  useEffect(() => {
+    if (statusTab !== 'pending') {
+      fetch(`/api/admin/kyc?status=pending&limit=1`, { headers: getAuthHeaders() })
+        .then(r => r.json())
+        .then(d => {
+          setPendingCount(d.pagination?.total || 0);
+        })
+        .catch(() => {});
+    }
+  }, [statusTab]);
 
   const getStatusBadge = (status: string) => {
     if (status === 'approved') return <Badge className="bg-emerald-500 text-white"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
@@ -157,20 +141,44 @@ export default function AdminKycPage() {
 
   const handleApprove = () => {
     if (selectedKyc) {
-      setApplications(prev => prev.map(a =>
-        a.id === selectedKyc.id ? { ...a, status: 'approved', reviewNote, reviewedAt: new Date().toISOString() } : a
-      ));
+      // Call API to approve
+      fetch(`/api/admin/kyc?id=${selectedKyc.id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved', reviewNote }),
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.error) {
+            setApplications(prev => prev.map(a =>
+              a.id === selectedKyc.id ? { ...a, status: 'approved', reviewNote, reviewedAt: new Date().toISOString() } : a
+            ));
+          }
+          setReviewModalOpen(false);
+        })
+        .catch(() => setReviewModalOpen(false));
     }
-    setReviewModalOpen(false);
   };
 
   const handleReject = () => {
     if (selectedKyc) {
-      setApplications(prev => prev.map(a =>
-        a.id === selectedKyc.id ? { ...a, status: 'rejected', reviewNote, reviewedAt: new Date().toISOString() } : a
-      ));
+      // Call API to reject
+      fetch(`/api/admin/kyc?id=${selectedKyc.id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected', reviewNote }),
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.error) {
+            setApplications(prev => prev.map(a =>
+              a.id === selectedKyc.id ? { ...a, status: 'rejected', reviewNote, reviewedAt: new Date().toISOString() } : a
+            ));
+          }
+          setReviewModalOpen(false);
+        })
+        .catch(() => setReviewModalOpen(false));
     }
-    setReviewModalOpen(false);
   };
 
   return (
@@ -185,6 +193,17 @@ export default function AdminKycPage() {
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-700">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => { setError(null); setPage(1); }}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tabs + Table */}
       <Card>
         <CardContent className="p-4 space-y-4">
@@ -195,7 +214,7 @@ export default function AdminKycPage() {
                   {tab === 'all' ? 'All' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                   {tab === 'pending' && (
                     <Badge variant="secondary" className="ml-1 text-xs">
-                      {MOCK_KYC.filter(a => a.status === 'pending').length}
+                      {pendingCount}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -208,7 +227,7 @@ export default function AdminKycPage() {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
-                ) : filteredApps.length === 0 ? (
+                ) : applications.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <ShieldCheck className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No KYC applications found for this filter</p>
@@ -218,6 +237,7 @@ export default function AdminKycPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>ID</TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Document Type</TableHead>
                           <TableHead className="hidden md:table-cell">Document No.</TableHead>
@@ -227,8 +247,9 @@ export default function AdminKycPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredApps.map(app => (
+                        {applications.map(app => (
                           <TableRow key={app.id}>
+                            <TableCell className="font-medium">{app.kycId}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
@@ -264,7 +285,7 @@ export default function AdminKycPage() {
       </Card>
 
       {/* Pagination */}
-      {!loading && filteredApps.length > 0 && totalPages > 1 && (
+      {!loading && applications.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Page {page} of {totalPages} • {total} total
@@ -284,7 +305,7 @@ export default function AdminKycPage() {
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>KYC Review - {selectedKyc?.kycName}</DialogTitle>
+            <DialogTitle>KYC Review - {selectedKyc?.kycId} ({selectedKyc?.kycName})</DialogTitle>
           </DialogHeader>
           {selectedKyc && (
             <div className="space-y-6">
@@ -294,10 +315,12 @@ export default function AdminKycPage() {
                   <User className="w-4 h-4" /> Personal Information
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
+                  <div><Label className="text-xs text-muted-foreground">KYC ID</Label><p className="font-medium">{selectedKyc.kycId}</p></div>
                   <div><Label className="text-xs text-muted-foreground">Name</Label><p className="font-medium">{selectedKyc.kycName}</p></div>
                   <div><Label className="text-xs text-muted-foreground">Date of Birth</Label><p className="font-medium">{selectedKyc.kycDob || 'N/A'}</p></div>
                   <div><Label className="text-xs text-muted-foreground">Gender</Label><p className="font-medium">{selectedKyc.kycGender || 'N/A'}</p></div>
                   <div><Label className="text-xs text-muted-foreground">Email</Label><p className="font-medium">{selectedKyc.user.email}</p></div>
+                  <div><Label className="text-xs text-muted-foreground">Phone</Label><p className="font-medium">{selectedKyc.user.phone || 'N/A'}</p></div>
                 </div>
               </div>
 

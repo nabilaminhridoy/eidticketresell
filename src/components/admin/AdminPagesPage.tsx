@@ -1,17 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  FileText, Plus, Search, Edit, Trash2, Eye, ArrowLeft, Globe, Settings
+  FileText, Search, Edit, ArrowLeft, Loader2
 } from 'lucide-react';
 
 interface CmsPage {
@@ -20,28 +19,69 @@ interface CmsPage {
   slug: string;
   status: 'published' | 'draft';
   lastUpdated: string;
-  sections: number;
+  content: string;
 }
 
-export default function AdminPagesPage({ pageSlug }: { pageSlug?: string }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
-  const mockPages: CmsPage[] = [
-    { id: '1', title: 'About Us', slug: 'about-us', status: 'published', lastUpdated: '2024-01-15', sections: 4 },
-    { id: '2', title: 'Contact Us', slug: 'contact-us', status: 'published', lastUpdated: '2024-01-10', sections: 3 },
-    { id: '3', title: 'How It Works', slug: 'how-it-works', status: 'published', lastUpdated: '2024-01-20', sections: 5 },
-    { id: '4', title: 'Privacy Policy', slug: 'privacy-policy', status: 'published', lastUpdated: '2024-01-05', sections: 8 },
-    { id: '5', title: 'Terms of Service', slug: 'terms-of-service', status: 'published', lastUpdated: '2024-01-01', sections: 10 },
-    { id: '6', title: 'Payment Policy', slug: 'payment-policy', status: 'published', lastUpdated: '2024-01-08', sections: 6 },
-    { id: '7', title: 'Safety Guidelines', slug: 'safety-guidelines', status: 'published', lastUpdated: '2024-01-12', sections: 4 },
-    { id: '8', title: 'Cookies Policy', slug: 'cookies-policy', status: 'published', lastUpdated: '2024-01-03', sections: 5 },
-    { id: '9', title: 'Refund Policy', slug: 'refund-policy', status: 'draft', lastUpdated: '2024-02-01', sections: 3 },
-  ];
+const defaultPages: CmsPage[] = [
+  { id: 'about-us', title: 'About Us', slug: 'about-us', status: 'published', lastUpdated: '', content: '' },
+  { id: 'contact-us', title: 'Contact Us', slug: 'contact-us', status: 'published', lastUpdated: '', content: '' },
+  { id: 'how-it-works', title: 'How It Works', slug: 'how-it-works', status: 'published', lastUpdated: '', content: '' },
+  { id: 'privacy-policy', title: 'Privacy Policy', slug: 'privacy-policy', status: 'published', lastUpdated: '', content: '' },
+  { id: 'terms-of-service', title: 'Terms of Service', slug: 'terms-of-service', status: 'published', lastUpdated: '', content: '' },
+  { id: 'payment-policy', title: 'Payment Policy', slug: 'payment-policy', status: 'published', lastUpdated: '', content: '' },
+  { id: 'safety-guidelines', title: 'Safety Guidelines', slug: 'safety-guidelines', status: 'published', lastUpdated: '', content: '' },
+  { id: 'cookies-policy', title: 'Cookies Policy', slug: 'cookies-policy', status: 'published', lastUpdated: '', content: '' },
+  { id: 'refund-policy', title: 'Refund Policy', slug: 'refund-policy', status: 'draft', lastUpdated: '', content: '' },
+];
+
+export default function AdminPagesPage({ pageSlug }: { pageSlug?: string }) {
+  const [pages, setPages] = useState<CmsPage[]>(defaultPages);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchPages();
+  }, []);
+
+  const fetchPages = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch settings that may contain page content
+      const settingsRes = await fetch('/api/admin/settings?group=pages', { headers: getAuthHeaders() });
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        const pageSettings = (settingsData.settings || []) as { id: string; key: string; value: string; group: string }[];
+
+        // Update pages with settings data where available
+        const updatedPages = defaultPages.map(page => {
+          const settingKey = `page_${page.slug}`;
+          const setting = pageSettings.find(s => s.key === settingKey);
+          return {
+            ...page,
+            content: setting?.value || '',
+            lastUpdated: setting ? new Date().toLocaleDateString() : 'Not configured',
+            status: setting?.value ? 'published' as const : 'draft' as const,
+          };
+        });
+        setPages(updatedPages);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load page settings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // View/edit specific page
   if (pageSlug) {
-    const page = mockPages.find(p => p.slug === pageSlug) || mockPages[0];
+    const page = pages.find(p => p.slug === pageSlug) || pages[0];
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -56,7 +96,7 @@ export default function AdminPagesPage({ pageSlug }: { pageSlug?: string }) {
             <div className="space-y-2"><label className="text-sm font-medium">Status</label>
               <Select defaultValue={page.status}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="published">Published</SelectItem><SelectItem value="draft">Draft</SelectItem></SelectContent></Select>
             </div>
-            <div className="space-y-2"><label className="text-sm font-medium">Content</label><Textarea defaultValue={`Content for ${page.title} page...`} rows={12} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Content</label><Textarea defaultValue={page.content || `Content for ${page.title} page...`} rows={12} /></div>
           </CardContent>
         </Card>
         <div className="flex gap-2">
@@ -67,7 +107,7 @@ export default function AdminPagesPage({ pageSlug }: { pageSlug?: string }) {
     );
   }
 
-  const filteredPages = mockPages.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredPages = pages.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="space-y-6">
@@ -83,40 +123,47 @@ export default function AdminPagesPage({ pageSlug }: { pageSlug?: string }) {
         <Input placeholder="Search pages..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Page Title</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Sections</TableHead>
-                <TableHead className="hidden md:table-cell">Last Updated</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPages.map(page => (
-                <TableRow key={page.id}>
-                  <TableCell className="font-medium">
-                    <Link href={`/admin/pages/${page.slug}`} className="hover:text-primary">{page.title}</Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{page.slug}</TableCell>
-                  <TableCell><Badge variant={page.status === 'published' ? 'default' : 'secondary'}>{page.status}</Badge></TableCell>
-                  <TableCell className="hidden md:table-cell">{page.sections}</TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{page.lastUpdated}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Link href={`/admin/pages/${page.slug}`}><Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button></Link>
-                    </div>
-                  </TableCell>
+      {loading ? (
+        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      ) : error ? (
+        <Card className="p-8 text-center">
+          <p className="text-red-500 mb-2">Error: {error}</p>
+          <Button variant="outline" onClick={fetchPages}>Try Again</Button>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Page Title</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden md:table-cell">Last Updated</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {filteredPages.map(page => (
+                  <TableRow key={page.id}>
+                    <TableCell className="font-medium">
+                      <Link href={`/admin/pages/${page.slug}`} className="hover:text-primary">{page.title}</Link>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{page.slug}</TableCell>
+                    <TableCell><Badge variant={page.status === 'published' ? 'default' : 'secondary'}>{page.status}</Badge></TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{page.lastUpdated}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Link href={`/admin/pages/${page.slug}`}><Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button></Link>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

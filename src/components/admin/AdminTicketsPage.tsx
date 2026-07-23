@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import {
   Ticket, Eye, Bus, TrainFront, Plane, Ship, ChevronLeft,
-  ChevronRight, Loader2, MapPin, Calendar, Clock, User, DollarSign, Tag
+  ChevronRight, Loader2, MapPin, Calendar, Clock, User, DollarSign, Tag, AlertCircle
 } from 'lucide-react';
 
 interface TicketRecord {
@@ -39,13 +39,10 @@ interface TicketRecord {
   seller?: { id: string; name: string; username: string; email: string };
 }
 
-const MOCK_TICKETS: TicketRecord[] = [
-  { id: '1', ticketId: 'ETR-00000001', sellerId: '1', transportType: 'bus', transportCompany: 'Green Line Paribahan', ticketType: 'online_copy', pnrNumber: 'GL12345', routeFrom: 'Dhaka', routeTo: 'Chittagong', departureDate: '2025-01-20', departureTime: '08:00', seatClass: 'AC Business', seatNumber: 'A1', originalPrice: 850, price: 900, platformFee: 18, totalAmount: 918, status: 'active', createdAt: '2025-01-15T10:00:00Z', seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin', email: 'rahim@example.com' } },
-  { id: '2', ticketId: 'ETR-00000002', sellerId: '1', transportType: 'train', transportCompany: 'Bangladesh Railway', ticketType: 'online_copy', pnrNumber: 'TR67890', routeFrom: 'Dhaka', routeTo: 'Sylhet', departureDate: '2025-01-22', departureTime: '06:30', seatClass: 'AC Sleeper', seatNumber: 'S2-4', originalPrice: 1200, price: 1300, platformFee: 26, totalAmount: 1326, status: 'active', createdAt: '2025-01-16T11:00:00Z', seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin', email: 'rahim@example.com' } },
-  { id: '3', ticketId: 'ETR-00000003', sellerId: '2', transportType: 'flight', transportCompany: 'Biman Bangladesh', ticketType: 'online_copy', pnrNumber: 'BG11111', routeFrom: 'Dhaka', routeTo: 'Cox Bazar', departureDate: '2025-01-25', departureTime: '10:00', seatClass: 'Economy', seatNumber: '12A', originalPrice: 4500, price: 5000, platformFee: 100, totalAmount: 5100, status: 'pending_review', createdAt: '2025-01-18T09:00:00Z', seller: { id: '2', name: 'Karim Hasan', username: 'karim_hasan', email: 'karim@example.com' } },
-  { id: '4', ticketId: 'ETR-00000004', sellerId: '3', transportType: 'launch', transportCompany: 'BIWTA Launch Service', ticketType: 'counter_copy', pnrNumber: null, routeFrom: 'Dhaka', routeTo: 'Barisal', departureDate: '2025-01-18', departureTime: '18:00', seatClass: 'AC Double Decker', seatNumber: null, originalPrice: 600, price: 700, platformFee: 21, totalAmount: 721, status: 'sold', createdAt: '2025-01-10T15:00:00Z', seller: { id: '3', name: 'Fatima Begum', username: 'fatima_begum', email: 'fatima@example.com' } },
-  { id: '5', ticketId: 'ETR-00000005', sellerId: '1', transportType: 'bus', transportCompany: 'Shyamoli Paribahan', ticketType: 'counter_copy', pnrNumber: null, routeFrom: 'Dhaka', routeTo: 'Rangpur', departureDate: '2025-01-14', departureTime: '22:00', seatClass: 'Non AC', seatNumber: null, originalPrice: 500, price: 550, platformFee: 16.5, totalAmount: 566.5, status: 'expired', createdAt: '2025-01-08T12:00:00Z', seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin', email: 'rahim@example.com' } },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 const STATUS_TABS = ['all', 'pending_review', 'active', 'sold', 'expired', 'cancelled'];
 const TRANSPORT_TYPES = ['all', 'bus', 'train', 'flight', 'launch'];
@@ -53,6 +50,7 @@ const TRANSPORT_TYPES = ['all', 'bus', 'train', 'flight', 'launch'];
 export default function AdminTicketsPage() {
   const [tickets, setTickets] = useState<TicketRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState('all');
   const [transportFilter, setTransportFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -70,33 +68,31 @@ export default function AdminTicketsPage() {
     params.set('page', String(page));
     params.set('limit', '20');
 
-    fetch(`/api/admin/tickets?${params.toString()}`)
-      .then(r => r.json())
+    fetch(`/api/admin/tickets?${params.toString()}`, { headers: getAuthHeaders() })
+      .then(r => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`);
+        return r.json();
+      })
       .then(d => {
-        if (d.tickets && d.tickets.length > 0) {
-          setTickets(d.tickets);
+        if (d.error) {
+          setError(d.error);
+          setTickets([]);
+        } else {
+          setError(null);
+          setTickets(d.tickets || []);
           setTotalPages(d.pagination?.totalPages || 1);
           setTotal(d.pagination?.total || 0);
-        } else {
-          setTickets(MOCK_TICKETS);
-          setTotalPages(1);
-          setTotal(MOCK_TICKETS.length);
         }
         setLoading(false);
       })
-      .catch(() => {
-        setTickets(MOCK_TICKETS);
+      .catch(err => {
+        setError(err.message || 'Failed to fetch tickets');
+        setTickets([]);
         setTotalPages(1);
-        setTotal(MOCK_TICKETS.length);
+        setTotal(0);
         setLoading(false);
       });
   }, [statusTab, transportFilter, search, page]);
-
-  const filteredTickets = tickets.filter(t => {
-    if (statusTab !== 'all' && t.status !== statusTab) return false;
-    if (transportFilter !== 'all' && t.transportType !== transportFilter) return false;
-    return true;
-  });
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, { bg: string; label: string }> = {
@@ -140,6 +136,17 @@ export default function AdminTicketsPage() {
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-700">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => { setError(null); setPage(1); }}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters + Table */}
       <Card>
         <CardContent className="p-4 space-y-4">
@@ -174,7 +181,7 @@ export default function AdminTicketsPage() {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
-                ) : filteredTickets.length === 0 ? (
+                ) : tickets.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Ticket className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No tickets found for this filter</p>
@@ -195,7 +202,7 @@ export default function AdminTicketsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTickets.map(ticket => (
+                        {tickets.map(ticket => (
                           <TableRow key={ticket.id}>
                             <TableCell className="font-medium">{ticket.ticketId}</TableCell>
                             <TableCell>
@@ -239,7 +246,7 @@ export default function AdminTicketsPage() {
       </Card>
 
       {/* Pagination */}
-      {!loading && filteredTickets.length > 0 && totalPages > 1 && (
+      {!loading && tickets.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
           <div className="flex items-center gap-2">

@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
 
     const disputeRecords = disputes.map(d => ({
       id: d.id,
+      dspId: d.dspId,
       orderId: d.order.orderId,
       initiatedBy: d.initiatedBy,
       initiatorName: d.initiatedBy === 'buyer' ? d.order.buyer.name : d.order.seller.name,

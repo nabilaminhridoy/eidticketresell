@@ -210,7 +210,7 @@ export default function AdminReviewsPage() {
           {selectedReview && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs text-muted-foreground">Review ID</Label><p className="font-medium">{selectedReview.id}</p></div>
+                <div><Label className="text-xs text-muted-foreground">Review ID</Label><p className="font-medium">REV-{selectedReview.id.slice(-6)}</p></div>
                 <div><Label className="text-xs text-muted-foreground">Order</Label><p className="font-medium">{selectedReview.orderId}</p></div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Author</Label>

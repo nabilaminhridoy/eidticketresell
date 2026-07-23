@@ -37,8 +37,8 @@ export default function AdminLoginPage() {
       }
 
       // Store admin token and info
-      localStorage.setItem('eid-admin-token', data.token);
-      localStorage.setItem('eid-admin', JSON.stringify(data.admin));
+      localStorage.setItem('etr_admin_token', data.token);
+      localStorage.setItem('etr_admin_info', JSON.stringify(data.admin));
 
       // Redirect to OTP verification or dashboard
       if (data.requireOtp) {

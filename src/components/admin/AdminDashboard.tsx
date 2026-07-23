@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Users, Ticket, ShoppingBag, CreditCard, Wallet, ShieldCheck,
-  TrendingUp, TrendingDown, DollarSign, BarChart3, Clock, AlertTriangle,
-  ArrowUpRight, ArrowDownRight, Eye, RefreshCw
+  DollarSign, BarChart3, Clock, AlertTriangle,
+  RefreshCw, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -30,6 +30,11 @@ interface RecentActivity {
   type: 'success' | 'warning' | 'error' | 'info';
 }
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0, totalTickets: 0, totalOrders: 0, totalRevenue: 0,
@@ -37,28 +42,46 @@ export default function AdminDashboard() {
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const handleRefresh = () => {
+    setStats({ totalUsers: 0, totalTickets: 0, totalOrders: 0, totalRevenue: 0, pendingKyc: 0, pendingWithdrawals: 0, activeTickets: 0, disputesOpen: 0 });
+    setRecentActivities([]);
+    setLoading(true);
+    setError('');
+
+    fetch('/api/admin/stats', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => { setStats(d.stats || d); })
+      .catch(() => { setError('Failed to load stats'); });
+
+    fetch('/api/admin/activity-log?limit=10', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => { setRecentActivities(Array.isArray(d) ? d : d.activities || []); setLoading(false); })
+      .catch(() => { setLoading(false); });
+  };
 
   useEffect(() => {
-    fetch('/api/admin/stats')
+    fetch('/api/admin/stats', { headers: getAuthHeaders() })
       .then(r => r.json())
-      .then(d => { setStats(d.stats || d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(d => { setStats(d.stats || d); })
+      .catch(() => { setError('Failed to load stats'); });
 
-    fetch('/api/admin/activity-log?limit=10')
+    fetch('/api/admin/activity-log?limit=10', { headers: getAuthHeaders() })
       .then(r => r.json())
-      .then(d => { setRecentActivities(Array.isArray(d) ? d : d.activities || []); })
-      .catch(() => {});
+      .then(d => { setRecentActivities(Array.isArray(d) ? d : d.activities || []); setLoading(false); })
+      .catch(() => { setLoading(false); });
   }, []);
 
   const statCards = [
-    { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-primary', bgColor: 'bg-primary/10', change: '+12%', up: true, link: '/admin/users' },
-    { label: 'Active Tickets', value: stats.activeTickets, icon: Ticket, color: 'text-orange', bgColor: 'bg-orange/10', change: '+8%', up: true, link: '/admin/tickets' },
-    { label: 'Total Orders', value: stats.totalOrders, icon: ShoppingBag, color: 'text-blue', bgColor: 'bg-blue/10', change: '+15%', up: true, link: '/admin/orders' },
-    { label: 'Revenue (BDT)', value: stats.totalRevenue, icon: DollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-50', change: '+23%', up: true, link: '/admin/reports/revenue' },
-    { label: 'Pending KYC', value: stats.pendingKyc, icon: ShieldCheck, color: 'text-yellow-600', bgColor: 'bg-yellow-50', change: '5 new', up: false, link: '/admin/kyc?status=pending' },
-    { label: 'Pending Withdrawals', value: stats.pendingWithdrawals, icon: Wallet, color: 'text-purple-600', bgColor: 'bg-purple-50', change: '2 new', up: false, link: '/admin/payout/withdraws?status=pending' },
-    { label: 'Open Disputes', value: stats.disputesOpen, icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-50', change: '-3', up: true, link: '/admin/disputes?status=open' },
-    { label: 'Platform Fee Earned', value: stats.totalRevenue * 0.05, icon: CreditCard, color: 'text-primary', bgColor: 'bg-primary/10', change: '+5%', up: true, link: '/admin/reports/revenue' },
+    { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-primary', bgColor: 'bg-primary/10', link: '/admin/users' },
+    { label: 'Active Tickets', value: stats.activeTickets, icon: Ticket, color: 'text-orange', bgColor: 'bg-orange/10', link: '/admin/tickets' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: ShoppingBag, color: 'text-blue', bgColor: 'bg-blue/10', link: '/admin/orders' },
+    { label: 'Revenue (BDT)', value: stats.totalRevenue, icon: DollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-50', link: '/admin/reports/revenue' },
+    { label: 'Pending KYC', value: stats.pendingKyc, icon: ShieldCheck, color: 'text-yellow-600', bgColor: 'bg-yellow-50', link: '/admin/kyc?status=pending' },
+    { label: 'Pending Withdrawals', value: stats.pendingWithdrawals, icon: Wallet, color: 'text-purple-600', bgColor: 'bg-purple-50', link: '/admin/payout/withdraws?status=pending' },
+    { label: 'Open Disputes', value: stats.disputesOpen, icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-50', link: '/admin/disputes?status=open' },
+    { label: 'Platform Fee Earned', value: stats.totalRevenue * 0.05, icon: CreditCard, color: 'text-primary', bgColor: 'bg-primary/10', link: '/admin/reports/revenue' },
   ];
 
   const quickActions = [
@@ -79,11 +102,15 @@ export default function AdminDashboard() {
           <p className="text-sm text-muted-foreground">Overview of your platform performance</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1">
-            <RefreshCw className="w-3.5 h-3.5" />Refresh
+          <Button variant="outline" size="sm" className="gap-1" onClick={handleRefresh} disabled={loading}>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />Refresh
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -95,10 +122,9 @@ export default function AdminDashboard() {
                   <div className={`w-10 h-10 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
                     <stat.icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
-                  <div className={`flex items-center gap-1 text-xs font-medium ${stat.up ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {stat.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    {stat.change}
-                  </div>
+                  {stat.value === 0 && loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  ) : null}
                 </div>
                 <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
@@ -143,7 +169,7 @@ export default function AdminDashboard() {
             <div className="space-y-3 max-h-[280px] overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               ) : recentActivities.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">

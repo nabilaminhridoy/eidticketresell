@@ -15,7 +15,7 @@ export default function AdminVerifyOtpPage() {
   const [adminEmail, setAdminEmail] = useState('');
 
   useEffect(() => {
-    const stored = localStorage.getItem('eid-admin');
+    const stored = localStorage.getItem('etr_admin_info');
     if (stored) {
       try {
         const admin = JSON.parse(stored);
@@ -32,7 +32,7 @@ export default function AdminVerifyOtpPage() {
     setLoading(true);
 
     const otpCode = otp.join('');
-    const token = localStorage.getItem('eid-admin-token');
+    const token = localStorage.getItem('etr_admin_token');
 
     try {
       const res = await fetch('/api/admin/auth/verify-otp', {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Menu, Bell, LogOut, LogIn, User, Search, X, ChevronDown, Settings } from 'lucide-react';
+import { iconMap } from './admin-icons';
 
 interface AdminUser {
   id: string;
@@ -21,7 +21,7 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
 
   useEffect(() => {
     // Load admin from localStorage
-    const stored = localStorage.getItem('eid-admin');
+    const stored = localStorage.getItem('etr_admin_info');
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -32,8 +32,8 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('eid-admin-token');
-    localStorage.removeItem('eid-admin');
+    localStorage.removeItem('etr_admin_token');
+    localStorage.removeItem('etr_admin_info');
     router.push('/admin/login');
   };
 
@@ -42,11 +42,11 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
       {/* Left side */}
       <div className="flex items-center gap-3">
         <button onClick={onMobileMenuToggle} className="p-2 rounded-lg hover:bg-muted/50 lg:hidden">
-          <Menu className="w-5 h-5" />
+          <iconMap.Menu className="w-5 h-5" />
         </button>
         {/* Search bar */}
         <div className="hidden md:flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-1.5 max-w-xs">
-          <Search className="w-4 h-4 text-muted-foreground" />
+          <iconMap.Search className="w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search..."
@@ -56,7 +56,7 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="p-0.5 hover:bg-muted/50 rounded">
-              <X className="w-3 h-3 text-muted-foreground" />
+              <iconMap.X className="w-3 h-3 text-muted-foreground" />
             </button>
           )}
         </div>
@@ -66,7 +66,7 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
       <div className="flex items-center gap-3">
         {/* Notifications */}
         <button className="p-2 rounded-lg hover:bg-muted/50 transition-colors relative">
-          <Bell className="w-5 h-5 text-muted-foreground" />
+          <iconMap.Bell className="w-5 h-5 text-muted-foreground" />
           <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[8px] flex items-center justify-center font-bold">3</div>
         </button>
 
@@ -78,30 +78,30 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
                 {admin.avatar ? (
                   <img src={admin.avatar} alt={admin.name} className="w-8 h-8 rounded-full" />
                 ) : (
-                  <User className="w-4 h-4 text-primary" />
+                  <iconMap.User className="w-4 h-4 text-primary" />
                 )}
               </div>
               <div className="hidden md:block">
                 <p className="text-sm font-medium leading-none">{admin.name}</p>
                 <p className="text-xs text-muted-foreground">{admin.role}</p>
               </div>
-              <ChevronDown className="w-3 h-3 text-muted-foreground hidden md:block" />
+              <iconMap.ChevronDown className="w-3 h-3 text-muted-foreground hidden md:block" />
             </button>
 
             {showUserMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-lg py-2 z-50">
                 <Link href="/admin/settings/general" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50" onClick={() => setShowUserMenu(false)}>
-                  <Settings className="w-4 h-4" />Settings
+                  <iconMap.Settings className="w-4 h-4" />Settings
                 </Link>
                 <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 text-red-600 w-full">
-                  <LogOut className="w-4 h-4" />Logout
+                  <iconMap.LogOut className="w-4 h-4" />Logout
                 </button>
               </div>
             )}
           </div>
         ) : (
           <Link href="/admin/login" className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm hover:bg-primary/90">
-            <LogIn className="w-4 h-4" />Login
+            <iconMap.LogIn className="w-4 h-4" />Login
           </Link>
         )}
       </div>

@@ -1,28 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import {
   Server, Database, FileText, Clock4, HardDrive, RefreshCw,
-  ArrowLeft, Download, Trash2, RotateCcw, CheckCircle, AlertTriangle,
-  Terminal, Calendar, ArrowUpCircle, Settings
+  Download, Trash2, RotateCcw, CheckCircle, AlertTriangle, Loader2,
+  ArrowUpCircle
 } from 'lucide-react';
 
-interface LogEntry {
+interface ActivityLogEntry {
   id: string;
-  level: 'info' | 'warning' | 'error';
-  message: string;
-  timestamp: string;
-  source: string;
+  action: string;
+  details: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  admin: { name: string } | null;
+  adminId: string | null;
 }
 
 interface CronJob {
@@ -43,8 +40,71 @@ interface Backup {
   type: 'auto' | 'manual';
 }
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
+
+// Cron job configuration - admin-only feature
+const configuredCronJobs: CronJob[] = [
+  { id: 'cron_auto_backup', name: 'Auto Backup', command: 'backup:run', schedule: '0 3 * * *', lastRun: '-', nextRun: '-', status: 'active' },
+  { id: 'cron_cache_cleanup', name: 'Cache Cleanup', command: 'cache:cleanup', schedule: '0 */6 * * *', lastRun: '-', nextRun: '-', status: 'active' },
+  { id: 'cron_expired_tickets', name: 'Expired Tickets Cleanup', command: 'tickets:cleanup-expired', schedule: '0 2 * * *', lastRun: '-', nextRun: '-', status: 'active' },
+  { id: 'cron_email_queue', name: 'Email Queue Process', command: 'email:process-queue', schedule: '*/5 * * * *', lastRun: '-', nextRun: '-', status: 'active' },
+  { id: 'cron_revenue_report', name: 'Revenue Report Generate', command: 'reports:generate', schedule: '0 9 * * 1', lastRun: '-', nextRun: '-', status: 'inactive' },
+];
+
+// Backup configuration - admin-only feature
+const configuredBackups: Backup[] = [];
+
+const classifyLogLevel = (action: string): 'info' | 'warning' | 'error' => {
+  const lower = action.toLowerCase();
+  if (lower.includes('fail') || lower.includes('error') || lower.includes('delete')) return 'error';
+  if (lower.includes('warn') || lower.includes('flag') || lower.includes('dispute')) return 'warning';
+  return 'info';
+};
+
 export default function AdminSystemPage({ section }: { section?: string }) {
+  const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [logsError, setLogsError] = useState<string | null>(null);
   const currentSection = section || null;
+
+  // Fetch logs when logs section is viewed
+  useEffect(() => {
+    if (currentSection !== 'logs') return;
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch('/api/admin/activity-log?limit=20', { headers: getAuthHeaders() });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to fetch logs');
+        }
+        const data = await res.json();
+        setLogs(data.activities || []);
+      } catch (err) {
+        setLogsError(err instanceof Error ? err.message : 'Failed to load system logs');
+      } finally {
+        setLogsLoading(false);
+      }
+    };
+    fetchLogs();
+  }, [currentSection]);
+
+  const refreshLogs = async () => {
+    try {
+      const res = await fetch('/api/admin/activity-log?limit=20', { headers: getAuthHeaders() });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to fetch logs');
+      }
+      const data = await res.json();
+      setLogs(data.activities || []);
+      setLogsError(null);
+    } catch (err) {
+      setLogsError(err instanceof Error ? err.message : 'Failed to load system logs');
+    }
+  };
 
   // Cache management
   if (currentSection === 'cache') {
@@ -55,9 +115,9 @@ export default function AdminSystemPage({ section }: { section?: string }) {
           <CardHeader><CardTitle>Cache Status</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-muted/30 text-center"><p className="text-sm text-muted-foreground">Application Cache</p><p className="text-lg font-bold">45 MB</p></div>
-              <div className="p-4 rounded-lg bg-muted/30 text-center"><p className="text-sm text-muted-foreground">Route Cache</p><p className="text-lg font-bold">12 MB</p></div>
-              <div className="p-4 rounded-lg bg-muted/30 text-center"><p className="text-sm text-muted-foreground">API Cache</p><p className="text-lg font-bold">8 MB</p></div>
+              <div className="p-4 rounded-lg bg-muted/30 text-center"><p className="text-sm text-muted-foreground">Application Cache</p><p className="text-lg font-bold">-</p></div>
+              <div className="p-4 rounded-lg bg-muted/30 text-center"><p className="text-sm text-muted-foreground">Route Cache</p><p className="text-lg font-bold">-</p></div>
+              <div className="p-4 rounded-lg bg-muted/30 text-center"><p className="text-sm text-muted-foreground">API Cache</p><p className="text-lg font-bold">-</p></div>
             </div>
             <Separator />
             <div className="space-y-3">
@@ -75,41 +135,55 @@ export default function AdminSystemPage({ section }: { section?: string }) {
     );
   }
 
-  // Logs
+  // Logs - fetched from activity-log API
   if (currentSection === 'logs') {
-    const mockLogs: LogEntry[] = [
-      { id: '1', level: 'error', message: 'Database connection timeout', timestamp: '2024-01-15 10:30:00', source: 'db' },
-      { id: '2', level: 'warning', message: 'High memory usage detected (85%)', timestamp: '2024-01-15 09:00:00', source: 'system' },
-      { id: '3', level: 'info', message: 'User login successful: admin@etr.com', timestamp: '2024-01-15 08:30:00', source: 'auth' },
-      { id: '4', level: 'error', message: 'bKash webhook validation failed', timestamp: '2024-01-14 22:00:00', source: 'payment' },
-      { id: '5', level: 'info', message: 'Backup completed successfully', timestamp: '2024-01-14 03:00:00', source: 'system' },
-    ];
-
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2"><FileText className="w-6 h-6" />System Logs</h1>
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader><TableRow><TableHead>Level</TableHead><TableHead>Message</TableHead><TableHead className="hidden md:table-cell">Source</TableHead><TableHead className="hidden md:table-cell">Timestamp</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {mockLogs.map(log => (
-                  <TableRow key={log.id}>
-                    <TableCell>
-                      <Badge variant={log.level === 'error' ? 'destructive' : log.level === 'warning' ? 'secondary' : 'default'}>
-                        {log.level === 'error' ? <AlertTriangle className="w-3 h-3 mr-1" /> : log.level === 'warning' ? <AlertTriangle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
-                        {log.level}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{log.message}</TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{log.source}</TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{log.timestamp}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold flex items-center gap-2"><FileText className="w-6 h-6" />System Logs</h1>
+          <Button variant="outline" size="sm" onClick={refreshLogs} className="gap-1"><RefreshCw className="w-4 h-4" />Refresh</Button>
+        </div>
+        {logsLoading ? (
+          <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : logsError ? (
+          <Card className="p-8 text-center">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <p className="text-red-500 mb-2">Error: {logsError}</p>
+            <Button variant="outline" onClick={refreshLogs}>Try Again</Button>
+          </Card>
+        ) : logs.length === 0 ? (
+          <Card className="p-8 text-center">
+            <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No system logs found.</p>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader><TableRow><TableHead>Level</TableHead><TableHead>Action</TableHead><TableHead className="hidden md:table-cell">Details</TableHead><TableHead className="hidden md:table-cell">User</TableHead><TableHead className="hidden md:table-cell">Timestamp</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {logs.map(log => {
+                    const level = classifyLogLevel(log.action);
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell>
+                          <Badge variant={level === 'error' ? 'destructive' : level === 'warning' ? 'secondary' : 'default'}>
+                            {level === 'error' ? <AlertTriangle className="w-3 h-3 mr-1" /> : level === 'warning' ? <AlertTriangle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
+                            {level}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">{log.action}</TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[250px] truncate">{log.details || '-'}</TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{log.admin?.name || log.adminId || 'system'}</TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
         <div className="flex gap-2">
           <Button variant="outline" className="gap-1"><Download className="w-4 h-4" />Download Logs</Button>
           <Button variant="destructive" className="gap-1"><Trash2 className="w-4 h-4" />Clear Logs</Button>
@@ -118,32 +192,22 @@ export default function AdminSystemPage({ section }: { section?: string }) {
     );
   }
 
-  // Cron Jobs
+  // Cron Jobs - configuration placeholder
   if (currentSection === 'cron-jobs') {
-    const mockCronJobs: CronJob[] = [
-      { id: '1', name: 'Auto Backup', command: 'backup:run', schedule: '0 3 * * *', lastRun: '2024-01-15 03:00', nextRun: '2024-01-16 03:00', status: 'active' },
-      { id: '2', name: 'Cache Cleanup', command: 'cache:cleanup', schedule: '0 */6 * * *', lastRun: '2024-01-15 06:00', nextRun: '2024-01-15 12:00', status: 'active' },
-      { id: '3', name: 'Expired Tickets Cleanup', command: 'tickets:cleanup-expired', schedule: '0 2 * * *', lastRun: '2024-01-15 02:00', nextRun: '2024-01-16 02:00', status: 'active' },
-      { id: '4', name: 'Email Queue Process', command: 'email:process-queue', schedule: '*/5 * * * *', lastRun: '2024-01-15 10:25', nextRun: '2024-01-15 10:30', status: 'active' },
-      { id: '5', name: 'Revenue Report Generate', command: 'reports:generate', schedule: '0 9 * * 1', lastRun: '2024-01-08 09:00', nextRun: '2024-01-15 09:00', status: 'inactive' },
-    ];
-
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold flex items-center gap-2"><Clock4 className="w-6 h-6" />Cron Jobs</h1>
         <Card>
           <CardContent className="p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead className="hidden md:table-cell">Command</TableHead><TableHead className="hidden md:table-cell">Schedule</TableHead><TableHead>Status</TableHead><TableHead className="hidden md:table-cell">Last Run</TableHead><TableHead className="hidden md:table-cell">Next Run</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead className="hidden md:table-cell">Command</TableHead><TableHead className="hidden md:table-cell">Schedule</TableHead><TableHead>Status</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
               <TableBody>
-                {mockCronJobs.map(job => (
+                {configuredCronJobs.map(job => (
                   <TableRow key={job.id}>
                     <TableCell className="font-medium">{job.name}</TableCell>
                     <TableCell className="hidden md:table-cell text-sm font-mono">{job.command}</TableCell>
                     <TableCell className="hidden md:table-cell text-sm">{job.schedule}</TableCell>
                     <TableCell><Badge variant={job.status === 'active' ? 'default' : 'secondary'}>{job.status}</Badge></TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{job.lastRun}</TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{job.nextRun}</TableCell>
                     <TableCell><Button variant="outline" size="sm">Run</Button></TableCell>
                   </TableRow>
                 ))}
@@ -155,41 +219,41 @@ export default function AdminSystemPage({ section }: { section?: string }) {
     );
   }
 
-  // Backups
+  // Backups - configuration placeholder
   if (currentSection === 'backups') {
-    const mockBackups: Backup[] = [
-      { id: '1', name: 'auto-backup-2024-01-15', size: '45 MB', createdAt: '2024-01-15 03:00', type: 'auto' },
-      { id: '2', name: 'auto-backup-2024-01-14', size: '44 MB', createdAt: '2024-01-14 03:00', type: 'auto' },
-      { id: '3', name: 'manual-backup-2024-01-10', size: '43 MB', createdAt: '2024-01-10 15:30', type: 'manual' },
-      { id: '4', name: 'auto-backup-2024-01-13', size: '44 MB', createdAt: '2024-01-13 03:00', type: 'auto' },
-    ];
-
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2"><HardDrive className="w-6 h-6" />Backups</h1>
           <Button size="sm" className="gap-1"><Download className="w-4 h-4" />Create Backup</Button>
         </div>
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Size</TableHead><TableHead className="hidden md:table-cell">Created</TableHead><TableHead className="w-[100px]">Actions</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {mockBackups.map(backup => (
-                  <TableRow key={backup.id}>
-                    <TableCell className="font-medium">{backup.name}</TableCell>
-                    <TableCell><Badge variant={backup.type === 'auto' ? 'default' : 'secondary'}>{backup.type}</Badge></TableCell>
-                    <TableCell className="text-sm">{backup.size}</TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{backup.createdAt}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1"><Button variant="outline" size="sm">Download</Button><Button variant="destructive" size="sm">Delete</Button></div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {configuredBackups.length === 0 ? (
+          <Card className="p-8 text-center">
+            <HardDrive className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No backups found. Create a backup to safeguard your data.</p>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Size</TableHead><TableHead className="hidden md:table-cell">Created</TableHead><TableHead className="w-[100px]">Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {configuredBackups.map(backup => (
+                    <TableRow key={backup.id}>
+                      <TableCell className="font-medium">{backup.name}</TableCell>
+                      <TableCell><Badge variant={backup.type === 'auto' ? 'default' : 'secondary'}>{backup.type}</Badge></TableCell>
+                      <TableCell className="text-sm">{backup.size}</TableCell>
+                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{backup.createdAt}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1"><Button variant="outline" size="sm">Download</Button><Button variant="destructive" size="sm">Delete</Button></div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
@@ -205,17 +269,12 @@ export default function AdminSystemPage({ section }: { section?: string }) {
               <CheckCircle className="w-8 h-8 text-emerald-600" />
               <div>
                 <p className="font-medium">Current Version: v1.0.0</p>
-                <p className="text-sm text-muted-foreground">Last updated: 2024-01-15</p>
+                <p className="text-sm text-muted-foreground">System is up to date</p>
               </div>
             </div>
             <Separator />
-            <div className="p-4 rounded-lg bg-muted/30">
-              <p className="text-sm font-medium">Available Update: v1.1.0</p>
-              <p className="text-xs text-muted-foreground mt-1">Bug fixes, performance improvements, new admin pages</p>
-            </div>
             <div className="flex gap-2">
-              <Button>Update Now</Button>
-              <Button variant="outline">Check for Updates</Button>
+              <Button>Check for Updates</Button>
             </div>
           </CardContent>
         </Card>
@@ -225,10 +284,10 @@ export default function AdminSystemPage({ section }: { section?: string }) {
 
   // Default - System Hub
   const systemFeatures = [
-    { key: 'cache', label: 'Cache Management', icon: Database, desc: 'Clear and manage application caches', stats: '65 MB used' },
-    { key: 'logs', label: 'System Logs', icon: FileText, desc: 'View and manage system logs', stats: '5 entries' },
-    { key: 'cron-jobs', label: 'Cron Jobs', icon: Clock4, desc: 'Manage scheduled tasks', stats: '5 jobs' },
-    { key: 'backups', label: 'Backups', icon: HardDrive, desc: 'Create and manage database backups', stats: '4 backups' },
+    { key: 'cache', label: 'Cache Management', icon: Database, desc: 'Clear and manage application caches' },
+    { key: 'logs', label: 'System Logs', icon: FileText, desc: 'View activity logs and system events' },
+    { key: 'cron-jobs', label: 'Cron Jobs', icon: Clock4, desc: 'Manage scheduled tasks', stats: `${configuredCronJobs.length} jobs` },
+    { key: 'backups', label: 'Backups', icon: HardDrive, desc: 'Create and manage database backups' },
     { key: 'update', label: 'System Update', icon: ArrowUpCircle, desc: 'Check and apply system updates', stats: 'v1.0.0' },
   ];
 
@@ -251,15 +310,11 @@ export default function AdminSystemPage({ section }: { section?: string }) {
                   <p className="text-xs text-muted-foreground">{feature.desc}</p>
                 </div>
               </div>
-              <Badge variant="secondary">{feature.stats}</Badge>
+              {feature.stats && <Badge variant="secondary">{feature.stats}</Badge>}
             </CardContent>
           </Card>
         ))}
       </div>
     </div>
   );
-}
-
-function Separator() {
-  return <hr className="border-border my-4" />;
 }

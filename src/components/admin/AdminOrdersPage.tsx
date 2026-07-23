@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Separator } from '@/components/ui/separator';
 import {
   ShoppingBag, Eye, ChevronLeft, ChevronRight, Loader2,
-  DollarSign, User, Truck, ShieldCheck, QrCode, MapPin, CheckCircle
+  DollarSign, User, Truck, ShieldCheck, QrCode, MapPin, CheckCircle, AlertCircle
 } from 'lucide-react';
 
 interface OrderRecord {
@@ -38,19 +38,17 @@ interface OrderRecord {
   journeyVerification?: { status: string; submittedAt: string | null } | null;
 }
 
-const MOCK_ORDERS: OrderRecord[] = [
-  { id: '1', orderId: 'ORD-00000001', ticketId: '1', buyerId: '5', sellerId: '1', amount: 882, platformFee: 18, totalAmount: 918, escrowStatus: 'held', paymentStatus: 'paid', deliveryMethod: 'online_pdf', deliveryStatus: 'delivered', qrCode: null, isQrScanned: false, status: 'completed', createdAt: '2025-01-15T12:00:00Z', buyer: { id: '5', name: 'Nasir Ahmed', username: 'nasir_ahmed' }, seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin' }, ticket: { id: '1', ticketId: 'ETR-00000001', transportType: 'bus', routeFrom: 'Dhaka', routeTo: 'Chittagong' }, journeyVerification: { status: 'verified', submittedAt: '2025-01-16T14:00:00Z' } },
-  { id: '2', orderId: 'ORD-00000002', ticketId: '2', buyerId: '4', sellerId: '1', amount: 1274, platformFee: 26, totalAmount: 1326, escrowStatus: 'held', paymentStatus: 'paid', deliveryMethod: 'online_pdf', deliveryStatus: 'pending', qrCode: null, isQrScanned: false, status: 'confirmed', createdAt: '2025-01-16T14:00:00Z', buyer: { id: '4', name: 'Arif Khan', username: 'arif_khan' }, seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin' }, ticket: { id: '2', ticketId: 'ETR-00000002', transportType: 'train', routeFrom: 'Dhaka', routeTo: 'Sylhet' }, journeyVerification: null },
-  { id: '3', orderId: 'ORD-00000003', ticketId: '4', buyerId: '5', sellerId: '3', amount: 679, platformFee: 21, totalAmount: 721, escrowStatus: 'held', paymentStatus: 'paid', deliveryMethod: 'in_person', deliveryStatus: 'pending', qrCode: 'QR-DATA-12345', isQrScanned: false, status: 'in_progress', createdAt: '2025-01-10T16:00:00Z', buyer: { id: '5', name: 'Nasir Ahmed', username: 'nasir_ahmed' }, seller: { id: '3', name: 'Fatima Begum', username: 'fatima_begum' }, ticket: { id: '4', ticketId: 'ETR-00000004', transportType: 'launch', routeFrom: 'Dhaka', routeTo: 'Barisal' }, journeyVerification: { status: 'pending', submittedAt: null } },
-  { id: '4', orderId: 'ORD-00000004', ticketId: '3', buyerId: '2', sellerId: '2', amount: 4900, platformFee: 100, totalAmount: 5100, escrowStatus: 'held', paymentStatus: 'pending', deliveryMethod: 'online_pdf', deliveryStatus: 'pending', qrCode: null, isQrScanned: false, status: 'pending', createdAt: '2025-01-18T11:00:00Z', buyer: { id: '2', name: 'Karim Hasan', username: 'karim_hasan' }, seller: { id: '2', name: 'Karim Hasan', username: 'karim_hasan' }, ticket: { id: '3', ticketId: 'ETR-00000003', transportType: 'flight', routeFrom: 'Dhaka', routeTo: 'Cox Bazar' }, journeyVerification: null },
-  { id: '5', orderId: 'ORD-00000005', ticketId: '5', buyerId: '4', sellerId: '1', amount: 533.5, platformFee: 16.5, totalAmount: 566.5, escrowStatus: 'refunded', paymentStatus: 'refunded', deliveryMethod: 'courier', deliveryStatus: 'pending', qrCode: 'QR-DATA-67890', isQrScanned: false, status: 'cancelled', createdAt: '2025-01-08T13:00:00Z', buyer: { id: '4', name: 'Arif Khan', username: 'arif_khan' }, seller: { id: '1', name: 'Rahim Uddin', username: 'rahim_uddin' }, ticket: { id: '5', ticketId: 'ETR-00000005', transportType: 'bus', routeFrom: 'Dhaka', routeTo: 'Rangpur' }, journeyVerification: null },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 const STATUS_TABS = ['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'disputed'];
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -66,32 +64,31 @@ export default function AdminOrdersPage() {
     params.set('page', String(page));
     params.set('limit', '20');
 
-    fetch(`/api/admin/orders?${params.toString()}`)
-      .then(r => r.json())
+    fetch(`/api/admin/orders?${params.toString()}`, { headers: getAuthHeaders() })
+      .then(r => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`);
+        return r.json();
+      })
       .then(d => {
-        if (d.orders && d.orders.length > 0) {
-          setOrders(d.orders);
+        if (d.error) {
+          setError(d.error);
+          setOrders([]);
+        } else {
+          setError(null);
+          setOrders(d.orders || []);
           setTotalPages(d.pagination?.totalPages || 1);
           setTotal(d.pagination?.total || 0);
-        } else {
-          setOrders(MOCK_ORDERS);
-          setTotalPages(1);
-          setTotal(MOCK_ORDERS.length);
         }
         setLoading(false);
       })
-      .catch(() => {
-        setOrders(MOCK_ORDERS);
+      .catch(err => {
+        setError(err.message || 'Failed to fetch orders');
+        setOrders([]);
         setTotalPages(1);
-        setTotal(MOCK_ORDERS.length);
+        setTotal(0);
         setLoading(false);
       });
   }, [statusTab, search, page]);
-
-  const filteredOrders = orders.filter(o => {
-    if (statusTab !== 'all' && o.status !== statusTab) return false;
-    return true;
-  });
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, { bg: string; label: string }> = {
@@ -149,6 +146,17 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-sm text-red-700">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => { setError(null); setPage(1); }}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-2">
@@ -172,7 +180,7 @@ export default function AdminOrdersPage() {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
-                ) : filteredOrders.length === 0 ? (
+                ) : orders.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No orders found for this filter</p>
@@ -195,7 +203,7 @@ export default function AdminOrdersPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredOrders.map(order => (
+                        {orders.map(order => (
                           <TableRow key={order.id}>
                             <TableCell className="font-medium">{order.orderId}</TableCell>
                             <TableCell>
@@ -236,7 +244,7 @@ export default function AdminOrdersPage() {
       </Card>
 
       {/* Pagination */}
-      {!loading && filteredOrders.length > 0 && totalPages > 1 && (
+      {!loading && orders.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
           <div className="flex items-center gap-2">

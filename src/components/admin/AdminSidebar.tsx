@@ -2,97 +2,102 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import {
-  LayoutDashboard, BarChart3, Ticket, ShoppingBag, CreditCard, Wallet,
-  RefreshCw, AlertTriangle, Users, ShieldCheck, MessageCircle, Star,
-  ScanLine, FileText, HelpCircle, BookOpen, PenTool, Home, Megaphone,
-  Search, Report, Image, Settings, Shield, Server, Clock, UserCog,
-  Key, ChevronDown, ChevronLeft, Menu, X, Bell, LogOut, LogIn,
-  Eye, Activity, FileBarChart2, Database, HardDrive, CalendarDays,
-  Mail, Smartphone, Globe, Palette, Coins, Clock4, Browser, Lock,
-  Hash, FolderOpen, Upload, Trash2, RotateCcw, Download, ArrowRight,
-  Scissors, UsersRound, Scale, BadgeCheck, ClipboardCheck
-} from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { iconMap } from './admin-icons';
+import type { LucideIcon } from 'lucide-react';
 
-const sidebarSections = [
+interface SidebarItem {
+  label: string;
+  icon: LucideIcon;
+  path: string;
+}
+
+interface SidebarSection {
+  title: string;
+  collapsible?: boolean;
+  items: SidebarItem[];
+}
+
+/* Resolve icon names → components at module init time (still tree-shakeable
+   because admin-icons.ts only imports the icons we actually need) */
+const sidebarSections: SidebarSection[] = [
   {
     title: 'DASHBOARD',
     items: [
-      { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-      { label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
-      { label: 'Activity Log', icon: Activity, path: '/admin/activity-log' },
+      { label: 'Dashboard', icon: iconMap.LayoutDashboard, path: '/admin' },
+      { label: 'Analytics', icon: iconMap.BarChart3, path: '/admin/analytics' },
+      { label: 'Activity Log', icon: iconMap.Activity, path: '/admin/activity-log' },
     ],
   },
   {
     title: 'MANAGEMENT',
     items: [
-      { label: 'Tickets', icon: Ticket, path: '/admin/tickets' },
-      { label: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
-      { label: 'Payments', icon: CreditCard, path: '/admin/payments' },
-      { label: 'Payouts', icon: Wallet, path: '/admin/payout/withdraws' },
-      { label: 'Refunds', icon: RefreshCw, path: '/admin/refunds' },
-      { label: 'Disputes', icon: AlertTriangle, path: '/admin/disputes' },
-      { label: 'Users', icon: Users, path: '/admin/users' },
-      { label: 'KYC Verification', icon: ShieldCheck, path: '/admin/kyc' },
-      { label: 'Messages', icon: MessageCircle, path: '/admin/messages' },
-      { label: 'Reviews', icon: Star, path: '/admin/reviews' },
-      { label: 'Ticket Verify', icon: ScanLine, path: '/admin/verify-ticket' },
-      { label: 'Journey Verify', icon: ClipboardCheck, path: '/admin/journey-verify' },
+      { label: 'Tickets', icon: iconMap.Ticket, path: '/admin/tickets' },
+      { label: 'Orders', icon: iconMap.ShoppingBag, path: '/admin/orders' },
+      { label: 'Payments', icon: iconMap.CreditCard, path: '/admin/payments' },
+      { label: 'Payouts', icon: iconMap.Wallet, path: '/admin/payout/withdraws' },
+      { label: 'Refunds', icon: iconMap.RefreshCw, path: '/admin/refunds' },
+      { label: 'Disputes', icon: iconMap.AlertTriangle, path: '/admin/disputes' },
+      { label: 'Users', icon: iconMap.Users, path: '/admin/users' },
+      { label: 'KYC Verification', icon: iconMap.ShieldCheck, path: '/admin/kyc' },
+      { label: 'Messages', icon: iconMap.MessageCircle, path: '/admin/messages' },
+      { label: 'Reviews', icon: iconMap.Star, path: '/admin/reviews' },
+      { label: 'Ticket Verify', icon: iconMap.ScanLine, path: '/admin/verify-ticket' },
+      { label: 'Journey Verify', icon: iconMap.ClipboardCheck, path: '/admin/journey-verify' },
     ],
   },
   {
     title: 'CONTENT',
     items: [
-      { label: 'Blog', icon: BookOpen, path: '/admin/blog' },
-      { label: 'FAQs', icon: HelpCircle, path: '/admin/faqs' },
-      { label: 'CMS Pages', icon: FileText, path: '/admin/pages' },
-      { label: 'Homepage', icon: Home, path: '/admin/homepage' },
-      { label: 'Internal Ads', icon: Megaphone, path: '/admin/ads' },
+      { label: 'Blog', icon: iconMap.BookOpen, path: '/admin/blog' },
+      { label: 'FAQs', icon: iconMap.HelpCircle, path: '/admin/faqs' },
+      { label: 'CMS Pages', icon: iconMap.FileText, path: '/admin/pages' },
+      { label: 'Homepage', icon: iconMap.Home, path: '/admin/homepage' },
+      { label: 'Internal Ads', icon: iconMap.Megaphone, path: '/admin/ads' },
     ],
   },
   {
     title: 'MARKETING & SEO',
     items: [
-      { label: 'Marketing', icon: PenTool, path: '/admin/marketing' },
-      { label: 'SEO', icon: Search, path: '/admin/seo' },
+      { label: 'Marketing', icon: iconMap.PenTool, path: '/admin/marketing' },
+      { label: 'SEO', icon: iconMap.Search, path: '/admin/seo' },
     ],
   },
   {
     title: 'REPORTS',
     items: [
-      { label: 'Reports', icon: FileBarChart2, path: '/admin/reports' },
+      { label: 'Reports', icon: iconMap.FileBarChart2, path: '/admin/reports' },
     ],
   },
   {
     title: 'MEDIA',
     items: [
-      { label: 'Media Library', icon: Image, path: '/admin/media' },
+      { label: 'Media Library', icon: iconMap.Image, path: '/admin/media' },
     ],
   },
   {
     title: 'SETTINGS',
     collapsible: true,
     items: [
-      { label: 'General', icon: Settings, path: '/admin/settings/general' },
-      { label: 'Localization', icon: Globe, path: '/admin/settings/localization' },
-      { label: 'Email / SMTP', icon: Mail, path: '/admin/settings/email' },
-      { label: 'SMS', icon: Smartphone, path: '/admin/settings/sms' },
-      { label: 'Payment Gateway', icon: CreditCard, path: '/admin/settings/payments' },
-      { label: 'Security', icon: Shield, path: '/admin/security' },
-      { label: 'API Keys', icon: Key, path: '/admin/security/api-keys' },
+      { label: 'General', icon: iconMap.Settings, path: '/admin/settings/general' },
+      { label: 'Localization', icon: iconMap.Globe, path: '/admin/settings/localization' },
+      { label: 'Email / SMTP', icon: iconMap.Mail, path: '/admin/settings/email' },
+      { label: 'SMS', icon: iconMap.Smartphone, path: '/admin/settings/sms' },
+      { label: 'Payment Gateway', icon: iconMap.CreditCard, path: '/admin/settings/payments' },
+      { label: 'Security', icon: iconMap.Shield, path: '/admin/security' },
+      { label: 'API Keys', icon: iconMap.Key, path: '/admin/security/api-keys' },
     ],
   },
   {
     title: 'SYSTEM',
     collapsible: true,
     items: [
-      { label: 'Administrators', icon: UserCog, path: '/admin/admins' },
-      { label: 'Roles & Permissions', icon: Scale, path: '/admin/roles' },
-      { label: 'Cache', icon: Database, path: '/admin/cache' },
-      { label: 'Logs', icon: FileText, path: '/admin/logs' },
-      { label: 'Backups', icon: HardDrive, path: '/admin/backups' },
-      { label: 'Cron Jobs', icon: Clock4, path: '/admin/cron-jobs' },
+      { label: 'Administrators', icon: iconMap.UserCog, path: '/admin/admins' },
+      { label: 'Roles & Permissions', icon: iconMap.Scale, path: '/admin/roles' },
+      { label: 'Cache', icon: iconMap.Database, path: '/admin/cache' },
+      { label: 'Logs', icon: iconMap.FileText, path: '/admin/logs' },
+      { label: 'Backups', icon: iconMap.HardDrive, path: '/admin/backups' },
+      { label: 'Cron Jobs', icon: iconMap.Clock4, path: '/admin/cron-jobs' },
     ],
   },
 ];
@@ -114,13 +119,13 @@ export default function AdminSidebar({ collapsed, onToggle }: { collapsed: boole
         {!collapsed && (
           <Link href="/admin" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Ticket className="w-5 h-5 text-primary-foreground" />
+              <iconMap.Ticket className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="font-bold text-sm">ETR Admin</span>
           </Link>
         )}
         <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
-          {collapsed ? <Menu className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {collapsed ? <iconMap.Menu className="w-4 h-4" /> : <iconMap.ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
@@ -140,7 +145,7 @@ export default function AdminSidebar({ collapsed, onToggle }: { collapsed: boole
                   </span>
                   {isCollapsible && (
                     <button onClick={() => toggleSection(section.title)} className="p-0.5 hover:bg-muted/50 rounded">
-                      <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      <iconMap.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </button>
                   )}
                 </div>

@@ -1,8 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import AdminSidebar from './AdminSidebar';
-import AdminHeader from './AdminHeader';
+import dynamic from 'next/dynamic';
+
+// Dynamic imports to prevent Turbopack from resolving the entire
+// sidebar/header module graph at compile time, which causes OOM
+// in the 4GB sandbox. Loading these client-only reduces peak memory.
+const AdminSidebar = dynamic(() => import('./AdminSidebar'), { ssr: false });
+const AdminHeader = dynamic(() => import('./AdminHeader'), { ssr: false });
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

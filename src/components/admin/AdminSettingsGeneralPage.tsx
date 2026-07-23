@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Settings, Globe, Upload, ImageIcon, Save, Mail, Phone, MapPin,
-  Palette, Language, Clock, Coins, Monitor, Loader2
+  Palette, Languages, Clock, Coins, Monitor, Loader2
 } from 'lucide-react';
 
 function getAuthHeaders() {
@@ -101,7 +101,7 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
   if (currentSection === 'languages') {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Language className="w-6 h-6" />Language Management</h1>
+        <h1 className="text-2xl font-bold flex items-center gap-2"><Languages className="w-6 h-6" />Language Management</h1>
         <Card>
           <CardContent className="p-6 space-y-3">
             {[
