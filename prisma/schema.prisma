@@ -207,6 +207,7 @@ model Order {
   dispute Dispute?
   journeyVerification JourneyVerification?
   refund  Refund?
+  payment PaymentTransaction?
 }
 
 model Chat {
@@ -510,6 +511,85 @@ model BlogTag {
   id    String @id @default(cuid())
   name  String @unique
   slug  String @unique
+}
+
+model PaymentTransaction {
+  id                String   @id @default(cuid())
+  payId             String   @unique // PAY-1, PAY-2 (using id-prefix scheme)
+  orderId           String?  @unique // Link to Order if applicable
+  tranId            String   @unique // SSLCommerz transaction ID (our tran_id)
+  valId             String?  // SSLCommerz validation ID
+  sessionKey        String?  // SSLCommerz session key
+  
+  // Amount tracking
+  amount            Float    // Original amount sent to SSLCommerz
+  storeAmount       Float?   // Amount after bank charges (from SSLCommerz)
+  currency          String   @default("BDT")
+  currencyType      String?  @default("BDT")
+  currencyAmount    Float?   // Amount in original currency
+  
+  // Payment details
+  paymentMethod     String?  // sslcommerz, bkash, googlepay, quickbankpay
+  cardType          String?  // VISA-Brac bank, MASTER-DBBL, bKash, etc.
+  cardNo            String?  // Masked card number or reference ID
+  cardIssuer        String?  // Issuer bank name
+  cardBrand         String?  // VISA, MASTER, AMEX, IB, MOBILE BANKING
+  bankTranId        String?  // Bank transaction ID
+  
+  // Customer info (from SSLCommerz response)
+  cusName           String?
+  cusEmail          String?
+  cusPhone          String?
+  cusAdd1           String?
+  cusCity           String?
+  cusCountry        String?
+  
+  // Risk assessment
+  riskLevel         Int      @default(0) // 0=safe, 1=risky
+  riskTitle         String?  // Safe, Risky
+  
+  // Status tracking
+  status            String   @default("pending") // pending, valid, validated, failed, cancelled, unattempted, expired
+  paymentStatus     String   @default("pending") // pending, paid, failed, refunded
+  escrowStatus      String?  // held, released, refunded
+  
+  // Invoice-specific fields
+  invoiceId         String?  @unique // SSLCommerz invoice ID (for invoice payments)
+  payUrl            String?  // Shareable payment link (for invoices)
+  qrPayUrl          String?  // QR payment URL (for invoices)
+  banglaQrCode      String?  // Bangla QR content
+  
+  // Quick Bank Pay-specific fields
+  utilityCode       String?  // Utility code for Quick Bank Pay
+  billType          String?  // education, isp, insurance
+  referenceId       String?  // Reference ID for the bill
+  confirmationId    String?  // Payment confirmation ID
+  
+  // Google Pay-specific fields
+  googlePaySessionKey String? // Google Pay session key
+  googlePayActionUrl  String? // Google Pay token submission URL
+  
+  // Refund tracking
+  refundRefId       String?  // Refund reference ID from SSLCommerz
+  refundAmount      Float?   // Amount refunded
+  refundStatus      String?  // processing, refunded, cancelled
+  refundRemarks     String?  // Reason for refund
+  
+  // Custom values (value_a through value_d)
+  valueA            String?
+  valueB            String?
+  valueC            String?
+  valueD            String?
+  
+  // Timestamps
+  paidAt            DateTime?
+  validatedAt       DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  order             Order?   @relation(fields: [orderId], references: [id])
 }
 
 model FaqCategory {

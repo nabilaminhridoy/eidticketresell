@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguageStore } from '@/lib/store';
 import { useNav } from '@/lib/use-nav';
 import {
   ArrowLeft, Shield, Phone, MapPin, Mail, User, Home,
   CreditCard, Lock, CheckCircle2, Bus, TrainFront, Plane, Ship,
-  AlertCircle,
+  AlertCircle, Link2, Clock, Copy, ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { ALL_BD_DISTRICTS } from '@/lib/constants';
 
 // ─── Payment methods ────────────────────────────────────────────────
-type PaymentMethod = 'bkash' | 'sslcommerz';
+type PaymentMethod = 'bkash' | 'sslcommerz' | 'googlepay' | 'invoice';
 
 const paymentMethods: {
   id: PaymentMethod;
@@ -46,7 +46,46 @@ const paymentMethods: {
     descriptionEn: 'Pay via SSLCommerz (card, net banking, mobile banking)',
     descriptionBn: 'SSLCommerz দিয়ে পেমেন্ট করুন (কার্ড, নেট ব্যাংকিং, মোবাইল ব্যাংকিং)',
   },
+  {
+    id: 'googlepay',
+    labelEn: 'Google Pay',
+    labelBn: 'গুগল পে',
+    iconBg: 'bg-white border border-gray-200',
+    descriptionEn: 'Pay with your Google Pay account',
+    descriptionBn: 'আপনার গুগল পে অ্যাকাউন্ট দিয়ে পেমেন্ট করুন',
+  },
+  {
+    id: 'invoice',
+    labelEn: 'Pay via Invoice Link',
+    labelBn: 'ইনভয়েস লিংক দিয়ে পেমেন্ট',
+    iconBg: 'bg-amber-500',
+    descriptionEn: 'Get a payment link you can pay later or share',
+    descriptionBn: 'পেমেন্ট লিংক পান যা আপনি পরে পেমেন্ট করতে বা শেয়ার করতে পারেন',
+  },
 ];
+
+// ─── Google Pay Types ────────────────────────────────────────────────
+interface GooglePayConfig {
+  apiVersion: string;
+  apiVersionMinor: string;
+  gatewayMerchantId: string;
+  gateway: string;
+  merchantId: string;
+  merchantName: string;
+  allowedAuthMethods: string[];
+  allowedCardNetworks: string[];
+  environment: string;
+  totalAmount: number;
+  currency: string;
+  countryCode: string;
+}
+
+interface InvoiceData {
+  pay_url: string;
+  qr_image_pay_url: string;
+  invoice_id: string;
+  tran_id: string;
+}
 
 // ─── Checkout Page Component ────────────────────────────────────────
 export default function CheckoutPage() {
@@ -63,33 +102,65 @@ export default function CheckoutPage() {
   const [upazilla, setUpazilla] = useState('');
   const [district, setDistrict] = useState('');
   const [postCode, setPostCode] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('sslcommerz');
 
   // ─── Validation state ────────────────────────────────────────
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ─── Google Pay state ────────────────────────────────────────
+  const [gpayConfig, setGpayConfig] = useState<GooglePayConfig | null>(null);
+  const [gpayReady, setGpayReady] = useState(false);
+  const [gpayLoading, setGpayLoading] = useState(false);
+  const googlePayBtnRef = useRef<HTMLDivElement>(null);
+
+  // ─── Invoice state ───────────────────────────────────────────
+  const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // ─── Mock ticket data ────────────────────────────────────────
+  const ticketInfo = {
+    transportType: 'bus',
+    operatorEn: 'Green Line Paribahan',
+    operatorBn: 'গ্রিন লাইন পরিবাহন',
+    fromEn: 'Dhaka',
+    fromBn: 'ঢাকা',
+    toEn: 'Chittigong',
+    toBn: 'চট্টগ্রাম',
+    date: '2025-03-28',
+    time: '22:00',
+    seat: 'A1',
+    classEn: 'AC Business',
+    classBn: 'এসি বিজনেস',
+    price: 850,
+    fee: 17,
+    total: 867,
+  };
+
+  const transportIconMap: Record<string, React.ElementType> = {
+    bus: Bus,
+    train: TrainFront,
+    flight: Plane,
+    launch: Ship,
+  };
+  const TransportIcon = transportIconMap[ticketInfo.transportType] || Bus;
+
   // ─── Phone validation (Bangladesh 11-digit) ──────────────────
   const validatePhone = (value: string): boolean => {
-    // Remove +88 prefix if present, then check for 11 digits
     const cleaned = value.replace(/^\+?88/, '').replace(/\D/g, '');
     return /^01[3-9]\d{8}$/.test(cleaned);
   };
 
   const formatPhoneDisplay = (value: string): string => {
-    // Always show +88 prefix
     const cleaned = value.replace(/^\+?88/, '').replace(/\D/g, '');
     return cleaned ? `+88 ${cleaned}` : '+88 ';
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Strip prefix if user typed it, store only the local number
     let val = e.target.value;
-    // Remove the +88 prefix the user might type
     val = val.replace(/^\+?88\s?/, '');
-    // Only allow digits
     val = val.replace(/\D/g, '');
-    // Limit to 11 digits
     if (val.length > 11) val = val.slice(0, 11);
     setPhone(val);
   };
@@ -124,15 +195,204 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+  // ─── Get payment method name ─────────────────────────────────
+  const getPaymentMethodName = () => {
+    const method = paymentMethods.find(m => m.id === paymentMethod);
+    return method ? (isBn ? method.labelBn : method.labelEn) : '';
+  };
 
-    setIsSubmitting(true);
-    // Simulate payment processing
+  // ─── Google Pay: Load SDK & Initialize ───────────────────────
+  const loadGooglePayScript = useCallback(() => {
+    const existing = document.querySelector('script[src="https://pay.google.com/gp/p/js/pay.js"]');
+    if (existing) return Promise.resolve();
+
+    return new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://pay.google.com/gp/p/js/pay.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Google Pay SDK'));
+      document.body.appendChild(script);
+    });
+  }, []);
+
+  const fetchGooglePayConfig = useCallback(async () => {
     try {
-      // In real app, this would call an API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      navigate('order-successful');
+      const res = await fetch('/api/payment/googlepay/config');
+      const data = await res.json();
+      if (data.success && data.apiVersion) {
+        setGpayConfig({
+          apiVersion: data.apiVersion,
+          apiVersionMinor: data.apiVersionMinor,
+          gatewayMerchantId: data.gatewayMerchantId,
+          gateway: data.gateway,
+          merchantId: data.merchantId,
+          merchantName: data.merchantName,
+          allowedAuthMethods: data.allowedAuthMethods,
+          allowedCardNetworks: data.allowedCardNetworks,
+          environment: data.environment,
+          totalAmount: ticketInfo.total,
+          currency: data.currency || 'BDT',
+          countryCode: data.countryCode || 'BD',
+        });
+        return data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const initGooglePay = useCallback(async () => {
+    if (gpayReady) return;
+    setGpayLoading(true);
+
+    try {
+      // Load the Google Pay SDK
+      await loadGooglePayScript();
+
+      // Fetch config from our backend
+      const config = await fetchGooglePayConfig();
+      if (!config) {
+        setGpayLoading(false);
+        return;
+      }
+
+      // Initialize PaymentsClient
+      const paymentsClient = new (window as any).google.payments.api.PaymentsClient({
+        environment: config.environment === 'TEST' ? 'TEST' : 'PRODUCTION',
+      });
+
+      // Check if Google Pay is ready
+      const isReadyToPayRequest = {
+        apiVersion: config.apiVersion,
+        apiVersionMinor: config.apiVersionMinor,
+        allowedPaymentMethods: [
+          {
+            type: 'CARD',
+            parameters: {
+              allowedAuthMethods: config.allowedAuthMethods,
+              allowedCardNetworks: config.allowedCardNetworks,
+            },
+            tokenizationSpecification: {
+              type: 'PAYMENT_GATEWAY',
+              parameters: {
+                gateway: config.gateway,
+                gatewayMerchantId: config.gatewayMerchantId,
+              },
+            },
+          },
+        ],
+      };
+
+      const response = await paymentsClient.isReadyToPay(isReadyToPayRequest);
+      if (response.result) {
+        setGpayReady(true);
+      }
+    } catch (err) {
+      console.error('Google Pay initialization failed:', err);
+    } finally {
+      setGpayLoading(false);
+    }
+  }, [gpayReady, loadGooglePayScript, fetchGooglePayConfig]);
+
+  // ─── Google Pay: Handle payment ──────────────────────────────
+  const handleGooglePayClick = async () => {
+    if (!gpayConfig) return;
+
+    try {
+      const paymentsClient = new (window as any).google.payments.api.PaymentsClient({
+        environment: gpayConfig.environment === 'TEST' ? 'TEST' : 'PRODUCTION',
+      });
+
+      const paymentDataRequest = {
+        apiVersion: gpayConfig.apiVersion,
+        apiVersionMinor: gpayConfig.apiVersionMinor,
+        allowedPaymentMethods: [
+          {
+            type: 'CARD',
+            parameters: {
+              allowedAuthMethods: gpayConfig.allowedAuthMethods,
+              allowedCardNetworks: gpayConfig.allowedCardNetworks,
+            },
+            tokenizationSpecification: {
+              type: 'PAYMENT_GATEWAY',
+              parameters: {
+                gateway: gpayConfig.gateway,
+                gatewayMerchantId: gpayConfig.gatewayMerchantId,
+              },
+            },
+          },
+        ],
+        transactionInfo: {
+          totalPriceStatus: 'FINAL',
+          totalPrice: String(ticketInfo.total),
+          currencyCode: gpayConfig.currency,
+          countryCode: gpayConfig.countryCode,
+        },
+        merchantInfo: {
+          merchantId: gpayConfig.merchantId,
+          merchantName: gpayConfig.merchantName,
+        },
+      };
+
+      const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
+
+      // Got the payment token from Google Pay
+      const tokenData = paymentData.paymentMethodData.tokenizationData.token;
+
+      // First: initiate a Google Pay transaction on our backend
+      setIsSubmitting(true);
+      const initiateRes = await fetch('/api/payment/googlepay/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          totalAmount: ticketInfo.total,
+          currency: gpayConfig.currency,
+          tranId: `GPY-${Date.now()}`,
+          cusName: fullName,
+          cusEmail: email,
+          cusPhone: `+88${phone}`,
+          cusAdd1: address,
+          cusCity: district,
+          cusPostcode: postCode,
+          cusCountry: 'BD',
+          product_category: 'bus ticket',
+          product_name: `${ticketInfo.fromEn} to ${ticketInfo.toEn} - ${ticketInfo.operatorEn}`,
+          product_profile: 'airline-tickets',
+          orderId: 'DEMO-ORDER',
+        }),
+      });
+      const initiateData = await initiateRes.json();
+
+      if (!initiateData.success) {
+        navigate('order-failed');
+        return;
+      }
+
+      // Second: process the Google Pay token with the session key
+      const processRes = await fetch('/api/payment/googlepay/process-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_key: initiateData.session_key,
+          en_signature_data: tokenData,
+          actionurl: initiateData.actionurl,
+        }),
+      });
+      const processData = await processRes.json();
+
+      if (processData.success) {
+        if (processData.type === 'otp') {
+          // Redirect to 3DS OTP page
+          window.location.href = processData.redirectUrl;
+        } else {
+          // Direct success
+          navigate('order-successful');
+        }
+      } else {
+        navigate('order-failed');
+      }
     } catch {
       navigate('order-failed');
     } finally {
@@ -140,38 +400,179 @@ export default function CheckoutPage() {
     }
   };
 
-  // ─── Get payment method name ─────────────────────────────────
-  const getPaymentMethodName = () => {
-    const method = paymentMethods.find(m => m.id === paymentMethod);
-    return method ? (isBn ? method.labelBn : method.labelEn) : '';
+  // ─── Invoice: Create invoice link ────────────────────────────
+  const handleCreateInvoice = async () => {
+    if (!validateForm()) return;
+    setInvoiceLoading(true);
+
+    try {
+      const res = await fetch('/api/payment/invoice/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          totalAmount: ticketInfo.total,
+          currency: 'BDT',
+          cusName: fullName,
+          cusEmail: email,
+          cusPhone: `+88${phone}`,
+          cusAdd1: address,
+          cusCity: district,
+          cusPostcode: postCode,
+          cusCountry: 'BD',
+          product_category: 'bus ticket',
+          product_name: `${ticketInfo.fromEn} to ${ticketInfo.toEn} - ${ticketInfo.operatorEn}`,
+          product_profile: 'airline-tickets',
+          inv_name: `${ticketInfo.fromEn} to ${ticketInfo.toEn} - ${ticketInfo.operatorEn}`,
+          inv_description: `Bus ticket: ${ticketInfo.fromEn} → ${ticketInfo.toEn}, Seat ${ticketInfo.seat}, ${ticketInfo.classEn}`,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success && data.pay_url) {
+        setInvoiceData({
+          pay_url: data.pay_url,
+          qr_image_pay_url: data.qr_image_pay_url || '',
+          invoice_id: data.invoice_id || '',
+          tran_id: data.tran_id || '',
+        });
+      } else {
+        setErrors({ ...errors, invoice: data.error || (isBn ? 'ইনভয়েস তৈরি ব্যর্থ' : 'Invoice creation failed') });
+      }
+    } catch {
+      setErrors({ ...errors, invoice: isBn ? 'ইনভয়েস তৈরি ব্যর্থ' : 'Invoice creation failed' });
+    } finally {
+      setInvoiceLoading(false);
+    }
   };
 
-  // ─── Mock ticket data ────────────────────────────────────────
-  const ticketInfo = {
-    transportType: 'bus',
-    operatorEn: 'Green Line Paribahan',
-    operatorBn: 'গ্রিন লাইন পরিবাহন',
-    fromEn: 'Dhaka',
-    fromBn: 'ঢাকা',
-    toEn: 'Chittagong',
-    toBn: 'চট্টগ্রাম',
-    date: '2025-03-28',
-    time: '22:00',
-    seat: 'A1',
-    classEn: 'AC Business',
-    classBn: 'এসি বিজনেস',
-    price: 850,
-    fee: 17,
-    total: 867,
+  // ─── Invoice: Copy link ──────────────────────────────────────
+  const handleCopyLink = async () => {
+    if (!invoiceData?.pay_url) return;
+    try {
+      await navigator.clipboard.writeText(invoiceData.pay_url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = invoiceData.pay_url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
-  const transportIconMap: Record<string, React.ElementType> = {
-    bus: Bus,
-    train: TrainFront,
-    flight: Plane,
-    launch: Ship,
+  // ─── Initialize Google Pay when selected ─────────────────────
+  useEffect(() => {
+    if (paymentMethod === 'googlepay' && !gpayReady && !gpayLoading) {
+      initGooglePay();
+    }
+  }, [paymentMethod, gpayReady, gpayLoading, initGooglePay]);
+
+  // ─── Clear invoice data when switching payment method ────────
+  useEffect(() => {
+    if (paymentMethod !== 'invoice') {
+      setInvoiceData(null);
+      setCopied(false);
+    }
+  }, [paymentMethod]);
+
+  // ─── Main Submit Handler ─────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      if (paymentMethod === 'sslcommerz') {
+        // ─── SSLCommerz Hosted Payment (Redirect) ──────────
+        const res = await fetch('/api/payment/sslcommerz/initiate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: 'DEMO-ORDER',
+            totalAmount: ticketInfo.total,
+            currency: 'BDT',
+            cusName: fullName,
+            cusEmail: email,
+            cusAdd1: address,
+            cusCity: district,
+            cusPostcode: postCode,
+            cusCountry: 'Bangladesh',
+            cusPhone: `+88${phone}`,
+            product_name: `${ticketInfo.fromEn} to ${ticketInfo.toEn} - ${ticketInfo.operatorEn}`,
+            product_category: 'bus ticket',
+            product_profile: 'airline-tickets',
+          }),
+        });
+        const data = await res.json();
+
+        if (data.data) {
+          // Redirect to SSLCommerz Gateway Page (Hosted Payment mode)
+          window.location.href = data.data;
+        } else {
+          setErrors({ ...errors, payment: data.error || data.details || (isBn ? 'পেমেন্ট শুরু ব্যর্থ' : 'Payment initiation failed') });
+          setIsSubmitting(false);
+        }
+      } else if (paymentMethod === 'googlepay') {
+        // Google Pay flow is handled by the button click, not the main submit
+        // But we validate the form here so user sees errors if form is incomplete
+        setIsSubmitting(false);
+      } else if (paymentMethod === 'invoice') {
+        // Invoice flow handled by handleCreateInvoice
+        setIsSubmitting(false);
+      } else if (paymentMethod === 'bkash') {
+        // ─── bKash - simulated for now ──────────────────────
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        navigate('order-successful');
+      }
+    } catch {
+      navigate('order-failed');
+    } finally {
+      // Only set false if we didn't redirect (SSLCommerz redirects the whole page)
+      if (paymentMethod !== 'sslcommerz' || errors.payment) {
+        setIsSubmitting(false);
+      }
+    }
   };
-  const TransportIcon = transportIconMap[ticketInfo.transportType] || Bus;
+
+  // ─── Determine button text and action ────────────────────────
+  const getButtonConfig = () => {
+    if (paymentMethod === 'invoice') {
+      if (invoiceData) {
+        return {
+          text: isBn ? 'ইনভয়েস লিংক দেখুন' : 'View Invoice Link',
+          action: () => window.open(invoiceData.pay_url, '_blank'),
+          disabled: false,
+        };
+      }
+      return {
+        text: isBn ? 'ইনভয়েস তৈরি করুন' : 'Create Invoice',
+        action: handleCreateInvoice,
+        disabled: invoiceLoading,
+      };
+    }
+    if (paymentMethod === 'googlepay') {
+      // Google Pay uses its own button, so the main button just validates form
+      return {
+        text: isBn ? 'ফর্ম যাচাই করুন' : 'Validate Form',
+        action: () => validateForm(),
+        disabled: false,
+      };
+    }
+    return {
+      text: isBn
+        ? `${getPaymentMethodName()} দিয়ে পেমেন্ট করুন`
+        : `Pay with ${getPaymentMethodName()}`,
+      action: handleSubmit,
+      disabled: isSubmitting,
+    };
+  };
+
+  const buttonConfig = getButtonConfig();
 
   // ─── Render ──────────────────────────────────────────────────
   return (
@@ -464,12 +865,16 @@ export default function CheckoutPage() {
                     >
                       <RadioGroupItem value={method.id} id={method.id} />
                       {/* Payment method icon */}
-                      <div className={`${method.iconBg} text-white rounded-lg p-2 flex items-center justify-center`}>
+                      <div className={`${method.iconBg} text-white rounded-lg p-2 flex items-center justify-center min-w-[36px] min-h-[36px]`}>
                         {method.id === 'bkash' ? (
-                          <span className="text-sm font-bold">b</span>
-                        ) : (
+                          <span className="text-sm font-bold text-white">b</span>
+                        ) : method.id === 'sslcommerz' ? (
                           <Lock className="h-4 w-4" />
-                        )}
+                        ) : method.id === 'googlepay' ? (
+                          <span className="text-sm font-bold text-gray-700">G</span>
+                        ) : method.id === 'invoice' ? (
+                          <Link2 className="h-4 w-4" />
+                        ) : null}
                       </div>
                       <div className="flex-1">
                         <Label htmlFor={method.id} className="font-semibold cursor-pointer">
@@ -479,9 +884,145 @@ export default function CheckoutPage() {
                           {isBn ? method.descriptionBn : method.descriptionEn}
                         </p>
                       </div>
+                      {method.id === 'invoice' && (
+                        <Clock className="h-4 w-4 text-amber-500" />
+                      )}
                     </div>
                   ))}
                 </RadioGroup>
+
+                {/* ─── Google Pay Button (shown when Google Pay is selected) ─── */}
+                {paymentMethod === 'googlepay' && (
+                  <div className="mt-4 space-y-3">
+                    <Separator />
+                    <div className="pt-2">
+                      {gpayLoading && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          {isBn ? 'গুগল পে লোড হচ্ছে...' : 'Loading Google Pay...'}
+                        </div>
+                      )}
+
+                      {gpayReady && !gpayLoading && (
+                        <div ref={googlePayBtnRef} className="flex justify-center">
+                          <button
+                            type="button"
+                            onClick={handleGooglePayClick}
+                            className="google-pay-button-inline flex items-center justify-center gap-2 bg-black text-white rounded-full px-6 py-3 min-h-[44px] font-medium transition-opacity hover:opacity-90"
+                            aria-label={isBn ? 'গুগল পে দিয়ে পেমেন্ট করুন' : 'Pay with Google Pay'}
+                          >
+                            <svg viewBox="0 0 56 24" className="h-5 w-auto" aria-hidden="true">
+                              <path d="M22.4 12.2c0-3.5-2.9-6.2-6.4-6.2-3.5 0-6.4 2.8-6.4 6.2 0 3.5 2.9 6.3 6.4 6.3 3.5 0 6.4-2.8 6.4-6.3zm-2.8 0c0 2.2-1.6 3.8-3.6 3.8-2 0-3.6-1.6-3.6-3.8 0-2.2 1.6-3.8 3.6-3.8 2 0 3.6 1.6 3.6 3.8z" fill="#4285F4"/>
+                              <path d="M35.6 6.3v12.4h-2.8V6.3h2.8z" fill="#34A853"/>
+                              <path d="M42.8 15.6l-2.2-1.5c.7-1 1.1-2.2 1.1-3.5 0-1.3-.4-2.5-1.1-3.5l2.2-1.5c1.1 1.5 1.7 3.3 1.7 5s-.6 3.5-1.7 5z" fill="#FBBC04"/>
+                              <path d="M36 12.2c0-1.3.4-2.5 1.1-3.5l2.2 1.5c-.7 1-1.1 2.2-1.1 3.5 0 1.3.4 2.5 1.1 3.5L36 16.7c-.7-1-1.1-2.2-1.1-3.5 0 1.3.4 2.5 1.1 3.5z" fill="#EA4335"/>
+                              <path d="M16 18.5c-3.5 0-6.4-2.8-6.4-6.3S12.5 6 16 6c1.7 0 3.2.6 4.4 1.7l2.2-2C20.8 4.2 18.5 3.3 16 3.3c-4.8 0-8.8 3.9-8.8 8.9s4 8.9 8.8 8.9c2.5 0 4.8-.9 6.6-2.4l-2.2-2c-1.2 1-2.7 1.7-4.4 1.7z" fill="#4285F4"/>
+                            </svg>
+                            <span>{isBn ? 'পেমেন্ট করুন' : 'Pay'}</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {!gpayReady && !gpayLoading && (
+                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4" />
+                          {isBn ? 'গুগল পে এই ডিভাইসে উপলব্ধ নয়' : 'Google Pay is not available on this device'}
+                        </div>
+                      )}
+
+                      {gpayConfig && (
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          {isBn
+                            ? `মোট: ৳ ${ticketInfo.total} (${gpayConfig.currency})`
+                            : `Total: ৳ ${ticketInfo.total} (${gpayConfig.currency})`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ─── Invoice Link Display (shown after invoice creation) ─── */}
+                {paymentMethod === 'invoice' && invoiceData && (
+                  <div className="mt-4 space-y-3">
+                    <Separator />
+                    <div className="pt-2 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Link2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <span className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
+                          {isBn ? 'পেমেন্ট লিংক' : 'Payment Link'}
+                        </span>
+                      </div>
+
+                      {/* Invoice link */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <Input
+                          readOnly
+                          value={invoiceData.pay_url}
+                          className="text-sm bg-white dark:bg-background"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCopyLink}
+                          className="flex items-center gap-1"
+                        >
+                          {copied ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5" />
+                          )}
+                          {copied ? (isBn ? 'কপি হয়েছে' : 'Copied') : (isBn ? 'কপি' : 'Copy')}
+                        </Button>
+                      </div>
+
+                      {/* Open link button */}
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => window.open(invoiceData.pay_url, '_blank')}
+                        className="w-full flex items-center gap-2"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        {isBn ? 'পেমেন্ট পৃষ্ঠা খুলুন' : 'Open Payment Page'}
+                      </Button>
+
+                      {/* Invoice details */}
+                      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>{isBn ? 'ইনভয়েস আইডি' : 'Invoice ID'}</span>
+                          <span className="font-medium">{invoiceData.invoice_id}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{isBn ? 'ট্রানজেকশন আইডি' : 'Transaction ID'}</span>
+                          <span className="font-medium">{invoiceData.tran_id}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{isBn ? 'মোট পরিমাণ' : 'Total Amount'}</span>
+                          <span className="font-medium">৳ {ticketInfo.total}</span>
+                        </div>
+                      </div>
+
+                      <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                        <Clock className="h-3 w-3 inline mr-1" />
+                        {isBn
+                          ? 'এই লিংক শেয়ার করে পরে পেমেন্ট করতে পারেন'
+                          : 'Share this link to pay later or with someone else'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* ─── Payment error ─── */}
+                {errors.payment && (
+                  <p className="text-sm text-destructive flex items-center gap-1 mt-3">
+                    <AlertCircle className="h-3.5 w-3.5" /> {errors.payment}
+                  </p>
+                )}
+                {errors.invoice && (
+                  <p className="text-sm text-destructive flex items-center gap-1 mt-3">
+                    <AlertCircle className="h-3.5 w-3.5" /> {errors.invoice}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -509,21 +1050,27 @@ export default function CheckoutPage() {
             <Button
               size="lg"
               className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
+              onClick={buttonConfig.action}
+              disabled={buttonConfig.disabled}
             >
-              {isSubmitting ? (
+              {isSubmitting || invoiceLoading ? (
                 <span className="flex items-center gap-2">
                   <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  {isBn ? 'প্রক্রিয়াকরণ...' : 'Processing...'}
+                  {isSubmitting
+                    ? (isBn ? 'প্রক্রিয়াকরণ...' : 'Processing...')
+                    : (isBn ? 'ইনভয়েস তৈরি হচ্ছে...' : 'Creating Invoice...')
+                  }
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  {isBn
-                    ? `${getPaymentMethodName()} দিয়ে পেমেন্ট করুন`
-                    : `Pay with ${getPaymentMethodName()}`
-                  }
+                  {paymentMethod === 'invoice' && !invoiceData ? (
+                    <Link2 className="h-4 w-4" />
+                  ) : paymentMethod === 'invoice' && invoiceData ? (
+                    <ExternalLink className="h-4 w-4" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
+                  {buttonConfig.text}
                 </span>
               )}
             </Button>
