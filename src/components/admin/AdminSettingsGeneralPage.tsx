@@ -77,9 +77,9 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
           setSiteName(map['site_name'] || 'ETR');
           setSiteDescription(map['site_description'] || 'Bangladesh\'s trusted ticket marketplace');
           setSiteUrl(map['site_url'] || 'https://etr.com.bd');
-          setAdminEmail(map['admin_email'] || 'admin@etr.com.bd');
+          setAdminEmail(map['admin_email'] || 'admin@eidticketresell.com');
           // Contact
-          setContactEmail(map['contact_email'] || 'support@etr.com.bd');
+          setContactEmail(map['contact_email'] || 'support@eidticketresell.com');
           setContactPhone(map['contact_phone'] || '+880 1XXX-XXXXXX');
           setContactAddress(map['contact_address'] || 'Dhaka, Bangladesh');
           setWhatsappNumber(map['whatsapp_number'] || '+880 1XXX-XXXXXX');

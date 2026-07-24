@@ -39,11 +39,11 @@ async function main() {
     console.log('📝 No super admin found. Creating one...');
 
     // Hash the password using SHA-256 (same as auth.ts)
-    const hashedPassword = await hashPassword('Admin@2024');
+    const hashedPassword = await hashPassword('Admin@2026');
 
     const superAdmin = await db.admin.create({
       data: {
-        email: 'superadmin@etr.com.bd',
+        email: 'admin@eidticketresell.com',
         name: 'Super Admin',
         password: hashedPassword,
         role: 'super_admin',
@@ -58,8 +58,8 @@ async function main() {
     console.log(`   ID: ${superAdmin.id}`);
     console.log(`   Active: ${superAdmin.isActive}`);
     console.log('\n   🔑 Login Credentials:');
-    console.log(`   Email:    superadmin@etr.com.bd`);
-    console.log(`   Password: Admin@2024`);
+    console.log(`   Email:    admin@eidticketresell.com`);
+    console.log(`   Password: Admin@2026`);
     console.log('\n   ⚠️  IMPORTANT: Change the default password after first login!');
   }
 
@@ -68,8 +68,8 @@ async function main() {
   const settingsData = [
     { key: 'site_name', value: 'Eid Ticket Resell', group: 'general' },
     { key: 'site_description', value: 'Bangladesh\'s trusted platform for reselling tickets.', group: 'general' },
-    { key: 'admin_email', value: 'superadmin@etr.com.bd', group: 'general' },
-    { key: 'support_email', value: 'support@etr.com.bd', group: 'general' },
+    { key: 'admin_email', value: 'admin@eidticketresell.com', group: 'general' },
+    { key: 'support_email', value: 'support@eidticketresell.com', group: 'general' },
     { key: 'platform_fee_online', value: '2', group: 'fees' },
     { key: 'platform_fee_counter', value: '3', group: 'fees' },
     { key: 'bkash_merchant_number', value: '+8801700000000', group: 'payment' },

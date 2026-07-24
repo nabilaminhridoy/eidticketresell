@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
     const existingSuperAdmin = await db.admin.findFirst({ where: { role: 'super_admin' } });
 
     if (!existingSuperAdmin) {
-      const hashedPassword = await hashPassword('Admin@2024');
+      const hashedPassword = await hashPassword('Admin@2026');
       await db.admin.create({
         data: {
-          email: 'superadmin@etr.com.bd',
+          email: 'admin@eidticketresell.com',
           name: 'Super Admin',
           password: hashedPassword,
           role: 'super_admin',
@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
     const settingsData = [
       { key: 'site_name', value: 'Eid Ticket Resell', group: 'general' },
       { key: 'site_description', value: 'Bangladesh\'s trusted platform for reselling tickets.', group: 'general' },
-      { key: 'admin_email', value: 'superadmin@etr.com.bd', group: 'general' },
-      { key: 'support_email', value: 'support@etr.com.bd', group: 'general' },
+      { key: 'admin_email', value: 'admin@eidticketresell.com', group: 'general' },
+      { key: 'support_email', value: 'support@eidticketresell.com', group: 'general' },
       { key: 'platform_fee_online', value: '2', group: 'fees' },
       { key: 'platform_fee_counter', value: '3', group: 'fees' },
       { key: 'bkash_merchant_number', value: '+8801700000000', group: 'payment' },
