@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useLanguageStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,186 +11,115 @@ import {
   CheckCircle2, BookOpen, Gavel, UserX, Bell
 } from 'lucide-react';
 
+function pick<T>(apiEn: T | undefined | null, apiBn: T | undefined | null, fallbackEn: T, fallbackBn: T, isBn: boolean): T {
+  if (isBn) return apiBn ?? apiEn ?? fallbackBn;
+  return apiEn ?? apiBn ?? fallbackEn;
+}
+
+function pickArray<T>(apiEn: T[] | undefined | null, apiBn: T[] | undefined | null, fallbackEn: T[], fallbackBn: T[], isBn: boolean): T[] {
+  if (isBn) return apiBn ?? apiEn ?? fallbackBn;
+  return apiEn ?? apiBn ?? fallbackEn;
+}
+
 export default function TermsOfServicePage() {
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
   const fontClass = isBn ? 'font-bangla' : '';
 
+  const [dbPage, setDbPage] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 2000);
+    fetch('/api/page-content?slug=terms-of-service')
+      .then(r => r.json())
+      .then(data => {
+        clearTimeout(timeout);
+        if (data.page) setDbPage(data.page);
+        setLoading(false);
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
+  }, []);
+
+  let dbContent: any = null;
+  let dbContentBn: any = null;
+  try {
+    dbContent = dbPage?.content ? JSON.parse(dbPage.content) : null;
+    dbContentBn = dbPage?.contentBn ? JSON.parse(dbPage.contentBn) : null;
+  } catch { /* ignore */ }
+
   const content = {
     hero: {
-      title: isBn ? 'সেবার শর্তাবলী' : 'Terms of Service',
-      subtitle: isBn
-        ? 'ঈদ টিকেট রিসেল প্ল্যাটফর্ম ব্যবহারের শর্ত ও নিয়মাবলী'
-        : 'Terms and conditions for using the Eid Ticket Resell platform',
+      title: pick(dbContent?.hero?.title, dbContentBn?.hero?.title, dbPage ? dbPage.title : 'Terms of Service', dbPage ? (dbPage.titleBn || dbPage.title) : 'সেবার শর্তাবলী', isBn),
+      subtitle: pick(dbContent?.hero?.subtitle, dbContentBn?.hero?.subtitle, 'Terms and conditions for using the Eid Ticket Resell platform', 'ঈদ টিকেট রিসেল প্ল্যাটফর্ম ব্যবহারের শর্ত ও নিয়মাবলী', isBn),
     },
-    lastUpdated: isBn ? 'সর্বশেষ আপডেট: ১ মার্চ, ২০২৫' : 'Last Updated: March 1, 2025',
+    lastUpdated: pick(dbContent?.lastUpdated, dbContentBn?.lastUpdated, 'Last Updated: March 1, 2025', 'সর্বশেষ আপডেট: ১ মার্চ, ২০২৫', isBn),
 
-    // Section 1: Acceptance of Terms
-    s1Title: isBn ? '১. শর্তাবলী গ্রহণ' : '1. Acceptance of Terms',
-    s1Content: isBn
-      ? 'ঈদ টিকেট রিসেল (এই "প্ল্যাটফর্ম") ব্যবহার করে আপনি এই শর্তাবলী গ্রহণ করেন। এই শর্তাবলী প্ল্যাটফর্মে সকল ক্রেতা, বিক্রেতা ও ব্যবহারকারীর উপর প্রযোজ্য। আপনি যদি এই শর্তাবলীর সাথে সম্মত হন না, তবে প্ল্যাটফর্ম ব্যবহার করবেন না। প্ল্যাটফর্ম যেকোনো সময় শর্তাবলী পরিবর্তন করতে পারে এবং পরিবর্তন প্রকাশের পর স্বয়ংক্রিয়ভাবে প্রযোজ্য হয়।'
-      : 'By using Eid Ticket Resell (this "Platform"), you accept these Terms of Service. These terms apply to all buyers, sellers, and users on the platform. If you do not agree with these terms, do not use the platform. The platform may modify these terms at any time, and changes become effective upon publication.',
+    s1Title: pick(dbContent?.s1Title, dbContentBn?.s1Title, '1. Acceptance of Terms', '১. শর্তাবলী গ্রহণ', isBn),
+    s1Content: pick(dbContent?.s1Content, dbContentBn?.s1Content, 'By using Eid Ticket Resell (this "Platform"), you accept these Terms of Service. These terms apply to all buyers, sellers, and users on the platform. If you do not agree with these terms, do not use the platform. The platform may modify these terms at any time, and changes become effective upon publication.', 'ঈদ টিকেট রিসেল (এই "প্ল্যাটফর্ম") ব্যবহার করে আপনি এই শর্তাবলী গ্রহণ করেন। এই শর্তাবলী প্ল্যাটফর্মে সকল ক্রেতা, বিক্রেতা ও ব্যবহারকারীর উপর প্রযোজ্য। আপনি যদি এই শর্তাবলীর সাথে সম্মত হন না, তবে প্ল্যাটফর্ম ব্যবহার করবেন না। প্ল্যাটফর্ম যেকোনো সময় শর্তাবলী পরিবর্তন করতে পারে এবং পরিবর্তন প্রকাশের পর স্বয়ংক্রিয়ভাবে প্রযোজ্য হয়।', isBn),
 
-    // Section 2: User Accounts
-    s2Title: isBn ? '২. ব্যবহারকারী অ্যাকাউন্ট' : '2. User Accounts',
-    s2Subtitle: isBn ? 'নিম্নলিখিত অ্যাকাউন্ট নিয়মাবলী সকল ব্যবহারকারীর উপর প্রযোজ্য:' : 'The following account rules apply to all users:',
-    accountItems: isBn
-      ? [
-        { t: 'নিবন্ধন', d: 'প্ল্যাটফর্মে অ্যাকাউন্ট তৈরি করতে সঠিক নাম, ইমেইল ও মোবাইল নম্বর প্রদান করতে হবে। ভুয়া তথ্য প্রদান অ্যাকাউন্ট বাতিলের কারণ।' },
-        { t: 'যাচাই', d: 'টিকেট বিক্রি করতে KYC (জান আপনি কে) যাচাই সম্পন্ন করতে হবে। এতে জাতীয় ID কার্ড, ফটো ও ঠিকানা প্রমাণ প্রদান প্রযোজ্য।' },
-        { t: 'অ্যাকাউন্ট নিরাপত্তা', d: 'আপনি আপনার অ্যাকাউন্ট পাসওয়ার্ড সুরক্ষিত রাখার জন্য দায়ী। অননুমোদিত অ্যাকাউন্ট ব্যবহার প্ল্যাটফর্মকে অবহিত করতে হবে।' },
-        { t: 'এক অ্যাকাউন্ট নিয়ম', d: 'প্রতিটি ব্যবহারকারী একটি অ্যাকাউন্ট রাখতে পারেন। একাধিক অ্যাকাউন্ট নিষিদ্ধ।' },
-        { t: 'নিষিদ্ধ কার্যকলাপ', d: 'ভুয়া অ্যাকাউন্ট, বট অ্যাকাউন্ট, অথবা অন্যের তথ্য ব্যবহার করে অ্যাকাউন্ট তৈরি নিষিদ্ধ।' },
-      ]
-      : [
-        { t: 'Registration', d: 'To create an account, you must provide a valid name, email, and mobile number. Providing false information will result in account cancellation.' },
-        { t: 'Verification', d: 'To sell tickets, KYC (Know Your Customer) verification must be completed. This requires National ID card, photo, and address proof.' },
-        { t: 'Account Security', d: 'You are responsible for keeping your account password secure. Unauthorized use must be reported to the platform immediately.' },
-        { t: 'One Account Rule', d: 'Each user may maintain one account. Multiple accounts are prohibited.' },
-        { t: 'Prohibited Activities', d: 'Fake accounts, bot accounts, or accounts using someone else\'s information are prohibited.' },
-      ],
+    s2Title: pick(dbContent?.s2Title, dbContentBn?.s2Title, '2. User Accounts', '২. ব্যবহারকারী অ্যাকাউন্ট', isBn),
+    s2Subtitle: pick(dbContent?.s2Subtitle, dbContentBn?.s2Subtitle, 'The following account rules apply to all users:', 'নিম্নলিখিত অ্যাকাউন্ট নিয়মাবলী সকল ব্যবহারকারীর উপর প্রযোজ্য:', isBn),
+    accountItems: pickArray(dbContent?.accountItems, dbContentBn?.accountItems,
+      [{ t: 'Registration', d: 'To create an account, you must provide a valid name, email, and mobile number. Providing false information will result in account cancellation.' }, { t: 'Verification', d: 'To sell tickets, KYC (Know Your Customer) verification must be completed. This requires National ID card, photo, and address proof.' }, { t: 'Account Security', d: 'You are responsible for keeping your account password secure. Unauthorized use must be reported to the platform immediately.' }, { t: 'One Account Rule', d: 'Each user may maintain one account. Multiple accounts are prohibited.' }, { t: 'Prohibited Activities', d: 'Fake accounts, bot accounts, or accounts using someone else\'s information are prohibited.' }],
+      [{ t: 'নিবন্ধন', d: 'প্ল্যাটফর্মে অ্যাকাউন্ট তৈরি করতে সঠিক নাম, ইমেইল ও মোবাইল নম্বর প্রদান করতে হবে। ভুয়া তথ্য প্রদান অ্যাকাউন্ট বাতিলের কারণ।' }, { t: 'যাচাই', d: 'টিকেট বিক্রি করতে KYC (জান আপনি কে) যাচাই সম্পন্ন করতে হবে। এতে জাতীয় ID কার্ড, ফটো ও ঠিকানা প্রমাণ প্রদান প্রযোজ্য।' }, { t: 'অ্যাকাউন্ট নিরাপত্তা', d: 'আপনি আপনার অ্যাকাউন্ট পাসওয়ার্ড সুরক্ষিত রাখার জন্য দায়ী। অননুমোদিত অ্যাকাউন্ট ব্যবহার প্ল্যাটফর্মকে অবহিত করতে হবে।' }, { t: 'এক অ্যাকাউন্ট নিয়ম', d: 'প্রতিটি ব্যবহারকারী একটি অ্যাকাউন্ট রাখতে পারেন। একাধিক অ্যাকাউন্ট নিষিদ্ধ।' }, { t: 'নিষিদ্ধ কার্যকলাপ', d: 'ভুয়া অ্যাকাউন্ট, বট অ্যাকাউন্ট, অথবা অন্যের তথ্য ব্যবহার করে অ্যাকাউন্ট তৈরি নিষিদ্ধ।' }],
+      isBn),
 
-    // Section 3: Buying Tickets
-    s3Title: isBn ? '৩. টিকেট ক্রয়' : '3. Buying Tickets',
-    s3Items: isBn
-      ? [
-        { t: 'ক্রেতার দায়বদ্ধতা', d: 'ক্রেতা টিকেটের সকল তথ্য (রুট, সময়, শ্রেণি) যাচাই করে ক্রয় নিশ্চিত করবেন। ক্রয় নিশ্চিতের পর ফেরত শর্ত ফেরত নীতি অনুসারে।' },
-        { t: 'পেমেন্ট শর্ত', d: 'ক্রেতা পেমেন্ট প্রক্রিয়া সম্পন্ন করবেন। পেমেন্ট এসক্রোতে রাখা হয় যতক্ষণ না যাত্রা সম্পন্ন।' },
-        { t: 'টিকেট যাচাই', d: 'টিকেট প্রাপ্তির পর ক্রেতা টিকেটের সত্যতা যাচাই করবেন। টিকেট যাচাই প্ল্যাটফর্মের "যাচাই টিকেট" ফিচার দিয়ে করতে পারেন।' },
-        { t: 'নিশ্চিতকরণ', d: 'টিকেট সত্যতা নিশ্চিত হলে "কনফার্ম রিসিপশন" ক্লিক করুন। এই নিশ্চিতকরণের পর পেমেন্ট বিক্রেতাকে রিলিজ হয়।' },
-      ]
-      : [
-        { t: 'Buyer Obligations', d: 'The buyer must verify all ticket details (route, time, class) before confirming purchase. After confirmation, refund conditions follow the Refund Policy.' },
-        { t: 'Payment Terms', d: 'The buyer must complete the payment process. Payment is held in escrow until the journey is completed.' },
-        { t: 'Ticket Verification', d: 'After receiving the ticket, the buyer must verify its authenticity. Use the "Verify Ticket" feature on the platform.' },
-        { t: 'Confirmation', d: 'Once ticket authenticity is confirmed, click "Confirm Reception." After this confirmation, payment is released to the seller.' },
-      ],
+    s3Title: pick(dbContent?.s3Title, dbContentBn?.s3Title, '3. Buying Tickets', '৩. টিকেট ক্রয়', isBn),
+    s3Items: pickArray(dbContent?.s3Items, dbContentBn?.s3Items,
+      [{ t: 'Buyer Obligations', d: 'The buyer must verify all ticket details (route, time, class) before confirming purchase. After confirmation, refund conditions follow the Refund Policy.' }, { t: 'Payment Terms', d: 'The buyer must complete the payment process. Payment is held in escrow until the journey is completed.' }, { t: 'Ticket Verification', d: 'After receiving the ticket, the buyer must verify its authenticity. Use the "Verify Ticket" feature on the platform.' }, { t: 'Confirmation', d: 'Once ticket authenticity is confirmed, click "Confirm Reception." After this confirmation, payment is released to the seller.' }],
+      [{ t: 'ক্রেতার দায়বদ্ধতা', d: 'ক্রেতা টিকেটের সকল তথ্য (রুট, সময়, শ্রেণি) যাচাই করে ক্রয় নিশ্চিত করবেন। ক্রয় নিশ্চিতের পর ফেরত শর্ত ফেরত নীতি অনুসারে।' }, { t: 'পেমেন্ট শর্ত', d: 'ক্রেতা পেমেন্ট প্রক্রিয়া সম্পন্ন করবেন। পেমেন্ট এসক্রোতে রাখা হয় যতক্ষণ না যাত্রা সম্পন্ন।' }, { t: 'টিকেট যাচাই', d: 'টিকেট প্রাপ্তির পর ক্রেতা টিকেটের সত্যতা যাচাই করবেন। টিকেট যাচাই প্ল্যাটফর্মের "যাচাই টিকেট" ফিচার দিয়ে করতে পারেন।' }, { t: 'নিশ্চিতকরণ', d: 'টিকেট সত্যতা নিশ্চিত হলে "কনফার্ম রিসিপশন" ক্লিক করুন। এই নিশ্চিতকরণের পর পেমেন্ট বিক্রেতাকে রিলিজ হয়।' }],
+      isBn),
 
-    // Section 4: Selling Tickets
-    s4Title: isBn ? '৪. টিকেট বিক্রি' : '4. Selling Tickets',
-    s4Items: isBn
-      ? [
-        { t: 'বিক্রেতার দায়বদ্ধতা', d: 'বিক্রেতা সঠিক টিকেট তথ্য প্রদান করবেন। ভুয়া অথবা ভুল তথ্য প্রদান অ্যাকাউন্ট বাতিলের কারণ।' },
-        { t: 'KYC প্রয়োজনীয়তা', d: 'টিকেট বিক্রি করতে KYC যাচাই সম্পন্ন করতে হবে। অযাচাইকৃত ব্যবহারকারী টিকেট তালিকাভুক্ত করতে পারবেন না।' },
-        { t: 'মূল্য নির্ধারণ', d: 'বিক্রেতা টিকেটের মূল্য নির্ধারণ করতে পারেন। মূল্য বিক্রি করার মূল দামের অতিরিক্ত হতে পারে কিন্তু পরিমিত হওয়া উচিত। অতিরিক্ত মূল্য প্ল্যাটফর্ম সমর্থন করে না।' },
-        { t: 'ডেলিভারি দায়বদ্ধতা', d: 'বিক্রেতা ক্রেতাকে টিকেট যাত্রার ৬ ঘণ্টা পূর্বে প্রদান করবেন। বিলম্ব ফেরত নীতি অনুসারে পেমেন্ট ফেরতের কারণ।' },
-      ]
-      : [
-        { t: 'Seller Obligations', d: 'The seller must provide accurate ticket information. Providing fake or incorrect information will result in account cancellation.' },
-        { t: 'KYC Requirements', d: 'KYC verification must be completed to sell tickets. Unverified users cannot list tickets.' },
-        { t: 'Pricing Rules', d: 'The seller can set the ticket price. The price may exceed the original sale price but should be reasonable. Excessive pricing is not supported by the platform.' },
-        { t: 'Delivery Commitment', d: 'The seller must deliver the ticket to the buyer at least 6 hours before departure. Delay results in refund per the Refund Policy.' },
-      ],
+    s4Title: pick(dbContent?.s4Title, dbContentBn?.s4Title, '4. Selling Tickets', '৪. টিকেট বিক্রি', isBn),
+    s4Items: pickArray(dbContent?.s4Items, dbContentBn?.s4Items,
+      [{ t: 'Seller Obligations', d: 'The seller must provide accurate ticket information. Providing fake or incorrect information will result in account cancellation.' }, { t: 'KYC Requirements', d: 'KYC verification must be completed to sell tickets. Unverified users cannot list tickets.' }, { t: 'Pricing Rules', d: 'The seller can set the ticket price. The price may exceed the original sale price but should be reasonable. Excessive pricing is not supported by the platform.' }, { t: 'Delivery Commitment', d: 'The seller must deliver the ticket to the buyer at least 6 hours before departure. Delay results in refund per the Refund Policy.' }],
+      [{ t: 'বিক্রেতার দায়বদ্ধতা', d: 'বিক্রেতা সঠিক টিকেট তথ্য প্রদান করবেন। ভুয়া অথবা ভুল তথ্য প্রদান অ্যাকাউন্ট বাতিলের কারণ।' }, { t: 'KYC প্রয়োজনীয়তা', d: 'টিকেট বিক্রি করতে KYC যাচাই সম্পন্ন করতে হবে। অযাচাইকৃত ব্যবহারকারী টিকেট তালিকাভুক্ত করতে পারবেন না।' }, { t: 'মূল্য নির্ধারণ', d: 'বিক্রেতা টিকেটের মূল্য নির্ধারণ করতে পারেন। মূল্য বিক্রি করার মূল দামের অতিরিক্ত হতে পারে কিন্তু পরিমিত হওয়া উচিত। অতিরিক্ত মূল্য প্ল্যাটফর্ম সমর্থন করে না।' }, { t: 'ডেলিভারি দায়বদ্ধতা', d: 'বিক্রেতা ক্রেতাকে টিকেট যাত্রার ৬ ঘণ্টা পূর্বে প্রদান করবেন। বিলম্ব ফেরত নীতি অনুসারে পেমেন্ট ফেরতের কারণ।' }],
+      isBn),
 
-    // Section 5: Platform Rules
-    s5Title: isBn ? '৫. প্ল্যাটফর্ম নিয়ম' : '5. Platform Rules',
-    s5Intro: isBn
-      ? 'নিম্নলিখিত কার্যকলাপ প্ল্যাটফর্মে নিষিদ্ধ:'
-      : 'The following activities are prohibited on the platform:',
-    prohibited: isBn
-      ? [
-        { t: 'জালিয়াতি', d: 'ভুয়া টিকেট বিক্রি, পেমেন্ট জালিয়াতি, অথবা পরিচয় জালিয়াতি' },
-        { t: 'স্কালপিং', d: 'টিকেট অতিরিক্ত মূল্যে বিক্রি (স্কালপিং) নিষিদ্ধ। প্ল্যাটফর্ম অতিরিক্ত মূল্যের টিকেট সরিয়ে দিতে পারে।' },
-        { t: 'হয়রানি', d: 'অন্য ব্যবহারকারীর প্রতি হয়রানি, আপত্তিজনক ভাষা, অথবা বিদ্বেষমূলক কার্যকলাপ' },
-        { t: 'স্প্যাম', d: 'অননুমোদিত বিজ্ঞপ্তি, স্প্যাম বার্তা, অথবা প্ল্যাটফর্মে অবৈধ বিষয়বস্তু প্রকাশ' },
-        { t: 'বট ব্যবহার', d: 'প্ল্যাটফর্মে বট অথবা স্বয়ংক্রিয় সরঞ্জাম ব্যবহার করে টিকেট সংগ্রহ অথবা মূল্য বৃদ্ধি' },
-      ]
-      : [
-        { t: 'Fraud', d: 'Selling fake tickets, payment fraud, or identity fraud' },
-        { t: 'Scalping', d: 'Selling tickets at excessive prices (scalping) is prohibited. The platform may remove excessively priced tickets.' },
-        { t: 'Harassment', d: 'Harassment, offensive language, or hateful behavior toward other users' },
-        { t: 'Spam', d: 'Unauthorized advertisements, spam messages, or publishing illegal content on the platform' },
-        { t: 'Bot Usage', d: 'Using bots or automated tools to collect tickets or inflate prices on the platform' },
-      ],
+    s5Title: pick(dbContent?.s5Title, dbContentBn?.s5Title, '5. Platform Rules', '৫. প্ল্যাটফর্ম নিয়ম', isBn),
+    s5Intro: pick(dbContent?.s5Intro, dbContentBn?.s5Intro, 'The following activities are prohibited on the platform:', 'নিম্নলিখিত কার্যকলাপ প্ল্যাটফর্মে নিষিদ্ধ:', isBn),
+    prohibited: pickArray(dbContent?.prohibited, dbContentBn?.prohibited,
+      [{ t: 'Fraud', d: 'Selling fake tickets, payment fraud, or identity fraud' }, { t: 'Scalping', d: 'Selling tickets at excessive prices (scalping) is prohibited. The platform may remove excessively priced tickets.' }, { t: 'Harassment', d: 'Harassment, offensive language, or hateful behavior toward other users' }, { t: 'Spam', d: 'Unauthorized advertisements, spam messages, or publishing illegal content on the platform' }, { t: 'Bot Usage', d: 'Using bots or automated tools to collect tickets or inflate prices on the platform' }],
+      [{ t: 'জালিয়াতি', d: 'ভুয়া টিকেট বিক্রি, পেমেন্ট জালিয়াতি, অথবা পরিচয় জালিয়াতি' }, { t: 'স্কালপিং', d: 'টিকেট অতিরিক্ত মূল্যে বিক্রি (স্কালপিং) নিষিদ্ধ। প্ল্যাটফর্ম অতিরিক্ত মূল্যের টিকেট সরিয়ে দিতে পারে।' }, { t: 'হয়রানি', d: 'অন্য ব্যবহারকারীর প্রতি হয়রানি, আপত্তিজনক ভাষা, অথবা বিদ্বেষমূলক কার্যকলাপ' }, { t: 'স্প্যাম', d: 'অননুমোদিত বিজ্ঞপ্তি, স্প্যাম বার্তা, অথবা প্ল্যাটফর্মে অবৈধ বিষয়বস্তু প্রকাশ' }, { t: 'বট ব্যবহার', d: 'প্ল্যাটফর্মে বট অথবা স্বয়ংক্রিয় সরঞ্জাম ব্যবহার করে টিকেট সংগ্রহ অথবা মূল্য বৃদ্ধি' }],
+      isBn),
 
-    // Section 6: Intellectual Property
-    s6Title: isBn ? '৬. সম্পত্তি অধিকার' : '6. Intellectual Property',
-    s6Content: isBn
-      ? [
-        'প্ল্যাটফর্মের সকল বিষয়বস্তু (লোগো, ডিজাইন, টেক্সট, গ্রাফিক্স) ঈদ টিকেট রিসেলের সম্পত্তি। অননুমোদিত ব্যবহার নিষিদ্ধ।',
-        'ব্যবহারকারীর প্রদানকৃত টিকেট তথ্য ব্যবহারকারীর সম্পত্তি। প্ল্যাটফর্ম লেনদেন প্রক্রিয়ার জন্য এই তথ্য ব্যবহার করে।',
-        'ব্যবহারকারী প্ল্যাটফর্মের বিষয়বস্তু কপি, বিতরণ অথবা পুনরায় প্রকাশ করতে পারবেন না।',
-      ]
-      : [
-        'All platform content (logo, design, text, graphics) is the property of Eid Ticket Resell. Unauthorized use is prohibited.',
-        'Ticket information provided by users is the property of the user. The platform uses this information for transaction processing.',
-        'Users may not copy, distribute, or republish platform content.',
-      ],
+    s6Title: pick(dbContent?.s6Title, dbContentBn?.s6Title, '6. Intellectual Property', '৬. সম্পত্তি অধিকার', isBn),
+    s6Content: pickArray(dbContent?.s6Content, dbContentBn?.s6Content,
+      ['All platform content (logo, design, text, graphics) is the property of Eid Ticket Resell. Unauthorized use is prohibited.', 'Ticket information provided by users is the property of the user. The platform uses this information for transaction processing.', 'Users may not copy, distribute, or republish platform content.'],
+      ['প্ল্যাটফর্মের সকল বিষয়বস্তু (লোগো, ডিজাইন, টেক্সট, গ্রাফিক্স) ঈদ টিকেট রিসেলের সম্পত্তি। অননুমোদিত ব্যবহার নিষিদ্ধ।', 'ব্যবহারকারীর প্রদানকৃত টিকেট তথ্য ব্যবহারকারীর সম্পত্তি। প্ল্যাটফর্ম লেনদেন প্রক্রিয়ার জন্য এই তথ্য ব্যবহার করে।', 'ব্যবহারকারী প্ল্যাটফর্মের বিষয়বস্তু কপি, বিতরণ অথবা পুনরায় প্রকাশ করতে পারবেন না।'],
+      isBn),
 
-    // Section 7: Limitation of Liability
-    s7Title: isBn ? '৭. দায়বদ্ধতা সীমাবদ্ধতা' : '7. Limitation of Liability',
-    s7Content: isBn
-      ? [
-        'প্ল্যাটফর্ম ক্রেতা ও বিক্রেতার মধ্যে মধ্যস্থতাকারী। প্ল্যাটফর্ম পরিবহন সংস্থার যাত্রা বিলম্ব, বাতিল অথবা সেবার গুণমানের জন্য দায়ী নয়।',
-        'প্ল্যাটফর্ম ব্যবহারকারীর ক্রয়/বিক্রি সিদ্ধান্তের জন্য দায়ী নয়।',
-        'প্ল্যাটফর্ম প্রযুক্তিগত ত্রুটি, ডাউনটাইম অথবা তৃতীয় পক্ষের সেবা ব্যর্থতার জন্য সর্বোচ্চ প্রয়াস করে কিন্তু দায়বদ্ধতা সীমিত।',
-        'প্ল্যাটফর্মের দায়বদ্ধতা লেনদেনের প্ল্যাটফর্ম ফি পরিমাণের মধ্যে সীমাবদ্ধ।',
-      ]
-      : [
-        'The platform is an intermediary between buyer and seller. The platform is not responsible for transport company\'s journey delays, cancellations, or service quality.',
-        'The platform is not responsible for users\' purchase/sale decisions.',
-        'The platform makes best efforts for technical issues, downtime, or third-party service failures, but liability is limited.',
-        'The platform\'s liability is limited to the platform fee amount of the transaction.',
-      ],
+    s7Title: pick(dbContent?.s7Title, dbContentBn?.s7Title, '7. Limitation of Liability', '৭. দায়বদ্ধতা সীমাবদ্ধতা', isBn),
+    s7Content: pickArray(dbContent?.s7Content, dbContentBn?.s7Content,
+      ['The platform is an intermediary between buyer and seller. The platform is not responsible for transport company\'s journey delays, cancellations, or service quality.', 'The platform is not responsible for users\' purchase/sale decisions.', 'The platform makes best efforts for technical issues, downtime, or third-party service failures, but liability is limited.', 'The platform\'s liability is limited to the platform fee amount of the transaction.'],
+      ['প্ল্যাটফর্ম ক্রেতা ও বিক্রেতার মধ্যে মধ্যস্থতাকারী। প্ল্যাটফর্ম পরিবহন সংস্থার যাত্রা বিলম্ব, বাতিল অথবা সেবার গুণমানের জন্য দায়ী নয়।', 'প্ল্যাটফর্ম ব্যবহারকারীর ক্রয়/বিক্রি সিদ্ধান্তের জন্য দায়ী নয়।', 'প্ল্যাটফর্ম প্রযুক্তিগত ত্রুটি, ডাউনটাইম অথবা তৃতীয় পক্ষের সেবা ব্যর্থতার জন্য সর্বোচ্চ প্রয়াস করে কিন্তু দায়বদ্ধতা সীমিত।', 'প্ল্যাটফর্মের দায়বদ্ধতা লেনদেনের প্ল্যাটফর্ম ফি পরিমাণের মধ্যে সীমাবদ্ধ।'],
+      isBn),
 
-    // Section 8: Dispute Resolution
-    s8Title: isBn ? '৮. বিবাদ সমাধান' : '8. Dispute Resolution',
-    s8Items: isBn
-      ? [
-        { t: 'বিবাদ দাখিল', d: 'ক্রেতা অথবা বিক্রেতা প্ল্যাটফর্মে বিবাদ দাখিল করতে পারেন।' },
-        { t: 'প্রক্রিয়া', d: 'প্ল্যাটফর্ম উভয় পক্ষের মতামত গ্রহণ করে এবং প্রমাণ পর্যালোচনা করে।' },
-        { t: 'সময়সীমা', d: 'বিবাদ সমাধান ৭ কর্মদিবসের মধ্যে সম্পন্ন হয়।' },
-        { t: 'সালিশি', d: 'বিবাদ সমাধানে প্ল্যাটফর্মের সিদ্ধান্ত চূড়ান্ত। বাংলাদেশের আইন অনুসারে সালিশি প্রক্রিয়া প্রযোজ্য।' },
-      ]
-      : [
-        { t: 'Filing Dispute', d: 'Buyer or seller can file a dispute on the platform.' },
-        { t: 'Process', d: 'The platform collects feedback from both parties and reviews evidence.' },
-        { t: 'Timeline', d: 'Dispute resolution is completed within 7 business days.' },
-        { t: 'Arbitration', d: 'The platform\'s decision in dispute resolution is final. Arbitration per Bangladesh law applies.' },
-      ],
+    s8Title: pick(dbContent?.s8Title, dbContentBn?.s8Title, '8. Dispute Resolution', '৮. বিবাদ সমাধান', isBn),
+    s8Items: pickArray(dbContent?.s8Items, dbContentBn?.s8Items,
+      [{ t: 'Filing Dispute', d: 'Buyer or seller can file a dispute on the platform.' }, { t: 'Process', d: 'The platform collects feedback from both parties and reviews evidence.' }, { t: 'Timeline', d: 'Dispute resolution is completed within 7 business days.' }, { t: 'Arbitration', d: 'The platform\'s decision in dispute resolution is final. Arbitration per Bangladesh law applies.' }],
+      [{ t: 'বিবাদ দাখিল', d: 'ক্রেতা অথবা বিক্রেতা প্ল্যাটফর্মে বিবাদ দাখিল করতে পারেন।' }, { t: 'প্রক্রিয়া', d: 'প্ল্যাটফর্ম উভয় পক্ষের মতামত গ্রহণ করে এবং প্রমাণ পর্যালোচনা করে।' }, { t: 'সময়সীমা', d: 'বিবাদ সমাধান ৭ কর্মদিবসের মধ্যে সম্পন্ন হয়।' }, { t: 'সালিশি', d: 'বিবাদ সমাধানে প্ল্যাটফর্মের সিদ্ধান্ত চূড়ান্ত। বাংলাদেশের আইন অনুসারে সালিশি প্রক্রিয়া প্রযোজ্য।' }],
+      isBn),
 
-    // Section 9: Termination
-    s9Title: isBn ? '৯. অ্যাকাউন্ট সমাপ্তি' : '9. Account Termination',
-    s9Intro: isBn
-      ? 'প্ল্যাটফর্ম নিম্নলিখিত অবস্থায় অ্যাকাউন্ট স্থগিত অথবা বাতিল করতে পারে:'
-      : 'The platform may suspend or cancel accounts under the following conditions:',
-    termination: isBn
-      ? [
-        'শর্তাবলী ভঙ্গ (নিষিদ্ধ কার্যকলাপ, জালিয়াতি)',
-        'বিক্রেতা টিকেট প্রদানে ৩ বার ব্যর্থ',
-        'ব্যবহারকারীর প্রতি অন্য ব্যবহারকারীর ৩+ অভিযোগ',
-        'প্ল্যাটফর্মে অবৈধ বিষয়বস্তু প্রকাশ',
-        'অ্যাকাউন্ট নিষিদ্ধ হলে সকল লেনদেন বাতিল এবং প্রযোজ্য ফেরত প্রক্রিয়াজাত',
-      ]
-      : [
-        'Violation of terms (prohibited activities, fraud)',
-        'Seller fails to deliver ticket 3 times',
-        '3+ complaints against a user from other users',
-        'Publishing illegal content on the platform',
-        'When an account is banned, all transactions are cancelled and applicable refunds are processed',
-      ],
+    s9Title: pick(dbContent?.s9Title, dbContentBn?.s9Title, '9. Account Termination', '৯. অ্যাকাউন্ট সমাপ্তি', isBn),
+    s9Intro: pick(dbContent?.s9Intro, dbContentBn?.s9Intro, 'The platform may suspend or cancel accounts under the following conditions:', 'প্ল্যাটফর্ম নিম্নলিখিত অবস্থায় অ্যাকাউন্ট স্থগিত অথবা বাতিল করতে পারে:', isBn),
+    termination: pickArray(dbContent?.termination, dbContentBn?.termination,
+      ['Violation of terms (prohibited activities, fraud)', 'Seller fails to deliver ticket 3 times', '3+ complaints against a user from other users', 'Publishing illegal content on the platform', 'When an account is banned, all transactions are cancelled and applicable refunds are processed'],
+      ['শর্তাবলী ভঙ্গ (নিষিদ্ধ কার্যকলাপ, জালিয়াতি)', 'বিক্রেতা টিকেট প্রদানে ৩ বার ব্যর্থ', 'ব্যবহারকারীর প্রতি অন্য ব্যবহারকারীর ৩+ অভিযোগ', 'প্ল্যাটফর্মে অবৈধ বিষয়বস্তু প্রকাশ', 'অ্যাকাউন্ট নিষিদ্ধ হলে সকল লেনদেন বাতিল এবং প্রযোজ্য ফেরত প্রক্রিয়াজাত'],
+      isBn),
 
-    // Section 10: Changes to Terms
-    s10Title: isBn ? '১০. শর্তাবলী পরিবর্তন' : '10. Changes to Terms',
-    s10Content: isBn
-      ? [
-        'প্ল্যাটফর্ম যেকোনো সময় শর্তাবলী পরিবর্তন করতে পারে।',
-        'পরিবর্তন প্ল্যাটফর্মে প্রকাশের পর স্বয়ংক্রিয়ভাবে প্রযোজ্য।',
-        'বড় পরিবর্তনের জন্য ব্যবহারকারীদের ইমেইল বিজ্ঞপ্তি প্রদান করা হয়।',
-        'প্রযোজ্য তারিখ: প্রকাশের ৭ দিন পর।',
-      ]
-      : [
-        'The platform may modify these terms at any time.',
-        'Changes become effective automatically upon publication on the platform.',
-        'For significant changes, users are notified via email.',
-        'Effective date: 7 days after publication.',
-      ],
+    s10Title: pick(dbContent?.s10Title, dbContentBn?.s10Title, '10. Changes to Terms', '১০. শর্তাবলী পরিবর্তন', isBn),
+    s10Content: pickArray(dbContent?.s10Content, dbContentBn?.s10Content,
+      ['The platform may modify these terms at any time.', 'Changes become effective automatically upon publication on the platform.', 'For significant changes, users are notified via email.', 'Effective date: 7 days after publication.'],
+      ['প্ল্যাটফর্ম যেকোনো সময় শর্তাবলী পরিবর্তন করতে পারে।', 'পরিবর্তন প্ল্যাটফর্মে প্রকাশের পর স্বয়ংক্রিয়ভাবে প্রযোজ্য।', 'বড় পরিবর্তনের জন্য ব্যবহারকারীদের ইমেইল বিজ্ঞপ্তি প্রদান করা হয়।', 'প্রযোজ্য তারিখ: প্রকাশের ৭ দিন পর।'],
+      isBn),
 
-    // Section 11: Governing Law
-    s11Title: isBn ? '১১. প্রযোজ্য আইন' : '11. Governing Law',
-    s11Content: isBn
-      ? 'এই শর্তাবলী বাংলাদেশের আইন অনুসারে প্রযোজ্য। যেকোনো আইনি বিবাদ বাংলাদেশের আদালতে নিষ্পত্তি হবে। প্ল্যাটফর্ম বাংলাদেশের ডিজিটাল নিরাপত্তা আইন, ভোক্তা অধিকার আইন, এবং ই-কমার্স নিয়মাবলী অনুসরণ করে।'
-      : 'These terms are governed by the laws of Bangladesh. Any legal disputes will be settled in Bangladesh courts. The platform follows Bangladesh\'s Digital Security Act, Consumer Rights Act, and e-Commerce regulations.',
+    s11Title: pick(dbContent?.s11Title, dbContentBn?.s11Title, '11. Governing Law', '১১. প্রযোজ্য আইন', isBn),
+    s11Content: pick(dbContent?.s11Content, dbContentBn?.s11Content, 'These terms are governed by the laws of Bangladesh. Any legal disputes will be settled in Bangladesh courts. The platform follows Bangladesh\'s Digital Security Act, Consumer Rights Act, and e-Commerce regulations.', 'এই শর্তাবলী বাংলাদেশের আইন অনুসারে প্রযোজ্য। যেকোনো আইনি বিবাদ বাংলাদেশের আদালতে নিষ্পত্তি হবে। প্ল্যাটফর্ম বাংলাদেশের ডিজিটাল নিরাপত্তা আইন, ভোক্তা অধিকার আইন, এবং ই-কমার্স নিয়মাবলী অনুসরণ করে।', isBn),
   };
 
   return (
@@ -203,7 +133,7 @@ export default function TermsOfServicePage() {
         <p className={`text-muted-foreground text-lg max-w-2xl mx-auto ${fontClass}`}>{content.hero.subtitle}</p>
       </div>
 
-      {/* Section 1: Acceptance */}
+      {/* Section 1 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -216,7 +146,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 2: User Accounts */}
+      {/* Section 2 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -242,7 +172,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 3: Buying Tickets */}
+      {/* Section 3 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -265,7 +195,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 4: Selling Tickets */}
+      {/* Section 4 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -288,7 +218,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 5: Platform Rules */}
+      {/* Section 5 */}
       <Card className="mb-6 border-red-500/20">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -316,7 +246,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 6: Intellectual Property */}
+      {/* Section 6 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -334,7 +264,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 7: Limitation of Liability */}
+      {/* Section 7 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -346,7 +276,7 @@ export default function TermsOfServicePage() {
           {content.s7Content.map((p, i) => (
             <p key={i} className={`flex items-start gap-2 text-sm text-muted-foreground ${fontClass}`}>
               <Badge variant="outline" className="shrink-0 mt-0.5 font-bold">
-                {isBn ? `${i + 1}` : `${i + 1}`}
+                {i + 1}
               </Badge>
               {p}
             </p>
@@ -354,7 +284,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 8: Dispute Resolution */}
+      {/* Section 8 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -377,7 +307,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 9: Termination */}
+      {/* Section 9 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -398,7 +328,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 10: Changes to Terms */}
+      {/* Section 10 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -416,7 +346,7 @@ export default function TermsOfServicePage() {
         </CardContent>
       </Card>
 
-      {/* Section 11: Governing Law */}
+      {/* Section 11 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>

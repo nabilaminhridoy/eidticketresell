@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore, useLanguageStore } from '@/lib/store';
 import {
   Ticket, ArrowRight, Bus, TrainFront, Plane, Ship,
@@ -28,6 +28,45 @@ export default function HomePage() {
   const [toCity, setToCity] = useState('');
   const [journeyDate, setJourneyDate] = useState('');
 
+  // API data state
+  const [dbSections, setDbSections] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 2000);
+    fetch('/api/homepage')
+      .then(r => r.json())
+      .then(data => {
+        clearTimeout(timeout);
+        if (data.sections && Array.isArray(data.sections)) {
+          const map: Record<string, any> = {};
+          for (const s of data.sections) {
+            let parsedContent: any = null;
+            let parsedContentBn: any = null;
+            try { parsedContent = s.content ? JSON.parse(s.content) : null; } catch { /* ignore */ }
+            try { parsedContentBn = s.contentBn ? JSON.parse(s.contentBn) : null; } catch { /* ignore */ }
+            map[s.sectionKey] = { ...s, parsedContent, parsedContentBn };
+          }
+          setDbSections(map);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
+  }, []);
+
+  // Helper: pick value from DB section or fallback
+  const pick = (sectionKey: string, field: string, fallbackEn: string, fallbackBn: string) => {
+    const sec = dbSections[sectionKey];
+    if (!sec) return isBn ? fallbackBn : fallbackEn;
+    if (field === 'title') return isBn ? (sec.titleBn || sec.title || fallbackBn) : (sec.title || fallbackEn);
+    if (field === 'subtitle') return isBn ? (sec.subtitleBn || sec.subtitle || fallbackBn) : (sec.subtitle || fallbackEn);
+    if (isBn) return sec.parsedContentBn?.[field] || sec.parsedContent?.[field] || fallbackBn;
+    return sec.parsedContent?.[field] || sec.parsedContentBn?.[field] || fallbackEn;
+  };
+
   const handleSearch = () => {
     navigate('search', {
       ...(transportType && { transportType }),
@@ -44,54 +83,95 @@ export default function HomePage() {
     { id: 'launch' as const, icon: Ship, labelKey: 'launch' as const, iconBg: 'bg-primary text-primary-foreground', lightBg: 'bg-primary/10', hoverBorder: 'hover:border-primary/30' },
   ];
 
-  const features = [
+  // Default features (fallback)
+  const defaultFeatures = [
     {
-      icon: Shield, title: t('verified', language) + ' ' + t('seller', language),
-      desc: language === 'en' ? 'All sellers go through KYC verification for your safety' : 'আপনার নিরাপত্তার জন্য সকল বিক্রেতা কেওয়াইসি যাচাইয় যান',
+      icon: Shield, titleEn: 'Verified Seller', titleBn: 'যাচাইকৃত বিক্রেতা',
+      descEn: 'All sellers go through KYC verification for your safety', descBn: 'আপনার নিরাপত্তার জন্য সকল বিক্রেতা কেওয়াইসি যাচাইয় যান',
       iconBg: 'bg-primary text-primary-foreground'
     },
     {
-      icon: Star, title: language === 'en' ? 'Escrow Protection' : 'এসক্রো সুরক্ষা',
-      desc: language === 'en' ? 'Your payment is held securely until the journey is complete' : 'যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট নিরাপদে রাখা হয়',
+      icon: Star, titleEn: 'Escrow Protection', titleBn: 'এসক্রো সুরক্ষা',
+      descEn: 'Your payment is held securely until the journey is complete', descBn: 'যাত্রা সম্পন্ন না হওয়া পর্যন্ত আপনার পেমেন্ট নিরাপদে রাখা হয়',
       iconBg: 'bg-orange text-orange-foreground'
     },
     {
-      icon: Zap, title: language === 'en' ? 'Instant Delivery' : 'তাৎক্ষণিক ডেলিভারি',
-      desc: language === 'en' ? 'Get your tickets delivered instantly to your device' : 'আপনার ডিভাইসে তাৎক্ষণিক টিকেট ডেলিভারি',
+      icon: Zap, titleEn: 'Instant Delivery', titleBn: 'তাৎক্ষণিক ডেলিভারি',
+      descEn: 'Get your tickets delivered instantly to your device', descBn: 'আপনার ডিভাইসে তাৎক্ষণিক টিকেট ডেলিভারি',
       iconBg: 'bg-blue text-blue-foreground'
     },
     {
-      icon: Users, title: language === 'en' ? '24/7 Support' : '২৪/৭ সাহায্য',
-      desc: language === 'en' ? 'Our support team is always here to help you' : 'আমাদের সাহায্য দল সবসময় আপনাকে সাহায্য করতে এখানে',
+      icon: Users, titleEn: '24/7 Support', titleBn: '২৪/৭ সাহায্য',
+      descEn: 'Our support team is always here to help you', descBn: 'আমাদের সাহায্য দল সবসময় আপনাকে সাহায্য করতে এখানে',
       iconBg: 'bg-primary text-primary-foreground'
     },
   ];
 
-  const stats = [
-    { value: '10,000+', label: language === 'en' ? 'Tickets Sold' : 'টিকেট বিক্রি', color: 'text-white' },
-    { value: '5,000+', label: language === 'en' ? 'Happy Users' : 'সুখী ব্যবহারকারী', color: 'text-white' },
-    { value: '500+', label: language === 'en' ? 'Verified Sellers' : 'যাচাইকৃত বিক্রেতা', color: 'text-white' },
-    { value: '64+', label: language === 'en' ? 'Cities Covered' : 'শহর কভারেজ', color: 'text-white' },
+  const features = dbSections.features?.parsedContent
+    ? (isBn
+      ? (dbSections.features.parsedContentBn || dbSections.features.parsedContent).map((f: any, i: number) => ({
+        ...defaultFeatures[i], title: f.title || f.titleEn || defaultFeatures[i].titleBn,
+        desc: f.desc || f.description || f.descBn || defaultFeatures[i].descBn,
+      }))
+      : dbSections.features.parsedContent.map((f: any, i: number) => ({
+        ...defaultFeatures[i], title: f.title || f.titleEn || defaultFeatures[i].titleEn,
+        desc: f.desc || f.description || defaultFeatures[i].descEn,
+      })))
+    : defaultFeatures.map(f => ({
+      ...f, title: isBn ? f.titleBn : f.titleEn, desc: isBn ? f.descBn : f.descEn,
+    }));
+
+  // Default stats (fallback)
+  const defaultStats = [
+    { value: '10,000+', labelEn: 'Tickets Sold', labelBn: 'টিকেট বিক্রি', color: 'text-white' },
+    { value: '5,000+', labelEn: 'Happy Users', labelBn: 'সুখী ব্যবহারকারী', color: 'text-white' },
+    { value: '500+', labelEn: 'Verified Sellers', labelBn: 'যাচাইকৃত বিক্রেতা', color: 'text-white' },
+    { value: '64+', labelEn: 'Cities Covered', labelBn: 'শহর কভারেজ', color: 'text-white' },
   ];
 
-  const steps = [
+  const dbStats = dbSections.stats?.parsedContent;
+  const stats = dbStats
+    ? (isBn
+      ? (dbSections.stats.parsedContentBn || dbStats).map((s: any, i: number) => ({
+        ...defaultStats[i], value: s.value || defaultStats[i].value, label: s.label || defaultStats[i].labelBn,
+      }))
+      : dbStats.map((s: any, i: number) => ({
+        ...defaultStats[i], value: s.value || defaultStats[i].value, label: s.label || defaultStats[i].labelEn,
+      })))
+    : defaultStats.map(s => ({ ...s, label: isBn ? s.labelBn : s.labelEn }));
+
+  // Default steps (fallback)
+  const defaultSteps = [
     {
-      step: '01', title: t('step1Title', language), desc: t('step1Desc', language),
+      step: '01', titleEn: t('step1Title', language), titleBn: '', descEn: t('step1Desc', language), descBn: '',
       iconBg: 'bg-primary text-primary-foreground', accent: 'bg-primary/10 border-primary/20'
     },
     {
-      step: '02', title: t('step2Title', language), desc: t('step2Desc', language),
+      step: '02', titleEn: t('step2Title', language), titleBn: '', descEn: t('step2Desc', language), descBn: '',
       iconBg: 'bg-orange text-orange-foreground', accent: 'bg-orange/10 border-orange/20'
     },
     {
-      step: '03', title: t('step3Title', language), desc: t('step3Desc', language),
+      step: '03', titleEn: t('step3Title', language), titleBn: '', descEn: t('step3Desc', language), descBn: '',
       iconBg: 'bg-blue text-blue-foreground', accent: 'bg-blue/10 border-blue/20'
     },
     {
-      step: '04', title: t('step4Title', language), desc: t('step4Desc', language),
+      step: '04', titleEn: t('step4Title', language), titleBn: '', descEn: t('step4Desc', language), descBn: '',
       iconBg: 'bg-primary text-primary-foreground', accent: 'bg-primary/10 border-primary/20'
     },
   ];
+
+  const dbSteps = dbSections.how_it_works?.parsedContent;
+  const steps = dbSteps
+    ? (isBn
+      ? (dbSections.how_it_works.parsedContentBn || dbSteps).map((s: any, i: number) => ({
+        ...defaultSteps[i], step: s.step || defaultSteps[i].step,
+        title: s.title || defaultSteps[i].titleEn, desc: s.desc || s.description || defaultSteps[i].descEn,
+      }))
+      : dbSteps.map((s: any, i: number) => ({
+        ...defaultSteps[i], step: s.step || defaultSteps[i].step,
+        title: s.title || defaultSteps[i].titleEn, desc: s.desc || s.description || defaultSteps[i].descEn,
+      })))
+    : defaultSteps.map(s => ({ ...s, title: s.titleEn, desc: s.descEn }));
 
   return (
     <>
@@ -103,7 +183,7 @@ export default function HomePage() {
             <div className="animate-[fadeInUp_0.6s_ease-out_both]">
               <Badge className="mb-6 px-4 py-1.5 text-sm bg-primary/15 text-primary border-primary/20 hover:bg-primary/20 transition-colors duration-300">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                {language === 'en' ? 'Eid Special 2025' : 'ঈদ স্পেশাল ২০২৫'}
+                {pick('hero', 'badge', 'Eid Special 2025', 'ঈদ স্পেশাল ২০২৫')}
               </Badge>
             </div>
 
@@ -112,7 +192,7 @@ export default function HomePage() {
               className={`text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] ${language === 'bn' ? 'font-bangla' : ''} animate-[fadeInUp_0.6s_ease-out_0.1s_both]`}
             >
               <span className="text-primary">
-                {t('heroTitle', language)}
+                {pick('hero', 'title', t('heroTitle', language), t('heroTitle', language))}
               </span>
             </h1>
 
@@ -120,7 +200,7 @@ export default function HomePage() {
             <p
               className={`text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''} animate-[fadeInUp_0.6s_ease-out_0.2s_both]`}
             >
-              {t('heroSubtitle', language)}
+              {pick('hero', 'subtitle', t('heroSubtitle', language), t('heroSubtitle', language))}
             </p>
 
             {/* Transport Search Form */}
@@ -307,10 +387,10 @@ export default function HomePage() {
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
           <div className="text-center mb-12 animate-[fadeInUp_0.5s_ease-out_both]">
             <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
-              {t('howItWorks', language)}
+              {pick('how_it_works', 'title', t('howItWorks', language), t('howItWorks', language))}
             </Badge>
             <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
-              {t('howItWorksTitle', language)}
+              {pick('how_it_works', 'subtitle', t('howItWorksTitle', language), t('howItWorksTitle', language))}
             </h2>
           </div>
 
@@ -340,10 +420,10 @@ export default function HomePage() {
       <section className="container mx-auto px-4 lg:px-8 py-16 lg:py-20">
         <div className="text-center mb-12 animate-[fadeInUp_0.5s_ease-out_both]">
           <Badge variant="secondary" className="mb-3 bg-blue/10 text-blue border-blue/20">
-            {t('whyChooseUs', language)}
+            {pick('features', 'title', t('whyChooseUs', language), t('whyChooseUs', language))}
           </Badge>
           <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
-            {t('whyChooseUs', language)}
+            {pick('features', 'subtitle', t('whyChooseUs', language), t('whyChooseUs', language))}
           </h2>
         </div>
 
@@ -391,10 +471,10 @@ export default function HomePage() {
         <div className="text-center mb-10 animate-[fadeInUp_0.5s_ease-out_both]">
           <Badge variant="secondary" className="mb-3 bg-orange/10 text-orange border-orange/20">
             <TrendingUp className="w-3 h-3 mr-1" />
-            {t('popularRoutes', language)}
+            {pick('popular_routes', 'title', t('popularRoutes', language), t('popularRoutes', language))}
           </Badge>
           <h2 className={`text-2xl lg:text-4xl font-bold ${language === 'bn' ? 'font-bangla' : ''}`}>
-            {t('popularRoutes', language)}
+            {pick('popular_routes', 'subtitle', t('popularRoutes', language), t('popularRoutes', language))}
           </h2>
         </div>
 
@@ -437,15 +517,15 @@ export default function HomePage() {
             <div className="animate-[fadeInUp_0.5s_ease-out_both]">
               <Badge className="mb-4 bg-orange/15 text-orange border-orange/20 hover:bg-orange/20 transition-colors duration-300">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                {language === 'en' ? 'Start Earning' : 'আয় শুরু করুন'}
+                {pick('cta', 'badge', 'Start Earning', 'আয় শুরু করুন')}
               </Badge>
               <h2 className={`text-2xl lg:text-4xl font-bold mb-4 ${language === 'bn' ? 'font-bangla' : ''}`}>
                 <span className="text-primary">
-                  {language === 'en' ? 'Start Selling Your Tickets Today' : 'আজই আপনার টিকেট বিক্রি শুরু করুন'}
+                  {pick('cta', 'title', 'Start Selling Your Tickets Today', 'আজই আপনার টিকেট বিক্রি শুরু করুন')}
                 </span>
               </h2>
               <p className={`text-muted-foreground mb-8 max-w-lg mx-auto leading-relaxed ${language === 'bn' ? 'font-bangla' : ''}`}>
-                {language === 'en' ? 'Join thousands of verified sellers and reach millions of travelers across Bangladesh' : 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং বাংলাদেশ জুড়ে লক্ষ লক্ষ যাত্রীর কাছে পৌঁছান'}
+                {pick('cta', 'subtitle', 'Join thousands of verified sellers and reach millions of travelers across Bangladesh', 'হাজার হাজার যাচাইকৃত বিক্রেতাদের সাথে যোগ দিন এবং বাংলাদেশ জুড়ে লক্ষ লক্ষ যাত্রীর কাছে পৌঁছান')}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button size="lg" onClick={() => navigate('sell-ticket')} className="bg-orange text-orange-foreground hover:bg-orange/90 rounded-xl px-8 h-12 text-base transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">

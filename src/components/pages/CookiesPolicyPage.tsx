@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useLanguageStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,219 +11,126 @@ import {
   Mail, CheckCircle2, Lock, Eye, Cog
 } from 'lucide-react';
 
+function pick<T>(apiEn: T | undefined | null, apiBn: T | undefined | null, fallbackEn: T, fallbackBn: T, isBn: boolean): T {
+  if (isBn) return apiBn ?? apiEn ?? fallbackBn;
+  return apiEn ?? apiBn ?? fallbackEn;
+}
+
+function pickArray<T>(apiEn: T[] | undefined | null, apiBn: T[] | undefined | null, fallbackEn: T[], fallbackBn: T[], isBn: boolean): T[] {
+  if (isBn) return apiBn ?? apiEn ?? fallbackBn;
+  return apiEn ?? apiBn ?? fallbackEn;
+}
+
 export default function CookiesPolicyPage() {
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
   const fontClass = isBn ? 'font-bangla' : '';
 
+  const [dbPage, setDbPage] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 2000);
+    fetch('/api/page-content?slug=cookies-policy')
+      .then(r => r.json())
+      .then(data => {
+        clearTimeout(timeout);
+        if (data.page) setDbPage(data.page);
+        setLoading(false);
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
+  }, []);
+
+  let dbContent: any = null;
+  let dbContentBn: any = null;
+  try {
+    dbContent = dbPage?.content ? JSON.parse(dbPage.content) : null;
+    dbContentBn = dbPage?.contentBn ? JSON.parse(dbPage.contentBn) : null;
+  } catch { /* ignore */ }
+
   const content = {
     hero: {
-      title: isBn ? 'কুকি নীতি' : 'Cookies Policy',
-      subtitle: isBn
-        ? 'কুকি কি, আমরা কুকি কিভাবে ব্যবহার করি, এবং আপনি কিভাবে কুকি নিয়ন্ত্রণ করতে পারেন'
-        : 'What cookies are, how we use them, and how you can manage them',
+      title: pick(dbContent?.hero?.title, dbContentBn?.hero?.title, dbPage ? dbPage.title : 'Cookies Policy', dbPage ? (dbPage.titleBn || dbPage.title) : 'কুকি নীতি', isBn),
+      subtitle: pick(dbContent?.hero?.subtitle, dbContentBn?.hero?.subtitle, 'What cookies are, how we use them, and how you can manage them', 'কুকি কি, আমরা কুকি কিভাবে ব্যবহার করি, এবং আপনি কিভাবে কুকি নিয়ন্ত্রণ করতে পারেন', isBn),
     },
-    lastUpdated: isBn ? 'সর্বশেষ আপডেট: ১ মার্চ, ২০২৫' : 'Last Updated: March 1, 2025',
+    lastUpdated: pick(dbContent?.lastUpdated, dbContentBn?.lastUpdated, 'Last Updated: March 1, 2025', 'সর্বশেষ আপডেট: ১ মার্চ, ২০২৫', isBn),
 
-    // Section 1: What Are Cookies
-    s1Title: isBn ? '১. কুকি কি?' : '1. What Are Cookies?',
-    s1Content: isBn
-      ? 'কুকি হল ছোট টেক্সট ফাইল যা আপনার ব্রাউজারে সংরক্ষণ করা হয় যখন আপনি একটি ওয়েবসাইট দর্শন করেন। কুকি ওয়েবসাইটকে আপনার পছন্দ ও সেটিংস মনে রাখতে সাহায্য করে, প্রতিটি দর্শনে একই তথ্য পুনরায় প্রদান করতে হয় না। কুকি আপনার কম্পিউটারে কোনো ক্ষতিকারক প্রোগ্রাম অথবা ভাইরাস সংরক্ষণ করে না। তা আপনার ব্যক্তিগত তথ্য সরাসরি সংগ্রহ করে না।'
-      : 'Cookies are small text files that are stored on your browser when you visit a website. Cookies help the website remember your preferences and settings, so you don\'t need to provide the same information again on each visit. Cookies do not store any harmful programs or viruses on your computer. They do not directly collect your personal information.',
-    s1Points: isBn
-      ? [
-        'কুকি ছোট টেক্সট ফাইল, সরাসরি ব্যক্তিগত তথ্য সংগ্রহ করে না',
-        'আপনার ব্রাউজারে সংরক্ষণ, ওয়েবসাইটকে পছন্দ মনে রাখতে সাহায্য',
-        'কোনো ভাইরাস অথবা ক্ষতিকারক প্রোগ্রাম সংরক্ষণ করে না',
-        'আপনি ব্রাউজার সেটিংস দিয়ে কুকি নিয়ন্ত্রণ করতে পারেন',
-      ]
-      : [
-        'Cookies are small text files, they don\'t directly collect personal information',
-        'Stored in your browser, helping the website remember your preferences',
-        'They do not store any viruses or harmful programs',
-        'You can control cookies through your browser settings',
-      ],
+    s1Title: pick(dbContent?.s1Title, dbContentBn?.s1Title, '1. What Are Cookies?', '১. কুকি কি?', isBn),
+    s1Content: pick(dbContent?.s1Content, dbContentBn?.s1Content, 'Cookies are small text files that are stored on your browser when you visit a website. Cookies help the website remember your preferences and settings, so you don\'t need to provide the same information again on each visit. Cookies do not store any harmful programs or viruses on your computer. They do not directly collect your personal information.', 'কুকি হল ছোট টেক্সট ফাইল যা আপনার ব্রাউজারে সংরক্ষণ করা হয় যখন আপনি একটি ওয়েবসাইট দর্শন করেন। কুকি ওয়েবসাইটকে আপনার পছন্দ ও সেটিংস মনে রাখতে সাহায্য করে, প্রতিটি দর্শনে একই তথ্য পুনরায় প্রদান করতে হয় না। কুকি আপনার কম্পিউটারে কোনো ক্ষতিকারক প্রোগ্রাম অথবা ভাইরাস সংরক্ষণ করে না। তা আপনার ব্যক্তিগত তথ্য সরাসরি সংগ্রহ করে না।', isBn),
+    s1Points: pickArray(dbContent?.s1Points, dbContentBn?.s1Points,
+      ['Cookies are small text files, they don\'t directly collect personal information', 'Stored in your browser, helping the website remember your preferences', 'They do not store any viruses or harmful programs', 'You can control cookies through your browser settings'],
+      ['কুকি ছোট টেক্সট ফাইল, সরাসরি ব্যক্তিগত তথ্য সংগ্রহ করে না', 'আপনার ব্রাউজারে সংরক্ষণ, ওয়েবসাইটকে পছন্দ মনে রাখতে সাহায্য', 'কোনো ভাইরাস অথবা ক্ষতিকারক প্রোগ্রাম সংরক্ষণ করে না', 'আপনি ব্রাউজার সেটিংস দিয়ে কুকি নিয়ন্ত্রণ করতে পারেন'],
+      isBn),
 
-    // Section 2: Types of Cookies
-    s2Title: isBn ? '২. আমরা কি কুকি ব্যবহার করি' : '2. Types of Cookies We Use',
+    s2Title: pick(dbContent?.s2Title, dbContentBn?.s2Title, '2. Types of Cookies We Use', '২. আমরা কি কুকি ব্যবহার করি', isBn),
+    essentialTitle: pick(dbContent?.essentialTitle, dbContentBn?.essentialTitle, 'Essential Cookies', 'প্রয়োজনীয় কুকি', isBn),
+    essentialDesc: pick(dbContent?.essentialDesc, dbContentBn?.essentialDesc, 'Essential cookies are required for the platform\'s basic functionality. These cannot be disabled.', 'প্রয়োজনীয় কুকি প্ল্যাটফর্মের মৌলিক কার্যক্রমের জন্য অপরিহার্য। এগুলো বন্ধ করা যায় না।', isBn),
+    essentialItems: pickArray(dbContent?.essentialItems, dbContentBn?.essentialItems,
+      [{ name: 'Login Session', d: 'Keeps your account logged in' }, { name: 'Payment Security', d: 'Payment process security and authentication' }, { name: 'Session Token', d: 'Session management and security' }, { name: 'CSRF Protection', d: 'Cross-site request forgery prevention' }],
+      [{ name: 'লগইন সেশন', d: 'আপনার অ্যাকাউন্ট লগইন অবস্থা মনে রাখে' }, { name: 'পেমেন্ট সুরক্ষা', d: 'পেমেন্ট প্রক্রিয়ার সুরক্ষা ও প্রমাণীকরণ' }, { name: 'সেশন টোকেন', d: 'সেশন পরিচালনা ও নিরাপত্তা' }, { name: 'CSRF সুরক্ষা', d: 'ক্রস-সাইট রিকোয়েস্ট জালিয়াতি প্রতিরোধ' }],
+      isBn),
+    essentialBadge: pick(dbContent?.essentialBadge, dbContentBn?.essentialBadge, 'Cannot be disabled', 'বন্ধ করা যায় না', isBn),
 
-    essentialTitle: isBn ? 'প্রয়োজনীয় কুকি' : 'Essential Cookies',
-    essentialDesc: isBn
-      ? 'প্রয়োজনীয় কুকি প্ল্যাটফর্মের মৌলিক কার্যক্রমের জন্য অপরিহার্য। এগুলো বন্ধ করা যায় না।'
-      : 'Essential cookies are required for the platform\'s basic functionality. These cannot be disabled.',
-    essentialItems: isBn
-      ? [
-        { name: 'লগইন সেশন', d: 'আপনার অ্যাকাউন্ট লগইন অবস্থা মনে রাখে' },
-        { name: 'পেমেন্ট সুরক্ষা', d: 'পেমেন্ট প্রক্রিয়ার সুরক্ষা ও প্রমাণীকরণ' },
-        { name: 'সেশন টোকেন', d: 'সেশন পরিচালনা ও নিরাপত্তা' },
-        { name: 'CSRF সুরক্ষা', d: 'ক্রস-সাইট রিকোয়েস্ট জালিয়াতি প্রতিরোধ' },
-      ]
-      : [
-        { name: 'Login Session', d: 'Keeps your account logged in' },
-        { name: 'Payment Security', d: 'Payment process security and authentication' },
-        { name: 'Session Token', d: 'Session management and security' },
-        { name: 'CSRF Protection', d: 'Cross-site request forgery prevention' },
-      ],
-    essentialBadge: isBn ? 'বন্ধ করা যায় না' : 'Cannot be disabled',
+    performanceTitle: pick(dbContent?.performanceTitle, dbContentBn?.performanceTitle, 'Performance Cookies', 'পারফরম্যান্স কুকি', isBn),
+    performanceDesc: pick(dbContent?.performanceDesc, dbContentBn?.performanceDesc, 'Performance cookies improve the platform\'s performance and user experience. These can be disabled.', 'পারফরম্যান্স কুকি প্ল্যাটফর্মের কার্যক্ষমতা ও ব্যবহারকারী অভিজ্ঞতা বৃদ্ধি করে। এগুলো বন্ধ করা যায়।', isBn),
+    performanceItems: pickArray(dbContent?.performanceItems, dbContentBn?.performanceItems,
+      [{ name: 'Page View Tracking', d: 'Analyzes which pages you view' }, { name: 'Page Load Time', d: 'Analyzes and improves page load times' }, { name: 'Error Tracking', d: 'Detects technical errors' }, { name: 'User Flow', d: 'Analyzes and improves user flow' }],
+      [{ name: 'পৃষ্ঠা দর্শন ট্র্যাকিং', d: 'কোন পৃষ্ঠা দর্শন করেন তা বিশ্লেষণ' }, { name: 'পেজ লোড সময়', d: 'পৃষ্ঠা লোড সময় বিশ্লেষণ ও উন্নয়ন' }, { name: 'ত্রুটি ট্র্যাকিং', d: 'প্রযুক্তিগত ত্রুটি সনাক্তকরণ' }, { name: 'ব্যবহার প্রবাহ', d: 'ব্যবহারকারী প্রবাহ বিশ্লেষণ ও উন্নয়ন' }],
+      isBn),
+    performanceBadge: pick(dbContent?.performanceBadge, dbContentBn?.performanceBadge, 'Optional', 'বিকল্প', isBn),
 
-    performanceTitle: isBn ? 'পারফরম্যান্স কুকি' : 'Performance Cookies',
-    performanceDesc: isBn
-      ? 'পারফরম্যান্স কুকি প্ল্যাটফর্মের কার্যক্ষমতা ও ব্যবহারকারী অভিজ্ঞতা বৃদ্ধি করে। এগুলো বন্ধ করা যায়।'
-      : 'Performance cookies improve the platform\'s performance and user experience. These can be disabled.',
-    performanceItems: isBn
-      ? [
-        { name: 'পৃষ্ঠা দর্শন ট্র্যাকিং', d: 'কোন পৃষ্ঠা দর্শন করেন তা বিশ্লেষণ' },
-        { name: 'পেজ লোড সময়', d: 'পৃষ্ঠা লোড সময় বিশ্লেষণ ও উন্নয়ন' },
-        { name: 'ত্রুটি ট্র্যাকিং', d: 'প্রযুক্তিগত ত্রুটি সনাক্তকরণ' },
-        { name: 'ব্যবহার প্রবাহ', d: 'ব্যবহারকারী প্রবাহ বিশ্লেষণ ও উন্নয়ন' },
-      ]
-      : [
-        { name: 'Page View Tracking', d: 'Analyzes which pages you view' },
-        { name: 'Page Load Time', d: 'Analyzes and improves page load times' },
-        { name: 'Error Tracking', d: 'Detects technical errors' },
-        { name: 'User Flow', d: 'Analyzes and improves user flow' },
-      ],
-    performanceBadge: isBn ? 'বিকল্প' : 'Optional',
+    functionalityTitle: pick(dbContent?.functionalityTitle, dbContentBn?.functionalityTitle, 'Functionality Cookies', 'ফাংশনালিটি কুকি', isBn),
+    functionalityDesc: pick(dbContent?.functionalityDesc, dbContentBn?.functionalityDesc, 'Functionality cookies remember your preferences and enhance user experience. These can be disabled.', 'ফাংশনালিটি কুকি আপনার পছন্দ মনে রাখে ও ব্যবহারকারী অভিজ্ঞতা বৃদ্ধি করে। এগুলো বন্ধ করা যায়।', isBn),
+    functionalityItems: pickArray(dbContent?.functionalityItems, dbContentBn?.functionalityItems,
+      [{ name: 'Language Preference', d: 'Remembers your selected language (Bengali/English)' }, { name: 'Theme Preference', d: 'Remembers your selected theme (Light/Dark)' }, { name: 'Search Filters', d: 'Remembers search and filter preferences' }, { name: 'Layout Preference', d: 'Remembers page layout and display preferences' }],
+      [{ name: 'ভাষা পছন্দ', d: 'আপনার নির্বাচিত ভাষা (বাংলা/English) মনে রাখে' }, { name: 'থিম পছন্দ', d: 'আপনার নির্বাচিত থিম (লাইট/ডার্ক) মনে রাখে' }, { name: 'সার্চ ফিল্টার', d: 'সার্চ ও ফিল্টার পছন্দ মনে রাখে' }, { name: 'লেআউট পছন্দ', d: 'পৃষ্ঠা লেআউট ও প্রদর্শন পছন্দ মনে রাখে' }],
+      isBn),
+    functionalityBadge: pick(dbContent?.functionalityBadge, dbContentBn?.functionalityBadge, 'Optional', 'বিকল্প', isBn),
 
-    functionalityTitle: isBn ? 'ফাংশনালিটি কুকি' : 'Functionality Cookies',
-    functionalityDesc: isBn
-      ? 'ফাংশনালিটি কুকি আপনার পছন্দ মনে রাখে ও ব্যবহারকারী অভিজ্ঞতা বৃদ্ধি করে। এগুলো বন্ধ করা যায়।'
-      : 'Functionality cookies remember your preferences and enhance user experience. These can be disabled.',
-    functionalityItems: isBn
-      ? [
-        { name: 'ভাষা পছন্দ', d: 'আপনার নির্বাচিত ভাষা (বাংলা/English) মনে রাখে' },
-        { name: 'থিম পছন্দ', d: 'আপনার নির্বাচিত থিম (লাইট/ডার্ক) মনে রাখে' },
-        { name: 'সার্চ ফিল্টার', d: 'সার্চ ও ফিল্টার পছন্দ মনে রাখে' },
-        { name: 'লেআউট পছন্দ', d: 'পৃষ্ঠা লেআউট ও প্রদর্শন পছন্দ মনে রাখে' },
-      ]
-      : [
-        { name: 'Language Preference', d: 'Remembers your selected language (Bengali/English)' },
-        { name: 'Theme Preference', d: 'Remembers your selected theme (Light/Dark)' },
-        { name: 'Search Filters', d: 'Remembers search and filter preferences' },
-        { name: 'Layout Preference', d: 'Remembers page layout and display preferences' },
-      ],
-    functionalityBadge: isBn ? 'বিকল্প' : 'Optional',
+    advertisingTitle: pick(dbContent?.advertisingTitle, dbContentBn?.advertisingTitle, 'Advertising Cookies', 'বিজ্ঞপ্তি কুকি', isBn),
+    advertisingDesc: pick(dbContent?.advertisingDesc, dbContentBn?.advertisingDesc, 'We currently do not use advertising cookies. We plan to add them in the future and will update this policy accordingly.', 'বর্তমানে আমরা বিজ্ঞপ্তি কুকি ব্যবহার করি না। ভবিষ্যতে যোগ করার পরিকল্পনা আছে এবং তখন এই নীতি আপডেট করা হবে।', isBn),
+    advertisingBadge: pick(dbContent?.advertisingBadge, dbContentBn?.advertisingBadge, 'Not currently used', 'বর্তমানে ব্যবহার নেই', isBn),
 
-    advertisingTitle: isBn ? 'বিজ্ঞপ্তি কুকি' : 'Advertising Cookies',
-    advertisingDesc: isBn
-      ? 'বর্তমানে আমরা বিজ্ঞপ্তি কুকি ব্যবহার করি না। ভবিষ্যতে যোগ করার পরিকল্পনা আছে এবং তখন এই নীতি আপডেট করা হবে।'
-      : 'We currently do not use advertising cookies. We plan to add them in the future and will update this policy accordingly.',
-    advertisingBadge: isBn ? 'বর্তমানে ব্যবহার নেই' : 'Not currently used',
+    s3Title: pick(dbContent?.s3Title, dbContentBn?.s3Title, '3. How to Manage Cookies', '৩. কুকি নিয়ন্ত্রণ', isBn),
+    s3Intro: pick(dbContent?.s3Intro, dbContentBn?.s3Intro, 'You can control cookies through your browser settings. Disabling essential cookies may prevent the platform\'s basic functionality from working.', 'আপনি ব্রাউজার সেটিংস দিয়ে কুকি নিয়ন্ত্রণ করতে পারেন। প্রয়োজনীয় কুকি বন্ধ করলে প্ল্যাটফর্মের মৌলিক কার্যক্রম সম্পন্ন হতে পারে না।', isBn),
+    browsers: pickArray(dbContent?.browsers, dbContentBn?.browsers,
+      [{ name: 'Google Chrome', d: 'Settings → Privacy and security → Cookies and other site data' }, { name: 'Mozilla Firefox', d: 'Settings → Privacy & Security → Cookies and Site Data' }, { name: 'Safari (iPhone)', d: 'Settings → Safari → Privacy & Security' }, { name: 'Safari (Mac)', d: 'Safari → Preferences → Privacy' }],
+      [{ name: 'Google Chrome', d: 'সেটিংস → প্রাইভেসি ও সিকিউরিটি → কুকি ও অন্যান্য সাইট ডেটা' }, { name: 'Mozilla Firefox', d: 'সেটিংস → প্রাইভেসি ও সিকিউরিটি → কুকি ও সাইট ডেটা' }, { name: 'Safari (iPhone)', d: 'সেটিংস → Safari → প্রাইভেসি ও সিকিউরিটি' }, { name: 'Safari (Mac)', d: 'Safari → প্রিফারেন্স → প্রাইভেসি' }],
+      isBn),
 
-    // Section 3: How to Manage Cookies
-    s3Title: isBn ? '৩. কুকি নিয়ন্ত্রণ' : '3. How to Manage Cookies',
-    s3Intro: isBn
-      ? 'আপনি ব্রাউজার সেটিংস দিয়ে কুকি নিয়ন্ত্রণ করতে পারেন। প্রয়োজনীয় কুকি বন্ধ করলে প্ল্যাটফর্মের মৌলিক কার্যক্রম সম্পন্ন হতে পারে না।'
-      : 'You can control cookies through your browser settings. Disabling essential cookies may prevent the platform\'s basic functionality from working.',
-    browsers: isBn
-      ? [
-        {
-          name: 'Google Chrome', d: 'সেটিংস → প্রাইভেসি ও সিকিউরিটি → কুকি ও অন্যান্য সাইট ডেটা',
-        },
-        {
-          name: 'Mozilla Firefox', d: 'সেটিংস → প্রাইভেসি ও সিকিউরিটি → কুকি ও সাইট ডেটা',
-        },
-        {
-          name: 'Safari (iPhone)', d: 'সেটিংস → Safari → প্রাইভেসি ও সিকিউরিটি',
-        },
-        {
-          name: 'Safari (Mac)', d: 'Safari → প্রিফারেন্স → প্রাইভেসি',
-        },
-      ]
-      : [
-        {
-          name: 'Google Chrome', d: 'Settings → Privacy and security → Cookies and other site data',
-        },
-        {
-          name: 'Mozilla Firefox', d: 'Settings → Privacy & Security → Cookies and Site Data',
-        },
-        {
-          name: 'Safari (iPhone)', d: 'Settings → Safari → Privacy & Security',
-        },
-        {
-          name: 'Safari (Mac)', d: 'Safari → Preferences → Privacy',
-        },
-      ],
+    s4Title: pick(dbContent?.s4Title, dbContentBn?.s4Title, '4. Third-Party Cookies', '৪. তৃতীয় পক্ষের কুকি', isBn),
+    s4Content: pick(dbContent?.s4Content, dbContentBn?.s4Content, 'Third-party cookies may be used on the platform:', 'প্ল্যাটফর্মে তৃতীয় পক্ষের কুকি ব্যবহার হতে পারে:', isBn),
+    thirdParty: pickArray(dbContent?.thirdParty, dbContentBn?.thirdParty,
+      [{ name: 'Google Analytics', d: 'For platform usage analytics and improvement. You can disable it using the Google Analytics opt-out plugin.', opt: 'Opt-out plugin available' }, { name: 'bKash', d: 'bKash uses its own cookies for payment processing.', opt: 'Required for payment' }, { name: 'SSLCommerz', d: 'SSLCommerz uses its own cookies for payment processing.', opt: 'Required for payment' }],
+      [{ name: 'Google Analytics', d: 'প্ল্যাটফর্ম ব্যবহার বিশ্লেষণ ও উন্নয়নের জন্য। আপনি Google Analytics অপ্ট-আউট প্লাগইন দিয়ে বন্ধ করতে পারেন।', opt: 'অপ্ট-আউট প্লাগইন উপলব্ধ' }, { name: 'bKash', d: 'বিকাশ পেমেন্ট প্রক্রিয়ার জন্য নিজস্ব কুকি ব্যবহার।', opt: 'পেমেন্ট প্রক্রিয়া প্রযোজনীয়' }, { name: 'SSLCommerz', d: 'SSLCommerz পেমেন্ট প্রক্রিয়ার জন্য নিজস্ব কুকি ব্যবহার।', opt: 'পেমেন্ট প্রক্রিয়া প্রযোজনীয়' }],
+      isBn),
 
-    // Section 4: Third-Party Cookies
-    s4Title: isBn ? '৪. তৃতীয় পক্ষের কুকি' : '4. Third-Party Cookies',
-    s4Content: isBn
-      ? 'প্ল্যাটফর্মে তৃতীয় পক্ষের কুকি ব্যবহার হতে পারে:'
-      : 'Third-party cookies may be used on the platform:',
-    thirdParty: isBn
-      ? [
-        { name: 'Google Analytics', d: 'প্ল্যাটফর্ম ব্যবহার বিশ্লেষণ ও উন্নয়নের জন্য। আপনি Google Analytics অপ্ট-আউট প্লাগইন দিয়ে বন্ধ করতে পারেন।', opt: 'অপ্ট-আউট প্লাগইন উপলব্ধ' },
-        { name: 'bKash', d: 'বিকাশ পেমেন্ট প্রক্রিয়ার জন্য নিজস্ব কুকি ব্যবহার।', opt: 'পেমেন্ট প্রক্রিয়া প্রয়োজনীয়' },
-        { name: 'SSLCommerz', d: 'SSLCommerz পেমেন্ট প্রক্রিয়ার জন্য নিজস্ব কুকি ব্যবহার।', opt: 'পেমেন্ট প্রক্রিয়া প্রয়োজনীয়' },
-      ]
-      : [
-        { name: 'Google Analytics', d: 'For platform usage analytics and improvement. You can disable it using the Google Analytics opt-out plugin.', opt: 'Opt-out plugin available' },
-        { name: 'bKash', d: 'bKash uses its own cookies for payment processing.', opt: 'Required for payment' },
-        { name: 'SSLCommerz', d: 'SSLCommerz uses its own cookies for payment processing.', opt: 'Required for payment' },
-      ],
+    s5Title: pick(dbContent?.s5Title, dbContentBn?.s5Title, '5. Cookie Duration', '৫. কুকি সময়কাল', isBn),
+    s5Intro: pick(dbContent?.s5Intro, dbContentBn?.s5Intro, 'Cookie duration is of two types:', 'কুকি সময়কাল দুই প্রকার:', isBn),
+    duration: pickArray(dbContent?.duration, dbContentBn?.duration,
+      [{ t: 'Session Cookies', d: 'Automatically deleted when the browser is closed. Used for essential session cookies (login, payment).' }, { t: 'Persistent Cookies', d: 'Stored for a specified duration (1 day to 1 year). Used for preference and analytics cookies.' }],
+      [{ t: 'সেশন কুকি', d: 'ব্রাউজার বন্ধ করলে স্বয়ংক্রিয়ভাবে মুছে যায়। প্রয়োজনীয় সেশন কুকি (লগইন, পেমেন্ট)।' }, { t: 'স্থায়ী কুকি', d: 'নির্দিষ্ট সময়ের জন্য সংরক্ষণ (১ দিন থেকে ১ বছর)। পছন্দ ও বিশ্লেষণ কুকি।' }],
+      isBn),
+    expiry: pickArray(dbContent?.expiry, dbContentBn?.expiry,
+      [{ t: 'Login Session', d: 'Deleted when browser closes' }, { t: 'Language Preference', d: '1 year' }, { t: 'Theme Preference', d: '1 year' }, { t: 'Analytics', d: '2 years' }, { t: 'Payment Token', d: 'Deleted when browser closes' }],
+      [{ t: 'লগইন সেশন', d: 'ব্রাউজার বন্ধ হলে মুছে যায়' }, { t: 'ভাষা পছন্দ', d: '১ বছর' }, { t: 'থিম পছন্দ', d: '১ বছর' }, { t: 'বিশ্লেষণ', d: '২ বছর' }, { t: 'পেমেন্ট টোকেন', d: 'ব্রাউজার বন্ধ হলে মুছে যায়' }],
+      isBn),
 
-    // Section 5: Cookie Duration
-    s5Title: isBn ? '৫. কুকি সময়কাল' : '5. Cookie Duration',
-    s5Intro: isBn
-      ? 'কুকি সময়কাল দুই প্রকার:'
-      : 'Cookie duration is of two types:',
-    duration: isBn
-      ? [
-        { t: 'সেশন কুকি', d: 'ব্রাউজার বন্ধ করলে স্বয়ংক্রিয়ভাবে মুছে যায়। প্রয়োজনীয় সেশন কুকি (লগইন, পেমেন্ট)।' },
-        { t: 'স্থায়ী কুকি', d: 'নির্দিষ্ট সময়ের জন্য সংরক্ষণ (১ দিন থেকে ১ বছর)। পছন্দ ও বিশ্লেষণ কুকি।' },
-      ]
-      : [
-        { t: 'Session Cookies', d: 'Automatically deleted when the browser is closed. Used for essential session cookies (login, payment).' },
-        { t: 'Persistent Cookies', d: 'Stored for a specified duration (1 day to 1 year). Used for preference and analytics cookies.' },
-      ],
-    expiry: isBn
-      ? [
-        { t: 'লগইন সেশন', d: 'ব্রাউজার বন্ধ হলে মুছে যায়' },
-        { t: 'ভাষা পছন্দ', d: '১ বছর' },
-        { t: 'থিম পছন্দ', d: '১ বছর' },
-        { t: 'বিশ্লেষণ', d: '২ বছর' },
-        { t: 'পেমেন্ট টোকেন', d: 'ব্রাউজার বন্ধ হলে মুছে যায়' },
-      ]
-      : [
-        { t: 'Login Session', d: 'Deleted when browser closes' },
-        { t: 'Language Preference', d: '1 year' },
-        { t: 'Theme Preference', d: '1 year' },
-        { t: 'Analytics', d: '2 years' },
-        { t: 'Payment Token', d: 'Deleted when browser closes' },
-      ],
+    s6Title: pick(dbContent?.s6Title, dbContentBn?.s6Title, '6. Changes to Policy', '৬. নীতি পরিবর্তন', isBn),
+    s6Items: pickArray(dbContent?.s6Items, dbContentBn?.s6Items,
+      ['We may modify this cookies policy at any time.', 'Changes become effective upon publication on the platform.', 'For significant changes, email notification is provided.', 'Effective date: 7 days after publication.'],
+      ['আমরা যেকোনো সময় কুকি নীতি পরিবর্তন করতে পারি।', 'পরিবর্তন প্ল্যাটফর্মে প্রকাশের পর প্রযোজ্য।', 'বড় পরিবর্তনের জন্য ইমেইল বিজ্ঞপ্তি প্রদান।', 'প্রযোজ্য তারিখ: প্রকাশের ৭ দিন পর।'],
+      isBn),
 
-    // Section 6: Changes to Policy
-    s6Title: isBn ? '৬. নীতি পরিবর্তন' : '6. Changes to Policy',
-    s6Items: isBn
-      ? [
-        'আমরা যেকোনো সময় কুকি নীতি পরিবর্তন করতে পারি।',
-        'পরিবর্তন প্ল্যাটফর্মে প্রকাশের পর প্রযোজ্য।',
-        'বড় পরিবর্তনের জন্য ইমেইল বিজ্ঞপ্তি প্রদান।',
-        'প্রযোজ্য তারিখ: প্রকাশের ৭ দিন পর।',
-      ]
-      : [
-        'We may modify this cookies policy at any time.',
-        'Changes become effective upon publication on the platform.',
-        'For significant changes, email notification is provided.',
-        'Effective date: 7 days after publication.',
-      ],
-
-    // Section 7: Contact
-    s7Title: isBn ? '৭. যোগাযোগ' : '7. Contact',
-    s7Content: isBn
-      ? 'কুকি সংক্রান্ত যেকোনো প্রশ্নের জন্য যোগাযোগ করুন:'
-      : 'For any questions related to cookies, please contact:',
-    contact: isBn
-      ? [
-        { label: 'ইমেইল', value: 'privacy@eidticketresell.com' },
-        { label: 'ফোন', value: '+880 1234-567890' },
-        { label: 'ঠিকানা', value: 'ঢাকা, বাংলাদেশ' },
-      ]
-      : [
-        { label: 'Email', value: 'privacy@eidticketresell.com' },
-        { label: 'Phone', value: '+880 1234-567890' },
-        { label: 'Address', value: 'Dhaka, Bangladesh' },
-      ],
+    s7Title: pick(dbContent?.s7Title, dbContentBn?.s7Title, '7. Contact', '৭. যোগাযোগ', isBn),
+    s7Content: pick(dbContent?.s7Content, dbContentBn?.s7Content, 'For any questions related to cookies, please contact:', 'কুকি সংক্রান্ত যেকোনো প্রশ্নের জন্য যোগাযোগ করুন:', isBn),
+    contact: pickArray(dbContent?.contact, dbContentBn?.contact,
+      [{ label: 'Email', value: 'privacy@eidticketresell.com' }, { label: 'Phone', value: '+880 1234-567890' }, { label: 'Address', value: 'Dhaka, Bangladesh' }],
+      [{ label: 'ইমেইল', value: 'privacy@eidticketresell.com' }, { label: 'ফোন', value: '+880 1234-567890' }, { label: 'ঠিকানা', value: 'ঢাকা, বাংলাদেশ' }],
+      isBn),
   };
 
   return (
@@ -236,7 +144,7 @@ export default function CookiesPolicyPage() {
         <p className={`text-muted-foreground text-lg max-w-2xl mx-auto ${fontClass}`}>{content.hero.subtitle}</p>
       </div>
 
-      {/* Section 1: What Are Cookies */}
+      {/* Section 1 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -257,7 +165,7 @@ export default function CookiesPolicyPage() {
         </CardContent>
       </Card>
 
-      {/* Section 2: Types of Cookies */}
+      {/* Section 2 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -349,7 +257,7 @@ export default function CookiesPolicyPage() {
         </CardContent>
       </Card>
 
-      {/* Section 3: How to Manage Cookies */}
+      {/* Section 3 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -384,7 +292,7 @@ export default function CookiesPolicyPage() {
         </CardContent>
       </Card>
 
-      {/* Section 4: Third-Party Cookies */}
+      {/* Section 4 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -410,7 +318,7 @@ export default function CookiesPolicyPage() {
         </CardContent>
       </Card>
 
-      {/* Section 5: Cookie Duration */}
+      {/* Section 5 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -445,7 +353,7 @@ export default function CookiesPolicyPage() {
         </CardContent>
       </Card>
 
-      {/* Section 6: Changes to Policy */}
+      {/* Section 6 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>
@@ -463,7 +371,7 @@ export default function CookiesPolicyPage() {
         </CardContent>
       </Card>
 
-      {/* Section 7: Contact */}
+      {/* Section 7 */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-xl ${fontClass}`}>

@@ -593,8 +593,94 @@ model PaymentTransaction {
 }
 
 model FaqCategory {
-  id    String @id @default(cuid())
-  name  String
-  slug  String @unique
-  order Int    @default(0)
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  items FaqItem[]
+}
+
+model PageContent {
+  id        String   @id @default(cuid())
+  slug      String   @unique // e.g. "how-it-works", "safety-guidelines", "payment-policy"
+  title     String   // Page title
+  titleBn   String?  // Bengali title
+  content   String   // Main content as JSON string (array of sections with title, body, icon)
+  contentBn String?  // Bengali content as JSON string
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model HomepageSection {
+  id          String   @id @default(cuid())
+  sectionKey  String   @unique // e.g. "hero", "stats", "features", "how_it_works", "popular_routes", "cta"
+  title       String
+  titleBn     String?
+  subtitle    String?
+  subtitleBn  String?
+  content     String?  // JSON string for section-specific data (stats values, feature list, steps, routes)
+  contentBn   String?  // Bengali content JSON
+  isVisible   Boolean  @default(true)
+  order       Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+model FaqItem {
+  id          String   @id @default(cuid())
+  categoryId  String
+  question    String
+  questionBn  String?
+  answer      String
+  answerBn    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category FaqCategory @relation(fields: [categoryId], references: [id])
+}
+
+model IpBlock {
+  id          String   @id @default(cuid())
+  ipAddress   String   @unique
+  reason      String?
+  blockedBy   String?
+  createdAt   DateTime @default(now())
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  permissions String?  // JSON array of allowed operations
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id         String @id @default(cuid())
+  roleId     String
+  permission String // e.g. "manage_tickets", "manage_users", "view_reports"
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permission])
 }

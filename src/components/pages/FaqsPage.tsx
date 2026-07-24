@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useLanguageStore } from '@/lib/store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,13 +32,50 @@ interface FaqCategory {
   items: FaqItem[];
 }
 
+// Icon/color mapping for DB categories
+const CATEGORY_ICON_MAP: Record<string, React.ElementType> = {
+  'general': HelpCircle,
+  'buying': ShoppingCart,
+  'selling': Tag,
+  'payment': CreditCard,
+  'account': UserCircle,
+};
+
+const CATEGORY_COLOR_MAP: Record<string, string> = {
+  'general': 'bg-green-600',
+  'buying': 'bg-orange-500',
+  'selling': 'bg-purple-500',
+  'payment': 'bg-blue-500',
+  'account': 'bg-teal-500',
+};
+
 export default function FaqsPage() {
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
   const cls = isBn ? 'font-bangla' : '';
 
-  const faqCategories: FaqCategory[] = [
-    // General
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 2000);
+    fetch('/api/faqs')
+      .then(r => r.json())
+      .then(data => {
+        clearTimeout(timeout);
+        if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+          setDbCategories(data.categories);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
+  }, []);
+
+  // Default hardcoded FAQ categories (fallback)
+  const defaultFaqCategories: FaqCategory[] = [
     {
       icon: HelpCircle,
       title: isBn ? 'সাধারণ জিজ্ঞাসা' : 'General',
@@ -81,7 +119,6 @@ export default function FaqsPage() {
         },
       ],
     },
-    // Buying Tickets
     {
       icon: ShoppingCart,
       title: isBn ? 'টিকেট ক্রয়' : 'Buying Tickets',
@@ -125,7 +162,6 @@ export default function FaqsPage() {
         },
       ],
     },
-    // Selling Tickets
     {
       icon: Tag,
       title: isBn ? 'টিকেট বিক্রি' : 'Selling Tickets',
@@ -169,7 +205,6 @@ export default function FaqsPage() {
         },
       ],
     },
-    // Payment & Refunds
     {
       icon: CreditCard,
       title: isBn ? 'পেমেন্ট ও ফেরত' : 'Payment & Refunds',
@@ -213,7 +248,6 @@ export default function FaqsPage() {
         },
       ],
     },
-    // Account & Verification
     {
       icon: UserCircle,
       title: isBn ? 'অ্যাকাউন্ট ও যাচাই' : 'Account & Verification',
@@ -258,6 +292,19 @@ export default function FaqsPage() {
       ],
     },
   ];
+
+  // Use DB categories if available, otherwise default
+  const faqCategories: FaqCategory[] = dbCategories.length > 0
+    ? dbCategories.map((cat) => ({
+      icon: CATEGORY_ICON_MAP[cat.slug] || HelpCircle,
+      title: isBn ? (cat.name + (cat.slug ? '' : '')) : cat.name, // Use DB name, it might be in English only
+      color: CATEGORY_COLOR_MAP[cat.slug] || 'bg-green-600',
+      items: cat.items.map((item: any) => ({
+        q: isBn ? (item.questionBn || item.question) : item.question,
+        a: isBn ? (item.answerBn || item.answer) : item.answer,
+      })),
+    }))
+    : defaultFaqCategories;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">

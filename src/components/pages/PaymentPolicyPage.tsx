@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useLanguageStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,43 +11,63 @@ import {
   Banknote, Smartphone, BadgeCheck
 } from 'lucide-react';
 
+// Helper: pick value from API data or fallback
+function pick<T>(apiEn: T | undefined | null, apiBn: T | undefined | null, fallbackEn: T, fallbackBn: T, isBn: boolean): T {
+  if (isBn) return apiBn ?? apiEn ?? fallbackBn;
+  return apiEn ?? apiBn ?? fallbackEn;
+}
+
 export default function PaymentPolicyPage() {
   const { language } = useLanguageStore();
   const isBn = language === 'bn';
   const fontClass = isBn ? 'font-bangla' : '';
 
+  const [dbPage, setDbPage] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 2000);
+    fetch('/api/page-content?slug=payment-policy')
+      .then(r => r.json())
+      .then(data => {
+        clearTimeout(timeout);
+        if (data.page) setDbPage(data.page);
+        setLoading(false);
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
+  }, []);
+
+  // Parse API content
+  let dbContent: any = null;
+  let dbContentBn: any = null;
+  try {
+    dbContent = dbPage?.content ? JSON.parse(dbPage.content) : null;
+    dbContentBn = dbPage?.contentBn ? JSON.parse(dbPage.contentBn) : null;
+  } catch { /* ignore */ }
+
   const content = {
     hero: {
-      title: isBn ? 'পেমেন্ট নীতি' : 'Payment Policy',
-      subtitle: isBn
-        ? 'ঈদ টিকেট রিসেলে পেমেন্ট কিভাবে কাজ করে, সেই সম্পর্কে সম্পূর্ণ তথ্য'
-        : 'Complete information about how payments work on Eid Ticket Resell',
+      title: pick(dbContent?.hero?.title, dbContentBn?.hero?.title, dbPage ? dbPage.title : 'Payment Policy', dbPage ? (dbPage.titleBn || dbPage.title) : 'পেমেন্ট নীতি', isBn),
+      subtitle: pick(dbContent?.hero?.subtitle, dbContentBn?.hero?.subtitle, 'Complete information about how payments work on Eid Ticket Resell', 'ঈদ টিকেট রিসেলে পেমেন্ট কিভাবে কাজ করে, সেই সম্পর্কে সম্পূর্ণ তথ্য', isBn),
     },
-    lastUpdated: isBn ? 'সর্বশেষ আপডেট: ১ মার্চ, ২০২৫' : 'Last Updated: March 1, 2025',
+    lastUpdated: pick(dbContent?.lastUpdated, dbContentBn?.lastUpdated, 'Last Updated: March 1, 2025', 'সর্বশেষ আপডেট: ১ মার্চ, ২০২৫', isBn),
 
-    // Section 1: Accepted Payment Methods
-    s1Title: isBn ? '১. গ্রহণযোগ্য পেমেন্ট পদ্ধতি' : '1. Accepted Payment Methods',
-    s1Intro: isBn
-      ? 'ঈদ টিকেট রিসেল বাংলাদেশের প্রধান পেমেন্ট পদ্ধতি সমর্থন করে যাতে প্রতিটি ব্যবহারকারী সহজে ও নিরাপদে লেনদেন করতে পারেন।'
-      : 'Eid Ticket Resell supports the major payment methods in Bangladesh so every user can transact easily and securely.',
-    bKashTitle: isBn ? 'বিকাশ' : 'bKash',
-    bKashDesc: isBn
-      ? 'বাংলাদেশের সবচেয়ে জনপ্রিয় মোবাইল ফাইন্যান্সিয়াল সার্ভিস। বিকাশ অ্যাকাউন্ট থেকে সরাসরি পেমেন্ট করতে পারবেন। পেমেন্ট পিন দিয়ে অনুমোদন করুন এবং তাৎক্ষণিক কনফারমেশন পান।'
-      : 'Bangladesh\'s most popular mobile financial service. You can pay directly from your bKash account. Authorize with your payment PIN and receive instant confirmation.',
-    sslTitle: isBn ? 'SSLCommerz' : 'SSLCommerz',
-    sslDesc: isBn
-      ? 'বাংলাদেশের প্রধান পেমেন্ট গেটওয়ে যা নিম্নলিখিত পদ্ধতি সমর্থন করে:'
-      : 'Bangladesh\'s premier payment gateway supporting the following methods:',
-    sslMethods: isBn
+    s1Title: pick(dbContent?.s1Title, dbContentBn?.s1Title, '1. Accepted Payment Methods', '১. গ্রহণযোগ্য পেমেন্ট পদ্ধতি', isBn),
+    s1Intro: pick(dbContent?.s1Intro, dbContentBn?.s1Intro, 'Eid Ticket Resell supports the major payment methods in Bangladesh so every user can transact easily and securely.', 'ঈদ টিকেট রিসেল বাংলাদেশের প্রধান পেমেন্ট পদ্ধতি সমর্থন করে যাতে প্রতিটি ব্যবহারকারী সহজে ও নিরাপদে লেনদেন করতে পারেন।', isBn),
+    bKashTitle: pick(dbContent?.bKashTitle, dbContentBn?.bKashTitle, 'bKash', 'বিকাশ', isBn),
+    bKashDesc: pick(dbContent?.bKashDesc, dbContentBn?.bKashDesc, 'Bangladesh\'s most popular mobile financial service. You can pay directly from your bKash account. Authorize with your payment PIN and receive instant confirmation.', 'বাংলাদেশের সবচেয়ে জনপ্রিয় মোবাইল ফাইন্যান্সিয়াল সার্ভিস। বিকাশ অ্যাকাউন্ট থেকে সরাসরি পেমেন্ট করতে পারবেন। পেমেন্ট পিন দিয়ে অনুমোদন করুন এবং তাৎক্ষণিক কনফিরমেশন পান।', isBn),
+    sslTitle: pick(dbContent?.sslTitle, dbContentBn?.sslTitle, 'SSLCommerz', 'SSLCommerz', isBn),
+    sslDesc: pick(dbContent?.sslDesc, dbContentBn?.sslDesc, 'Bangladesh\'s premier payment gateway supporting the following methods:', 'বাংলাদেশের প্রধান পেমেন্ট গেটওয়ে যা নিম্নলিখিত পদ্ধতি সমর্থন করে:', isBn),
+    sslMethods: (isBn ? (dbContentBn?.sslMethods || dbContent?.sslMethods) : (dbContent?.sslMethods || dbContentBn?.sslMethods)) || (isBn
       ? ['ভিসা (Visa) ক্রেডিট/ডেবিট কার্ড', 'মাস্টারকার্ড (Mastercard) ক্রেডিট/ডেবিট কার্ড', 'আমেরিকান এক্সপ্রেস (Amex)', 'ডিবিবিল নেকাস (DBBL Nexus) কার্ড', 'মোবাইল ব্যাংকিং (বিকাশ, রকেট, নগদ, উপায়)', 'ইন্টারনেট ব্যাংকিং']
-      : ['Visa Credit/Debit Cards', 'Mastercard Credit/Debit Cards', 'American Express (Amex)', 'DBBL Nexus Cards', 'Mobile Banking (bKash, Rocket, Nagad, Upay)', 'Internet Banking'],
+      : ['Visa Credit/Debit Cards', 'Mastercard Credit/Debit Cards', 'American Express (Amex)', 'DBBL Nexus Cards', 'Mobile Banking (bKash, Rocket, Nagad, Upay)', 'Internet Banking']),
 
-    // Section 2: Payment Process
-    s2Title: isBn ? '২. পেমেন্ট প্রক্রিয়া' : '2. Payment Process',
-    s2Intro: isBn
-      ? 'টিকেট ক্রয়ের পেমেন্ট প্রক্রিয়া নিম্নলিখিত ধাপে সম্পন্ন হয়:'
-      : 'The payment process for purchasing a ticket follows these steps:',
-    steps: isBn
+    s2Title: pick(dbContent?.s2Title, dbContentBn?.s2Title, '2. Payment Process', '২. পেমেন্ট প্রক্রিয়া', isBn),
+    s2Intro: pick(dbContent?.s2Intro, dbContentBn?.s2Intro, 'The payment process for purchasing a ticket follows these steps:', 'টিকেট ক্রয়ের পেমেন্ট প্রক্রিয়া নিম্নলিখিত ধাপে সম্পন্ন হয়:', isBn),
+    steps: (isBn ? (dbContentBn?.steps || dbContent?.steps) : (dbContent?.steps || dbContentBn?.steps)) || (isBn
       ? [
         { n: 'ধাপ ১', t: 'টিকেট নির্বাচন', d: 'আপনার পছন্দের টিকেট নির্বাচন করুন এবং ক্রয় বিকল্পে ক্লিক করুন।' },
         { n: 'ধাপ ২', t: 'পেমেন্ট পদ্ধতি নির্বাচন', d: 'বিকাশ অথবা SSLCommerz (কার্ড/মোবাইল ব্যাংকিং) নির্বাচন করুন।' },
@@ -62,128 +83,41 @@ export default function PaymentPolicyPage() {
         { n: 'Step 4', t: 'Escrow Hold', d: 'Payment is securely held in escrow — the seller does not receive it immediately.' },
         { n: 'Step 5', t: 'Ticket Delivery', d: 'Seller provides ticket details and buyer verifies them.' },
         { n: 'Step 6', t: 'Escrow Release', d: 'Payment is released to the seller after journey completion or buyer confirmation.' },
-      ],
+      ]),
 
-    // Section 3: Escrow System
-    s3Title: isBn ? '৩. এসক্রো সুরক্ষা ব্যবস্থা' : '3. Escrow Protection System',
-    s3Intro: isBn
-      ? 'আমাদের এসক্রো ব্যবস্থা ক্রেতা ও বিক্রেতা উভয়ের জন্য পেমেন্ট নিরাপত্তা নিশ্চিত করে। ক্রেতার পেমেন্ট যাত্রা সম্পন্ন হওয়া পর্যন্ত এসক্রোতে অবরুদ্ধ থাকে।'
-      : 'Our escrow system ensures payment security for both buyer and seller. The buyer\'s payment is held in escrow until the journey is completed.',
-    escrowPoints: isBn
-      ? [
-        'ক্রেতার পেমেন্ট লেনদেন শুরুতেই এসক্রোতে রাখা হয়',
-        'বিক্রেতা পেমেন্ট পান না যতক্ষণ না ক্রেতা টিকেট যাচাই করেন',
-        'যাত্রা সম্পন্ন হলে পেমেন্ট স্বয়ংক্রিয়ভাবে বিক্রেতাকে রিলিজ হয়',
-        'টিকেট সমস্যা হলে ক্রেতা পেমেন্ট ফেরতের অনুরোধ করতে পারেন',
-        'বিবাদ উঠলে প্ল্যাটফর্ম এসক্রো পেমেন্ট হোল্ড করে রাখে যতক্ষণ না সমাধান হয়',
-        'এসক্রো ব্যবস্থা প্ল্যাটফর্ম ফি প্রযোজ্য হওয়ার পর বিক্রেতাকে পেমেন্ট রিলিজ করে',
-      ]
-      : [
-        'Buyer\'s payment is held in escrow at the start of the transaction',
-        'Seller does not receive payment until the buyer verifies the ticket',
-        'Payment is automatically released to the seller after journey completion',
-        'If there is a ticket issue, the buyer can request a refund',
-        'In case of dispute, the platform holds the escrow payment until resolution',
-        'The escrow system releases payment to the seller after platform fee is applied',
-      ],
-    escrowReleaseTitle: isBn ? 'এসক্রো রিলিজের শর্ত' : 'Escrow Release Conditions',
-    escrowRelease: isBn
-      ? [
-        'ক্রেতা যাত্রা সম্পন্নের পর নিশ্চিত করেন ("কনফার্ম রিসিপশন" বাটন)',
-        'যাত্রা সম্পন্ন হওয়ার ২৪ ঘণ্টা পর স্বয়ংক্রিয়ভাবে রিলিজ',
-        'ক্রেতা কোনো অভিযোগ জানালে প্ল্যাটফর্ম তদন্ত করে সিদ্ধান্ত নেয়',
-        'তদন্ত ৭ কর্মদিবসের মধ্যে সম্পন্ন হয়',
-      ]
-      : [
-        'Buyer confirms after journey completion ("Confirm Reception" button)',
-        'Automatic release 24 hours after journey completion',
-        'If the buyer raises a complaint, the platform investigates and decides',
-        'Investigation is completed within 7 business days',
-      ],
+    s3Title: pick(dbContent?.s3Title, dbContentBn?.s3Title, '3. Escrow Protection System', '৩. এসক্রো সুরক্ষা ব্যবস্থা', isBn),
+    s3Intro: pick(dbContent?.s3Intro, dbContentBn?.s3Intro, 'Our escrow system ensures payment security for both buyer and seller. The buyer\'s payment is held in escrow until the journey is completed.', 'আমাদের এসক্রো ব্যবস্থা ক্রেতা ও বিক্রেতা উভয়ের জন্য পেমেন্ট নিরাপত্তা নিশ্চিত করে। ক্রেতার পেমেন্ট যাত্রা সম্পন্ন হওয়া পর্যন্ত এসক্রোতে অবরুদ্ধ থাকে।', isBn),
+    escrowPoints: (isBn ? (dbContentBn?.escrowPoints || dbContent?.escrowPoints) : (dbContent?.escrowPoints || dbContentBn?.escrowPoints)) || (isBn
+      ? ['ক্রেতার পেমেন্ট লেনদেন শুরুতেই এসক্রোতে রাখা হয়', 'বিক্রেতা পেমেন্ট পান না যতক্ষণ না ক্রেতা টিকেট যাচাই করেন', 'যাত্রা সম্পন্ন হলে পেমেন্ট স্বয়ংক্রিয়ভাবে বিক্রেতাকে রিলিজ হয়', 'টিকেট সমস্যা হলে ক্রেতা পেমেন্ট ফেরতের অনুরোধ করতে পারেন', 'বিবাদ উঠলে প্ল্যাটফর্ম এসক্রো পেমেন্ট হোল্ড করে রাখে যতক্ষণ না সমাধান হয়', 'এসক্রো ব্যবস্থা প্ল্যাটফর্ম ফি প্রযোজ্য হওয়ার পর বিক্রেতাকে পেমেন্ট রিলিজ করে']
+      : ['Buyer\'s payment is held in escrow at the start of the transaction', 'Seller does not receive payment until the buyer verifies the ticket', 'Payment is automatically released to the seller after journey completion', 'If there is a ticket issue, the buyer can request a refund', 'In case of dispute, the platform holds the escrow payment until resolution', 'The escrow system releases payment to the seller after platform fee is applied']),
+    escrowReleaseTitle: pick(dbContent?.escrowReleaseTitle, dbContentBn?.escrowReleaseTitle, 'Escrow Release Conditions', 'এসক্রো রিলিজের শর্ত', isBn),
+    escrowRelease: (isBn ? (dbContentBn?.escrowRelease || dbContent?.escrowRelease) : (dbContent?.escrowRelease || dbContentBn?.escrowRelease)) || (isBn
+      ? ['ক্রেতা যাত্রা সম্পন্নের পর নিশ্চিত করেন ("কনফার্ম রিসিপশন" বাটন)', 'যাত্রা সম্পন্ন হওয়ার ২৪ ঘণ্টা পর স্বয়ংক্রিয়ভাবে রিলিজ', 'ক্রেতা কোনো অভিযোগ জানালে প্ল্যাটফর্ম তদন্ত করে সিদ্ধান্ত নেয়', 'তদন্ত ৭ কর্মদিবসের মধ্যে সম্পন্ন হয়']
+      : ['Buyer confirms after journey completion ("Confirm Reception" button)', 'Automatic release 24 hours after journey completion', 'If the buyer raises a complaint, the platform investigates and decides', 'Investigation is completed within 7 business days']),
 
-    // Section 4: Platform Fee
-    s4Title: isBn ? '৪. প্ল্যাটফর্ম সার্ভিস ফি' : '4. Platform Service Fee',
-    s4Intro: isBn
-      ? 'প্রতিটি সফল লেনদেনে ৫% সার্ভিস ফি প্রযোজ্য। এই ফি প্ল্যাটফর্ম পরিচালনা, এসক্রো সুরক্ষা ও ক্রেতা-বিক্রেতা সহায়তার খরচ বহন করে।'
-      : 'A 5% service fee applies to every successful transaction. This fee covers platform operations, escrow protection, and buyer-seller support.',
-    feePoints: isBn
-      ? [
-        'ফি হল লেনদেনের মোট পরিমাণের ৫%',
-        'ফি বিক্রেতার প্রাপ্য পেমেন্ট থেকে কর্তন করা হয়',
-        'ক্রেতা পুরো পরিমাণ প্রদান করেন — ক্রেতার উপর কোনো অতিরিক্ত ফি নেই',
-        'ফি এসক্রো রিলিজের সময় স্বয়ংক্রিয়ভাবে কর্তন হয়',
-        'ফি ন্যূনতম ৳২০ (লেনদেনের পরিমাণ কম হলে)',
-        'ফি বাতিল/ফেরতের লেনদেনে প্রযোজ্য হয় না',
-      ]
-      : [
-        'The fee is 5% of the total transaction amount',
-        'The fee is deducted from the seller\'s received payment',
-        'The buyer pays the full amount — no additional fee on the buyer',
-        'The fee is automatically deducted at escrow release',
-        'Minimum fee is ৳20 (for small transaction amounts)',
-        'The fee does not apply to cancelled/refunded transactions',
-      ],
+    s4Title: pick(dbContent?.s4Title, dbContentBn?.s4Title, '4. Platform Service Fee', '৪. প্ল্যাটফর্ম সার্ভিস ফি', isBn),
+    s4Intro: pick(dbContent?.s4Intro, dbContentBn?.s4Intro, 'A 5% service fee applies to every successful transaction. This fee covers platform operations, escrow protection, and buyer-seller support.', 'প্রতিটি সফল লেনদেনে ৫% সার্ভিস ফি প্রযোজ্য। এই ফি প্ল্যাটফর্ম পরিচালনা, এসক্রো সুরক্ষা ও ক্রেতা-বিক্রেতা সহায়তার খরচ বহন করে।', isBn),
+    feePoints: (isBn ? (dbContentBn?.feePoints || dbContent?.feePoints) : (dbContent?.feePoints || dbContentBn?.feePoints)) || (isBn
+      ? ['ফি হল লেনদেনের মোট পরিমাণের ৫%', 'ফি বিক্রেতার প্রাপ্য পেমেন্ট থেকে কর্তন করা হয়', 'ক্রেতা পুরো পরিমাণ প্রদান করেন — ক্রেতার উপর কোনো অতিরিক্ত ফি নেই', 'ফি এসক্রো রিলিজের সময় স্বয়ংক্রিয়ভাবে কর্তন হয়', 'ফি ন্যূনতম ৳২০ (লেনদেনের পরিমাণ কম হলে)', 'ফি বাতিল/ফেরতের লেনদেনে প্রযোজ্য হয় না']
+      : ['The fee is 5% of the total transaction amount', 'The fee is deducted from the seller\'s received payment', 'The buyer pays the full amount — no additional fee on the buyer', 'The fee is automatically deducted at escrow release', 'Minimum fee is ৳20 (for small transaction amounts)', 'The fee does not apply to cancelled/refunded transactions']),
 
-    // Section 5: Payment Security
-    s5Title: isBn ? '৫. পেমেন্ট নিরাপত্তা' : '5. Payment Security',
-    s5Intro: isBn
-      ? 'আমরা প্রতিটি পেমেন্টের নিরাপত্তা নিশ্চিত করতে শ্রেষ্ঠ প্রযুক্তি ব্যবহার করি।'
-      : 'We use the best technology to ensure the security of every payment.',
-    securityPoints: isBn
-      ? [
-        'SSL/TLS এনক্রিপশন: সকল পেমেন্ট তথ্য ২৫৬-বিট SSL এনক্রিপশনে সুরক্ষিত',
-        'PCI DSS সম্মতি: আমাদের পেমেন্ট গেটওয়ে PCI DSS মান অনুসরণ করে',
-        'কার্ড তথ্য সংরক্ষণ নেই: আমরা কোনো কার্ড নম্বর সংরক্ষণ করি না',
-        'টোকেনাইজেশন: পেমেন্ট তথ্য টোকেন হিসেবে প্রক্রিয়াজাত হয়',
-        'দ্বি-পক্ষীয় যাচাই: বিকাশ পেমেন্টে OTP যাচাই প্রযোজ্য',
-        'নিরাপদ এসক্রো: পেমেন্ট যাত্রা পর্যন্ত অবরুদ্ধ থাকে',
-      ]
-      : [
-        'SSL/TLS Encryption: All payment data is secured with 256-bit SSL encryption',
-        'PCI DSS Compliance: Our payment gateway follows PCI DSS standards',
-        'No Card Data Storage: We do not store any card numbers',
-        'Tokenization: Payment data is processed as tokens',
-        'Two-Factor Verification: OTP verification required for bKash payments',
-        'Secure Escrow: Payment is held locked until the journey',
-      ],
+    s5Title: pick(dbContent?.s5Title, dbContentBn?.s5Title, '5. Payment Security', '৫. পেমেন্ট নিরাপত্তা', isBn),
+    s5Intro: pick(dbContent?.s5Intro, dbContentBn?.s5Intro, 'We use the best technology to ensure the security of every payment.', 'আমরা প্রতিটি পেমেন্টের নিরাপত্তা নিশ্চিত করতে শ্রেষ্ঠ প্রযুক্তি ব্যবহার করি।', isBn),
+    securityPoints: (isBn ? (dbContentBn?.securityPoints || dbContent?.securityPoints) : (dbContent?.securityPoints || dbContentBn?.securityPoints)) || (isBn
+      ? ['SSL/TLS এনক্রিপশন: সকল পেমেন্ট তথ্য ২৫৬-বিট SSL এনক্রিপশনে সুরক্ষিত', 'PCI DSS সম্মতি: আমাদের পেমেন্ট গেটওয়ে PCI DSS মান অনুসরণ করে', 'কার্ড তথ্য সংরক্ষণ নেই: আমরা কোনো কার্ড নম্বর সংরক্ষণ করি না', 'টোকেনাইজেশন: পেমেন্ট তথ্য টোকেন হিসেবে প্রক্রিয়াজাত হয়', 'দ্বি-পক্ষীয় যাচাই: বিকাশ পেমেন্টে OTP যাচাই প্রযোজ্য', 'নিরাপদ এসক্রো: পেমেন্ট যাত্রা পর্যন্ত অবরুদ্ধ থাকে']
+      : ['SSL/TLS Encryption: All payment data is secured with 256-bit SSL encryption', 'PCI DSS Compliance: Our payment gateway follows PCI DSS standards', 'No Card Data Storage: We do not store any card numbers', 'Tokenization: Payment data is processed as tokens', 'Two-Factor Verification: OTP verification required for bKash payments', 'Secure Escrow: Payment is held locked until the journey']),
 
-    // Section 6: Failed Payments
-    s6Title: isBn ? '৬. ব্যর্থ পেমেন্ট' : '6. Failed Payments',
-    s6Intro: isBn
-      ? 'কখনও কখনও পেমেন্ট প্রযুক্তিগত কারণে ব্যর্থ হতে পারে। এই অংশে জানুন কি হয় এবং কি করতে হবে।'
-      : 'Sometimes payments may fail for technical reasons. Learn what happens and what to do in this section.',
-    failedPoints: isBn
-      ? [
-        { t: 'ব্যর্থ পেমেন্টে কি হয়', d: 'পেমেন্ট ব্যর্থ হলে কোনো টাকা কর্তন হয় না। লেনদেন বাতিল হয় এবং টিকেট অর্ডার সম্পন্ন হয় না।' },
-        { t: 'পুনরায় চেষ্টা', d: 'আপনি অন্য পেমেন্ট পদ্ধতি ব্যবহার করে পুনরায় চেষ্টা করতে পারেন। "পেমেন্ট পুনরায় চেষ্টা" বাটনে ক্লিক করুন।' },
-        { t: 'অপ্রত্যাশিত কর্তন', d: 'যদি পেমেন্ট ব্যর্থ হলেও টাকা কর্তন হয়, তা ৩-৫ কর্মদিবসের মধ্যে স্বয়ংক্রিয়ভাবে ফেরত আসবে।' },
-        { t: 'সহায়তা', d: '৫ কর্মদিবসের মধ্যে ফেরত না পেলে support@eidticketresell.com যোগাযোগ করুন।' },
-      ]
-      : [
-        { t: 'What happens on failure', d: 'If payment fails, no money is deducted. The transaction is cancelled and the ticket order is not completed.' },
-        { t: 'Retry process', d: 'You can retry using a different payment method. Click the "Retry Payment" button.' },
-        { t: 'Unexpected deduction', d: 'If money is deducted despite payment failure, it will be automatically refunded within 3-5 business days.' },
-        { t: 'Support', d: 'If you do not receive a refund within 5 business days, contact support@eidticketresell.com.' },
-      ],
+    s6Title: pick(dbContent?.s6Title, dbContentBn?.s6Title, '6. Failed Payments', '৬. ব্যর্থ পেমেন্ট', isBn),
+    s6Intro: pick(dbContent?.s6Intro, dbContentBn?.s6Intro, 'Sometimes payments may fail for technical reasons. Learn what happens and what to do in this section.', 'কখনও কখনও পেমেন্ট প্রযুক্তিগত কারণে ব্যর্থ হতে পারে। এই অংশে জানুন কি হয় এবং কি করতে হবে।', isBn),
+    failedPoints: (isBn ? (dbContentBn?.failedPoints || dbContent?.failedPoints) : (dbContent?.failedPoints || dbContentBn?.failedPoints)) || (isBn
+      ? [{ t: 'ব্যর্থ পেমেন্টে কি হয়', d: 'পেমেন্ট ব্যর্থ হলে কোনো টাকা কর্তন হয় না। লেনদেন বাতিল হয় এবং টিকেট অর্ডার সম্পন্ন হয় না।' }, { t: 'পুনরায় চেষ্টা', d: 'আপনি অন্য পেমেন্ট পদ্ধতি ব্যবহার করে পুনরায় চেষ্টা করতে পারেন। "পেমেন্ট পুনরায় চেষ্টা" বাটনে ক্লিক করুন।' }, { t: 'অপ্রত্যাশিত কর্তন', d: 'যদি পেমেন্ট ব্যর্থ হলেও টাকা কর্তন হয়, তা ৩-৫ কর্মদিবসের মধ্যে স্বয়ংক্রিয়ভাবে ফেরত আসবে।' }, { t: 'সহায়তা', d: '৫ কর্মদিবসের মধ্যে ফেরত না পেলে support@eidticketresell.com যোগাযোগ করুন।' }]
+      : [{ t: 'What happens on failure', d: 'If payment fails, no money is deducted. The transaction is cancelled and the ticket order is not completed.' }, { t: 'Retry process', d: 'You can retry using a different payment method. Click the "Retry Payment" button.' }, { t: 'Unexpected deduction', d: 'If money is deducted despite payment failure, it will be automatically refunded within 3-5 business days.' }, { t: 'Support', d: 'If you do not receive a refund within 5 business days, contact support@eidticketresell.com.' }]),
 
-    // Section 7: International Payments
-    s7Title: isBn ? '৭. আন্তর্জাতিক পেমেন্ট' : '7. International Payments',
-    s7Intro: isBn
-      ? 'বর্তমানে আমরা আন্তর্জাতিক পেমেন্ট সমর্থন করি না। সকল লেনদেন বাংলাদেশি টাকা (BDT) এ সম্পন্ন হয়।'
-      : 'We currently do not support international payments. All transactions are completed in Bangladeshi Taka (BDT).',
-    intlPoints: isBn
-      ? [
-        'শুধুমাত্র বাংলাদেশি পেমেন্ট পদ্ধতি গ্রহণযোগ্য',
-        'সকল লেনদেন BDT (৳) তে সম্পন্ন হয়',
-        'বিদেশি ক্রেডিট/ডেবিট কার্ড বর্তমানে সমর্থন করি না',
-        'ভবিষ্যতে আন্তর্জাতিক পেমেন্ট সমর্থন যোগ করার পরিকল্পনা আছে',
-      ]
-      : [
-        'Only Bangladeshi payment methods are accepted',
-        'All transactions are in BDT (৳)',
-        'International credit/debit cards are not currently supported',
-        'We plan to add international payment support in the future',
-      ],
+    s7Title: pick(dbContent?.s7Title, dbContentBn?.s7Title, '7. International Payments', '৭. আন্তর্জাতিক পেমেন্ট', isBn),
+    s7Intro: pick(dbContent?.s7Intro, dbContentBn?.s7Intro, 'We currently do not support international payments. All transactions are completed in Bangladeshi Taka (BDT).', 'বর্তমানে আমরা আন্তর্জাতিক পেমেন্ট সমর্থন করি না। সকল লেনদেন বাংলাদেশি টাকা (BDT) এ সম্পন্ন হয়।', isBn),
+    intlPoints: (isBn ? (dbContentBn?.intlPoints || dbContent?.intlPoints) : (dbContent?.intlPoints || dbContentBn?.intlPoints)) || (isBn
+      ? ['শুধুমাত্র বাংলাদেশি পেমেন্ট পদ্ধতি গ্রহণযোগ্য', 'সকল লেনদেন BDT (৳) তে সম্পন্ন হয়', 'বিদেশি ক্রেডিট/ডেবিট কার্ড বর্তমানে সমর্থন করি না', 'ভবিষ্যতে আন্তর্জাতিক পেমেন্ট সমর্থন যোগ করার পরিকল্পনা আছে']
+      : ['Only Bangladeshi payment methods are accepted', 'All transactions are in BDT (৳)', 'International credit/debit cards are not currently supported', 'We plan to add international payment support in the future']),
   };
 
   return (

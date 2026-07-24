@@ -21,11 +21,45 @@ function getAuthHeaders() {
 }
 
 export default function AdminSettingsGeneralPage({ section }: { section?: string }) {
-  const [settingsMap, setSettingsMap] = useState<Record<string, string>>({});
-  const [siteName, setSiteName] = useState('');
-  const [siteDescription, setSiteDescription] = useState('');
+  const [initialSettings, setInitialSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // General / Site Info
+  const [siteName, setSiteName] = useState('');
+  const [siteDescription, setSiteDescription] = useState('');
+  const [siteUrl, setSiteUrl] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+
+  // Contact
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactAddress, setContactAddress] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+
+  // Appearance
+  const [darkMode, setDarkMode] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState('#7C3AED');
+  const [showPoweredBy, setShowPoweredBy] = useState(true);
+
+  // Localization
+  const [defaultLanguage, setDefaultLanguage] = useState('en');
+  const [bilingualMode, setBilingualMode] = useState(true);
+  const [currency, setCurrency] = useState('bdt');
+  const [timezone, setTimezone] = useState('asia-dhaka');
+  const [dateFormat, setDateFormat] = useState('dd-mm-yyyy');
+
+  // Currency
+  const [primaryCurrency, setPrimaryCurrency] = useState('BDT');
+  const [currencySymbol, setCurrencySymbol] = useState('৳');
+  const [decimalPlaces, setDecimalPlaces] = useState('2');
+  const [symbolPosition, setSymbolPosition] = useState('before');
+
+  // Timezone
+  const [platformTimezone, setPlatformTimezone] = useState('asia-dhaka');
+  const [tzDateFormat, setTzDateFormat] = useState('dd-mm-yyyy');
+  const [timeFormat, setTimeFormat] = useState('12h');
 
   const currentSection = section || 'general';
 
@@ -38,34 +72,128 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
           d.settings.forEach((s: { key: string; value: string }) => {
             map[s.key] = s.value;
           });
-          setSettingsMap(map);
+          setInitialSettings(map);
+          // Site Info
           setSiteName(map['site_name'] || 'ETR');
           setSiteDescription(map['site_description'] || 'Bangladesh\'s trusted ticket marketplace');
+          setSiteUrl(map['site_url'] || 'https://etr.com.bd');
+          setAdminEmail(map['admin_email'] || 'admin@etr.com.bd');
+          // Contact
+          setContactEmail(map['contact_email'] || 'support@etr.com.bd');
+          setContactPhone(map['contact_phone'] || '+880 1XXX-XXXXXX');
+          setContactAddress(map['contact_address'] || 'Dhaka, Bangladesh');
+          setWhatsappNumber(map['whatsapp_number'] || '+880 1XXX-XXXXXX');
+          // Appearance
+          setDarkMode(map['dark_mode'] === 'true');
+          setPrimaryColor(map['primary_color'] || '#7C3AED');
+          setShowPoweredBy(map['show_powered_by'] !== 'false');
+          // Localization
+          setDefaultLanguage(map['default_language'] || 'en');
+          setBilingualMode(map['bilingual_mode'] !== 'false');
+          setCurrency(map['currency'] || 'bdt');
+          setTimezone(map['timezone'] || 'asia-dhaka');
+          setDateFormat(map['date_format'] || 'dd-mm-yyyy');
+          // Currency
+          setPrimaryCurrency(map['primary_currency'] || 'BDT');
+          setCurrencySymbol(map['currency_symbol'] || '৳');
+          setDecimalPlaces(map['decimal_places'] || '2');
+          setSymbolPosition(map['symbol_position'] || 'before');
+          // Timezone
+          setPlatformTimezone(map['platform_timezone'] || 'asia-dhaka');
+          setTzDateFormat(map['tz_date_format'] || 'dd-mm-yyyy');
+          setTimeFormat(map['time_format'] || '12h');
         }
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
-  const handleSave = async () => {
-    try {
-      const settings = [
-        { key: 'site_name', value: siteName, group: 'general' },
-        { key: 'site_description', value: siteDescription, group: 'general' },
-      ];
-      await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings }),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch {
-      // Save failed silently
+  const buildSettingsForSection = (sectionKey: string): { key: string; value: string; group: string }[] => {
+    switch (sectionKey) {
+      case 'general-site-info':
+        return [
+          { key: 'site_name', value: siteName, group: 'general' },
+          { key: 'site_description', value: siteDescription, group: 'general' },
+          { key: 'site_url', value: siteUrl, group: 'general' },
+          { key: 'admin_email', value: adminEmail, group: 'general' },
+        ];
+      case 'general-contact':
+        return [
+          { key: 'contact_email', value: contactEmail, group: 'general' },
+          { key: 'contact_phone', value: contactPhone, group: 'general' },
+          { key: 'contact_address', value: contactAddress, group: 'general' },
+          { key: 'whatsapp_number', value: whatsappNumber, group: 'general' },
+        ];
+      case 'general-appearance':
+        return [
+          { key: 'dark_mode', value: darkMode ? 'true' : 'false', group: 'general' },
+          { key: 'primary_color', value: primaryColor, group: 'general' },
+          { key: 'show_powered_by', value: showPoweredBy ? 'true' : 'false', group: 'general' },
+        ];
+      case 'localization':
+        return [
+          { key: 'default_language', value: defaultLanguage, group: 'localization' },
+          { key: 'bilingual_mode', value: bilingualMode ? 'true' : 'false', group: 'localization' },
+          { key: 'currency', value: currency, group: 'localization' },
+          { key: 'timezone', value: timezone, group: 'localization' },
+          { key: 'date_format', value: dateFormat, group: 'localization' },
+        ];
+      case 'currency':
+        return [
+          { key: 'primary_currency', value: primaryCurrency, group: 'currency' },
+          { key: 'currency_symbol', value: currencySymbol, group: 'currency' },
+          { key: 'decimal_places', value: decimalPlaces, group: 'currency' },
+          { key: 'symbol_position', value: symbolPosition, group: 'currency' },
+        ];
+      case 'timezone':
+        return [
+          { key: 'platform_timezone', value: platformTimezone, group: 'timezone' },
+          { key: 'tz_date_format', value: tzDateFormat, group: 'timezone' },
+          { key: 'time_format', value: timeFormat, group: 'timezone' },
+        ];
+      default:
+        return [];
     }
   };
 
-  if (loading && currentSection === 'general') {
+  const handleSave = async (sectionKey: string) => {
+    setSaving(true);
+    try {
+      const allSettings = buildSettingsForSection(sectionKey);
+      // Diff: only send changed settings
+      const changedSettings = allSettings.filter(s => {
+        const initial = initialSettings[s.key];
+        return initial !== s.value;
+      });
+
+      if (changedSettings.length === 0) {
+        setSaving(false);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+        return;
+      }
+
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: changedSettings }),
+      });
+
+      if (res.ok) {
+        // Update initial settings to reflect saved values
+        const newInitial = { ...initialSettings };
+        changedSettings.forEach(s => { newInitial[s.key] = s.value; });
+        setInitialSettings(newInitial);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch {
+      // Save failed silently
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
 
@@ -78,19 +206,19 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
           <CardHeader><CardTitle>Language & Region</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-4">
             <div className="space-y-2"><label className="text-sm font-medium">Default Language</label>
-              <Select defaultValue="en"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="bn">বাংলা (Bangla)</SelectItem></SelectContent></Select>
+              <Select value={defaultLanguage} onValueChange={setDefaultLanguage}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="bn">বাংলা (Bangla)</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Default Currency</label>
-              <Select defaultValue="bdt"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="bdt">BDT (৳) - Bangladeshi Taka</SelectItem><SelectItem value="usd">USD ($) - US Dollar</SelectItem></SelectContent></Select>
+              <Select value={currency} onValueChange={setCurrency}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="bdt">BDT (৳) - Bangladeshi Taka</SelectItem><SelectItem value="usd">USD ($) - US Dollar</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Default Timezone</label>
-              <Select defaultValue="asia-dhaka"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="asia-dhaka">Asia/Dhaka (UTC+6)</SelectItem><SelectItem value="utc">UTC</SelectItem></SelectContent></Select>
+              <Select value={timezone} onValueChange={setTimezone}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="asia-dhaka">Asia/Dhaka (UTC+6)</SelectItem><SelectItem value="utc">UTC</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Date Format</label>
-              <Select defaultValue="dd-mm-yyyy"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dd-mm-yyyy">DD-MM-YYYY</SelectItem><SelectItem value="mm-dd-yyyy">MM-DD-YYYY</SelectItem><SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem></SelectContent></Select>
+              <Select value={dateFormat} onValueChange={setDateFormat}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dd-mm-yyyy">DD-MM-YYYY</SelectItem><SelectItem value="mm-dd-yyyy">MM-DD-YYYY</SelectItem><SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem></SelectContent></Select>
             </div>
-            <div className="flex items-center gap-2"><Switch defaultChecked /><label className="text-sm">Enable bilingual mode (English/Bangla)</label></div>
-            <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
+            <div className="flex items-center gap-2"><Switch checked={bilingualMode} onCheckedChange={setBilingualMode} /><label className="text-sm">Enable bilingual mode (English/Bangla)</label></div>
+            <Button onClick={() => handleSave('localization')} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? 'Saved!' : 'Save Settings'}</Button>
           </CardContent>
         </Card>
       </div>
@@ -130,13 +258,13 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
         <Card>
           <CardHeader><CardTitle>Currency Configuration</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-4">
-            <div className="space-y-2"><label className="text-sm font-medium">Primary Currency</label><Input defaultValue="BDT" /></div>
-            <div className="space-y-2"><label className="text-sm font-medium">Currency Symbol</label><Input defaultValue="৳" /></div>
-            <div className="space-y-2"><label className="text-sm font-medium">Decimal Places</label><Input type="number" defaultValue={2} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Primary Currency</label><Input value={primaryCurrency} onChange={e => setPrimaryCurrency(e.target.value)} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Currency Symbol</label><Input value={currencySymbol} onChange={e => setCurrencySymbol(e.target.value)} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Decimal Places</label><Input type="number" value={decimalPlaces} onChange={e => setDecimalPlaces(e.target.value)} /></div>
             <div className="space-y-2"><label className="text-sm font-medium">Symbol Position</label>
-              <Select defaultValue="before"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="before">Before (৳100)</SelectItem><SelectItem value="after">After (100৳)</SelectItem></SelectContent></Select>
+              <Select value={symbolPosition} onValueChange={setSymbolPosition}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="before">Before (৳100)</SelectItem><SelectItem value="after">After (100৳)</SelectItem></SelectContent></Select>
             </div>
-            <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
+            <Button onClick={() => handleSave('currency')} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? 'Saved!' : 'Save Settings'}</Button>
           </CardContent>
         </Card>
       </div>
@@ -151,15 +279,15 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="space-y-2"><label className="text-sm font-medium">Platform Timezone</label>
-              <Select defaultValue="asia-dhaka"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="asia-dhaka">Asia/Dhaka (UTC+6)</SelectItem><SelectItem value="utc">UTC</SelectItem><SelectItem value="asia-kolkata">Asia/Kolkata (UTC+5:30)</SelectItem></SelectContent></Select>
+              <Select value={platformTimezone} onValueChange={setPlatformTimezone}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="asia-dhaka">Asia/Dhaka (UTC+6)</SelectItem><SelectItem value="utc">UTC</SelectItem><SelectItem value="asia-kolkata">Asia/Kolkata (UTC+5:30)</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Date Format</label>
-              <Select defaultValue="dd-mm-yyyy"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dd-mm-yyyy">DD-MM-YYYY</SelectItem><SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem></SelectContent></Select>
+              <Select value={tzDateFormat} onValueChange={setTzDateFormat}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dd-mm-yyyy">DD-MM-YYYY</SelectItem><SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Time Format</label>
-              <Select defaultValue="12h"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="12h">12-hour (AM/PM)</SelectItem><SelectItem value="24h">24-hour</SelectItem></SelectContent></Select>
+              <Select value={timeFormat} onValueChange={setTimeFormat}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="12h">12-hour (AM/PM)</SelectItem><SelectItem value="24h">24-hour</SelectItem></SelectContent></Select>
             </div>
-            <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
+            <Button onClick={() => handleSave('timezone')} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? 'Saved!' : 'Save Settings'}</Button>
           </CardContent>
         </Card>
       </div>
@@ -188,7 +316,7 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
                 <p className="text-sm text-gray-400">Click or drag to upload dark mode logo</p>
               </div>
             </div>
-            <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Logo'}</Button>
+            <Button disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Logo'}</Button>
           </CardContent>
         </Card>
       </div>
@@ -210,7 +338,7 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
                 <p className="text-xs text-muted-foreground">Recommended: 32x32px, ICO/PNG</p>
               </div>
             </div>
-            <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Favicon'}</Button>
+            <Button disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Favicon'}</Button>
           </CardContent>
         </Card>
       </div>
@@ -238,9 +366,9 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
             <CardContent className="p-6 space-y-4">
               <div className="space-y-2"><label className="text-sm font-medium">Site Name</label><Input value={siteName} onChange={e => setSiteName(e.target.value)} /></div>
               <div className="space-y-2"><label className="text-sm font-medium">Site Description</label><Textarea value={siteDescription} onChange={e => setSiteDescription(e.target.value)} rows={3} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Site URL</label><Input defaultValue={settingsMap['site_url'] || 'https://etr.com.bd'} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Admin Email</label><Input defaultValue={settingsMap['admin_email'] || 'admin@etr.com.bd'} type="email" /></div>
-              <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
+              <div className="space-y-2"><label className="text-sm font-medium">Site URL</label><Input value={siteUrl} onChange={e => setSiteUrl(e.target.value)} /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Admin Email</label><Input value={adminEmail} onChange={e => setAdminEmail(e.target.value)} type="email" /></div>
+              <Button onClick={() => handleSave('general-site-info')} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? 'Saved!' : 'Save Settings'}</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -249,11 +377,11 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
           <Card>
             <CardHeader><CardTitle>Contact Information</CardTitle></CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="space-y-2"><label className="text-sm font-medium">Contact Email</label><Input defaultValue={settingsMap['contact_email'] || 'support@etr.com.bd'} type="email" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Phone Number</label><Input defaultValue={settingsMap['contact_phone'] || '+880 1XXX-XXXXXX'} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Address</label><Textarea defaultValue={settingsMap['contact_address'] || 'Dhaka, Bangladesh'} rows={2} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">WhatsApp</label><Input defaultValue={settingsMap['whatsapp_number'] || '+880 1XXX-XXXXXX'} /></div>
-              <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
+              <div className="space-y-2"><label className="text-sm font-medium">Contact Email</label><Input value={contactEmail} onChange={e => setContactEmail(e.target.value)} type="email" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Phone Number</label><Input value={contactPhone} onChange={e => setContactPhone(e.target.value)} /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Address</label><Textarea value={contactAddress} onChange={e => setContactAddress(e.target.value)} rows={2} /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">WhatsApp</label><Input value={whatsappNumber} onChange={e => setWhatsappNumber(e.target.value)} /></div>
+              <Button onClick={() => handleSave('general-contact')} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? 'Saved!' : 'Save Settings'}</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -262,12 +390,12 @@ export default function AdminSettingsGeneralPage({ section }: { section?: string
           <Card>
             <CardHeader><CardTitle>Appearance Settings</CardTitle></CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="flex items-center gap-2"><Switch defaultChecked /><label className="text-sm">Enable Dark Mode</label></div>
+              <div className="flex items-center gap-2"><Switch checked={darkMode} onCheckedChange={setDarkMode} /><label className="text-sm">Enable Dark Mode</label></div>
               <div className="space-y-2"><label className="text-sm font-medium">Primary Color</label>
-                <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-primary border-2 border-border" /><Input defaultValue={settingsMap['primary_color'] || '#7C3AED'} className="max-w-[150px]" /></div>
+                <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg border-2 border-border" style={{ backgroundColor: primaryColor }} /><Input value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="max-w-[150px]" /></div>
               </div>
-              <div className="flex items-center gap-2"><Switch defaultChecked /><label className="text-sm">Show powered by ETR in footer</label></div>
-              <Button onClick={handleSave}>{saved ? 'Saved!' : 'Save Settings'}</Button>
+              <div className="flex items-center gap-2"><Switch checked={showPoweredBy} onCheckedChange={setShowPoweredBy} /><label className="text-sm">Show powered by ETR in footer</label></div>
+              <Button onClick={() => handleSave('general-appearance')} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? 'Saved!' : 'Save Settings'}</Button>
             </CardContent>
           </Card>
         </TabsContent>

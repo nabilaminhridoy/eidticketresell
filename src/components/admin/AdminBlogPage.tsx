@@ -64,10 +64,29 @@ export default function AdminBlogPage({ action, itemId, section }: {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [newPost, setNewPost] = useState({ title: '', content: '', category: '', tags: '', status: 'draft' });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // New post state
+  const [newPost, setNewPost] = useState({ title: '', content: '', excerpt: '', category: '', tags: '', status: 'draft' });
+
+  // Edit post state
+  const [editPost, setEditPost] = useState({ title: '', content: '', excerpt: '', category: '', status: 'draft' });
+
+  // New category state
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategorySlug, setNewCategorySlug] = useState('');
 
   const currentAction = action || 'list';
   const currentSection = section || 'posts';
+
+  const refreshData = async () => {
+    const res = await fetch('/api/admin/blog', { headers: getAuthHeaders() });
+    const d = await res.json();
+    if (d.posts) setPosts(d.posts);
+    if (d.categories) setCategories(d.categories);
+    if (d.tags) setTags(d.tags);
+  };
 
   useEffect(() => {
     fetch('/api/admin/blog', { headers: getAuthHeaders() })
@@ -80,6 +99,22 @@ export default function AdminBlogPage({ action, itemId, section }: {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  // Initialize edit form using "adjust state during render" pattern
+  const [prevEditItemId, setPrevEditItemId] = useState<string | null>(null);
+  if (currentAction === 'edit' && itemId && itemId !== prevEditItemId && posts.length > 0) {
+    const post = posts.find(p => p.id === itemId);
+    if (post) {
+      setPrevEditItemId(itemId);
+      setEditPost({
+        title: post.title,
+        content: post.content,
+        excerpt: post.excerpt || '',
+        category: post.categoryId || '',
+        status: post.status,
+      });
+    }
+  }
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -126,15 +161,15 @@ export default function AdminBlogPage({ action, itemId, section }: {
     );
   }
 
-  // Create/Edit post
-  if (currentAction === 'create' || currentAction === 'edit') {
+  // Create post
+  if (currentAction === 'create') {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/admin/blog">
             <Button variant="ghost" size="sm"><ArrowLeft className="w-4 h-4" />Back</Button>
           </Link>
-          <h1 className="text-xl font-bold">{currentAction === 'create' ? 'Create New Post' : 'Edit Post'}</h1>
+          <h1 className="text-xl font-bold">Create New Post</h1>
         </div>
         <Card>
           <CardContent className="p-6 space-y-4">
@@ -144,20 +179,20 @@ export default function AdminBlogPage({ action, itemId, section }: {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Slug</label>
-              <Input placeholder="auto-generated-slug" className="bg-muted/30" readOnly />
+              <Input placeholder="auto-generated-slug" value={newPost.title ? newPost.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-') : ''} className="bg-muted/30" readOnly />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Excerpt</label>
+              <Textarea placeholder="Brief summary of the post" rows={2} value={newPost.excerpt} onChange={e => setNewPost({...newPost, excerpt: e.target.value})} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Category</label>
               <Select value={newPost.category} onValueChange={v => setNewPost({...newPost, category: v})}>
                 <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
-                  {categories.map(c => <SelectItem key={c.id} value={c.slug}>{c.name}</SelectItem>)}
+                  {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tags</label>
-              <Input placeholder="Enter tags separated by commas" value={newPost.tags} onChange={e => setNewPost({...newPost, tags: e.target.value})} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Content</label>
@@ -176,12 +211,148 @@ export default function AdminBlogPage({ action, itemId, section }: {
           </CardContent>
         </Card>
         <div className="flex gap-2">
-          <Button>{currentAction === 'create' ? 'Publish' : 'Update'}</Button>
+          <Button onClick={async () => {
+            if (!newPost.title.trim() || !newPost.content.trim()) return;
+            setSaving(true);
+            try {
+              const res = await fetch('/api/admin/blog', {
+                method: 'POST',
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  title: newPost.title,
+                  content: newPost.content,
+                  excerpt: newPost.excerpt,
+                  categoryId: newPost.category || null,
+                  status: newPost.status,
+                }),
+              });
+              if (res.ok) {
+                await refreshData();
+                // Reset form and go back to list
+                setNewPost({ title: '', content: '', excerpt: '', category: '', tags: '', status: 'draft' });
+                window.location.href = '/admin/blog';
+              }
+            } catch { /* silent */ }
+            setSaving(false);
+          }} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Publish'}</Button>
           <Link href="/admin/blog"><Button variant="outline">Cancel</Button></Link>
         </div>
       </div>
     );
   }
+
+  // Edit post
+  if (currentAction === 'edit' && itemId) {
+    const post = posts.find(p => p.id === itemId);
+    if (!post && !loading) return <div className="text-center py-12 text-muted-foreground">Post not found</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Link href="/admin/blog">
+            <Button variant="ghost" size="sm"><ArrowLeft className="w-4 h-4" />Back</Button>
+          </Link>
+          <h1 className="text-xl font-bold">Edit Post</h1>
+        </div>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Title</label>
+              <Input value={editPost.title} onChange={e => setEditPost({...editPost, title: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Excerpt</label>
+              <Textarea value={editPost.excerpt} onChange={e => setEditPost({...editPost, excerpt: e.target.value})} rows={2} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Category</label>
+              <Select value={editPost.category} onValueChange={v => setEditPost({...editPost, category: v})}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Content</label>
+              <Textarea value={editPost.content} onChange={e => setEditPost({...editPost, content: e.target.value})} rows={10} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select value={editPost.status} onValueChange={v => setEditPost({...editPost, status: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="flex gap-2">
+          <Button onClick={async () => {
+            if (!editPost.title.trim() || !editPost.content.trim()) return;
+            setSaving(true);
+            try {
+              const res = await fetch('/api/admin/blog', {
+                method: 'PUT',
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: itemId,
+                  title: editPost.title,
+                  content: editPost.content,
+                  excerpt: editPost.excerpt,
+                  categoryId: editPost.category || null,
+                  status: editPost.status,
+                }),
+              });
+              if (res.ok) {
+                await refreshData();
+                window.location.href = '/admin/blog';
+              }
+            } catch { /* silent */ }
+            setSaving(false);
+          }} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update'}</Button>
+          <Link href="/admin/blog"><Button variant="outline">Cancel</Button></Link>
+        </div>
+      </div>
+    );
+  }
+
+  const handleDeletePost = async () => {
+    if (!selectedPost) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/blog?id=${selectedPost.id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        await refreshData();
+        setShowDeleteDialog(false);
+        setSelectedPost(null);
+      }
+    } catch { /* silent */ }
+    setDeleting(false);
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/blog', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create_category', categoryName: newCategoryName, categorySlug: newCategorySlug || undefined }),
+      });
+      if (res.ok) {
+        await refreshData();
+        setShowCreateDialog(false);
+        setNewCategoryName('');
+        setNewCategorySlug('');
+      }
+    } catch { /* silent */ }
+    setSaving(false);
+  };
 
   // Main list view with tabs
   return (
@@ -307,7 +478,13 @@ export default function AdminBlogPage({ action, itemId, section }: {
                         <TableCell>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={async () => {
+                              const res = await fetch(`/api/admin/blog?id=${cat.id}&action=delete_category`, {
+                                method: 'DELETE',
+                                headers: getAuthHeaders(),
+                              });
+                              if (res.ok) await refreshData();
+                            }}><Trash2 className="w-3.5 h-3.5" /></Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -348,16 +525,16 @@ export default function AdminBlogPage({ action, itemId, section }: {
         </TabsContent>
       </Tabs>
 
-      {/* Delete dialog */}
+      {/* Delete post dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Blog Post</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">Are you sure you want to delete "{selectedPost?.title}"? This action cannot be undone.</p>
+          <p className="text-sm text-muted-foreground">Are you sure you want to delete &quot;{selectedPost?.title}&quot;? This action cannot be undone.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => setShowDeleteDialog(false)}>Delete</Button>
+            <Button variant="destructive" onClick={handleDeletePost} disabled={deleting}>{deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -371,16 +548,16 @@ export default function AdminBlogPage({ action, itemId, section }: {
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Name</label>
-              <Input placeholder="Category name" />
+              <Input placeholder="Category name" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Slug</label>
-              <Input placeholder="category-slug" />
+              <Input placeholder="category-slug (auto-generated if empty)" value={newCategorySlug} onChange={e => setNewCategorySlug(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            <Button onClick={() => setShowCreateDialog(false)}>Create</Button>
+            <Button onClick={handleCreateCategory} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

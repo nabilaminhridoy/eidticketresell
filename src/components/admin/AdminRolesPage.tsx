@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,16 +11,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Switch } from '@/components/ui/switch';
 import {
   Scale, Plus, Edit, Trash2, Key, Shield, CheckCircle, XCircle,
-  Users, Search
+  Users, Search, Loader2
 } from 'lucide-react';
 
 interface Role {
   id: string;
   name: string;
-  slug: string;
-  description: string;
-  usersCount: number;
+  description: string | null;
+  isDefault: boolean;
   permissions: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Permission {
@@ -31,14 +32,10 @@ interface Permission {
   description: string;
 }
 
-// Configurable roles - managed through admin configuration
-const configuredRoles: Role[] = [
-  { id: 'role_super_admin', name: 'Super Admin', slug: 'super_admin', description: 'Full access to all features', usersCount: 1, permissions: ['all'] },
-  { id: 'role_content_manager', name: 'Content Manager', slug: 'content_manager', description: 'Manage content, blog, FAQs, pages', usersCount: 1, permissions: ['blog', 'faqs', 'pages', 'homepage', 'ads', 'seo', 'media'] },
-  { id: 'role_support_agent', name: 'Support Agent', slug: 'support_agent', description: 'Handle tickets, users, disputes', usersCount: 1, permissions: ['tickets', 'orders', 'users', 'disputes', 'messages'] },
-  { id: 'role_finance_manager', name: 'Finance Manager', slug: 'finance_manager', description: 'Handle payments, payouts, refunds', usersCount: 1, permissions: ['payments', 'payouts', 'refunds', 'reports'] },
-  { id: 'role_viewer', name: 'Viewer', slug: 'viewer', description: 'Read-only access to dashboard', usersCount: 0, permissions: ['dashboard', 'analytics'] },
-];
+function getAuthHeaders() {
+  const token = localStorage.getItem('etr_admin_token');
+  return { 'Authorization': `Bearer ${token}` };
+}
 
 const configuredPermissions: Permission[] = [
   { id: 'perm_dashboard_view', category: 'Dashboard', name: 'View Dashboard', slug: 'dashboard', description: 'Access admin dashboard' },
@@ -68,8 +65,119 @@ const configuredPermissions: Permission[] = [
 const permissionCategories = ['Dashboard', 'Management', 'Finance', 'Content', 'System'];
 
 export default function AdminRolesPage({ section }: { section?: string }) {
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [newRoleDescription, setNewRoleDescription] = useState('');
+  const [newRolePermissions, setNewRolePermissions] = useState<string[]>([]);
+  const [editRoleName, setEditRoleName] = useState('');
+  const [editRoleDescription, setEditRoleDescription] = useState('');
+  const [editRolePermissions, setEditRolePermissions] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const currentSection = section || null;
+
+  useEffect(() => {
+    fetch('/api/admin/roles', { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => {
+        if (d.roles) setRoles(d.roles);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const refreshRoles = async () => {
+    const res = await fetch('/api/admin/roles', { headers: getAuthHeaders() });
+    const d = await res.json();
+    if (d.roles) setRoles(d.roles);
+  };
+
+  const handleCreateRole = async () => {
+    if (!newRoleName.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/roles', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newRoleName, description: newRoleDescription, permissions: newRolePermissions }),
+      });
+      if (res.ok) {
+        await refreshRoles();
+        setShowCreateDialog(false);
+        setNewRoleName('');
+        setNewRoleDescription('');
+        setNewRolePermissions([]);
+      }
+    } catch {
+      // failed silently
+    }
+    setSaving(false);
+  };
+
+  const handleEditRole = async () => {
+    if (!selectedRole) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/roles', {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedRole.id, name: editRoleName, description: editRoleDescription, permissions: editRolePermissions }),
+      });
+      if (res.ok) {
+        await refreshRoles();
+        setShowEditDialog(false);
+        setSelectedRole(null);
+      }
+    } catch {
+      // failed silently
+    }
+    setSaving(false);
+  };
+
+  const handleDeleteRole = async () => {
+    if (!selectedRole) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/roles?id=${selectedRole.id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        await refreshRoles();
+        setShowDeleteDialog(false);
+        setSelectedRole(null);
+      }
+    } catch {
+      // failed silently
+    }
+    setDeleting(false);
+  };
+
+  const openEditDialog = (role: Role) => {
+    setSelectedRole(role);
+    setEditRoleName(role.name);
+    setEditRoleDescription(role.description || '');
+    setEditRolePermissions(role.permissions);
+    setShowEditDialog(true);
+  };
+
+  const openDeleteDialog = (role: Role) => {
+    setSelectedRole(role);
+    setShowDeleteDialog(true);
+  };
+
+  const togglePermission = (slug: string, list: string[], setList: (v: string[]) => void) => {
+    if (list.includes(slug)) {
+      setList(list.filter(p => p !== slug));
+    } else {
+      setList([...list, slug]);
+    }
+  };
 
   // Permissions view
   if (currentSection === 'permissions') {
@@ -120,47 +228,51 @@ export default function AdminRolesPage({ section }: { section?: string }) {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader><TableRow><TableHead>Role</TableHead><TableHead>Description</TableHead><TableHead>Users</TableHead><TableHead className="hidden md:table-cell">Permissions</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
-            <TableBody>
-              {configuredRoles.map(role => (
-                <TableRow key={role.id}>
-                  <TableCell className="font-medium">{role.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{role.description}</TableCell>
-                  <TableCell><Badge variant="secondary">{role.usersCount}</Badge></TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex gap-1 flex-wrap">
-                      {role.permissions.map(p => <Badge key={p} variant="outline" className="text-xs">{p}</Badge>)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button>
-                      {role.slug !== 'super_admin' && <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {loading ? (
+        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow><TableHead>Role</TableHead><TableHead>Description</TableHead><TableHead className="hidden md:table-cell">Default</TableHead><TableHead className="hidden md:table-cell">Permissions</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {roles.map(role => (
+                  <TableRow key={role.id}>
+                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{role.description || 'No description'}</TableCell>
+                    <TableCell className="hidden md:table-cell">{role.isDefault && <Badge variant="secondary">Default</Badge>}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="flex gap-1 flex-wrap max-h-[60px] overflow-y-auto">
+                        {role.permissions.map(p => <Badge key={p} variant="outline" className="text-xs">{p}</Badge>)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(role)}><Edit className="w-3.5 h-3.5" /></Button>
+                        {!role.isDefault && <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => openDeleteDialog(role)}><Trash2 className="w-3.5 h-3.5" /></Button>}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Create role dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-[500px]">
           <DialogHeader><DialogTitle>Create New Role</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2"><label className="text-sm font-medium">Role Name</label><Input placeholder="Role name" /></div>
-            <div className="space-y-2"><label className="text-sm font-medium">Description</label><Input placeholder="Role description" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Role Name</label><Input placeholder="Role name" value={newRoleName} onChange={e => setNewRoleName(e.target.value)} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Description</label><Input placeholder="Role description" value={newRoleDescription} onChange={e => setNewRoleDescription(e.target.value)} /></div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Permissions</label>
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {configuredPermissions.map(perm => (
                   <div key={perm.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30">
-                    <Switch />
+                    <Switch checked={newRolePermissions.includes(perm.slug)} onCheckedChange={() => togglePermission(perm.slug, newRolePermissions, setNewRolePermissions)} />
                     <div><p className="text-sm font-medium">{perm.name}</p><p className="text-xs text-muted-foreground">{perm.description}</p></div>
                   </div>
                 ))}
@@ -169,7 +281,45 @@ export default function AdminRolesPage({ section }: { section?: string }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            <Button onClick={() => setShowCreateDialog(false)}>Create Role</Button>
+            <Button onClick={handleCreateRole} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Role'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit role dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-[500px]">
+          <DialogHeader><DialogTitle>Edit Role</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2"><label className="text-sm font-medium">Role Name</label><Input value={editRoleName} onChange={e => setEditRoleName(e.target.value)} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Description</label><Input value={editRoleDescription} onChange={e => setEditRoleDescription(e.target.value)} /></div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Permissions</label>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {configuredPermissions.map(perm => (
+                  <div key={perm.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30">
+                    <Switch checked={editRolePermissions.includes(perm.slug)} onCheckedChange={() => togglePermission(perm.slug, editRolePermissions, setEditRolePermissions)} />
+                    <div><p className="text-sm font-medium">{perm.name}</p><p className="text-xs text-muted-foreground">{perm.description}</p></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+            <Button onClick={handleEditRole} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete role dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Delete Role</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Are you sure you want to delete the role &quot;{selectedRole?.name}&quot;? This action cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteRole} disabled={deleting}>{deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

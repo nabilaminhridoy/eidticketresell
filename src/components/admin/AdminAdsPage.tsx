@@ -43,8 +43,28 @@ export default function AdminAdsPage({ action, itemId }: { action?: 'list' | 'vi
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedAd, setSelectedAd] = useState<AdRecord | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Create ad form state
+  const [newAd, setNewAd] = useState({
+    title: '',
+    description: '',
+    link: '',
+    placement: '',
+    type: 'banner',
+    startDate: '',
+    endDate: '',
+  });
 
   const currentAction = action || 'list';
+
+  const refreshAds = async () => {
+    const res = await fetch('/api/admin/ads', { headers: getAuthHeaders() });
+    const d = await res.json();
+    if (d.ads) setAds(d.ads);
+  };
 
   useEffect(() => {
     fetch('/api/admin/ads', { headers: getAuthHeaders() })
@@ -52,6 +72,41 @@ export default function AdminAdsPage({ action, itemId }: { action?: 'list' | 'vi
       .then(d => { if (d.ads) setAds(d.ads); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  const handleCreateAd = async () => {
+    if (!newAd.title.trim() || !newAd.placement) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/ads', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAd),
+      });
+      if (res.ok) {
+        await refreshAds();
+        setNewAd({ title: '', description: '', link: '', placement: '', type: 'banner', startDate: '', endDate: '' });
+        window.location.href = '/admin/ads';
+      }
+    } catch { /* silent */ }
+    setSaving(false);
+  };
+
+  const handleDeleteAd = async () => {
+    if (!selectedAd) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/ads?id=${selectedAd.id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        await refreshAds();
+        setShowDeleteDialog(false);
+        setSelectedAd(null);
+      }
+    } catch { /* silent */ }
+    setDeleting(false);
+  };
 
   // Create ad
   if (currentAction === 'create') {
@@ -63,27 +118,27 @@ export default function AdminAdsPage({ action, itemId }: { action?: 'list' | 'vi
         </div>
         <Card>
           <CardContent className="p-6 space-y-4">
-            <div className="space-y-2"><label className="text-sm font-medium">Title</label><Input placeholder="Ad title" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Title</label><Input placeholder="Ad title" value={newAd.title} onChange={e => setNewAd({...newAd, title: e.target.value})} /></div>
             <div className="space-y-2"><label className="text-sm font-medium">Placement</label>
-              <Select><SelectTrigger><SelectValue placeholder="Select placement" /></SelectTrigger><SelectContent>
+              <Select value={newAd.placement} onValueChange={v => setNewAd({...newAd, placement: v})}><SelectTrigger><SelectValue placeholder="Select placement" /></SelectTrigger><SelectContent>
                 <SelectItem value="homepage">Homepage</SelectItem><SelectItem value="sidebar">Sidebar</SelectItem><SelectItem value="header">Header</SelectItem><SelectItem value="footer">Footer</SelectItem><SelectItem value="buy-tickets">Buy Tickets</SelectItem><SelectItem value="dashboard">Dashboard</SelectItem>
               </SelectContent></Select>
             </div>
             <div className="space-y-2"><label className="text-sm font-medium">Type</label>
-              <Select defaultValue="banner"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+              <Select value={newAd.type} onValueChange={v => setNewAd({...newAd, type: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
                 <SelectItem value="banner">Banner</SelectItem><SelectItem value="popup">Popup</SelectItem><SelectItem value="text">Text</SelectItem>
               </SelectContent></Select>
             </div>
-            <div className="space-y-2"><label className="text-sm font-medium">Description</label><Textarea placeholder="Ad description" rows={3} /></div>
-            <div className="space-y-2"><label className="text-sm font-medium">Link URL</label><Input placeholder="https://..." /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Description</label><Textarea placeholder="Ad description" rows={3} value={newAd.description} onChange={e => setNewAd({...newAd, description: e.target.value})} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium">Link URL</label><Input placeholder="https://..." value={newAd.link} onChange={e => setNewAd({...newAd, link: e.target.value})} /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><label className="text-sm font-medium">Start Date</label><Input type="date" /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">End Date</label><Input type="date" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">Start Date</label><Input type="date" value={newAd.startDate} onChange={e => setNewAd({...newAd, startDate: e.target.value})} /></div>
+              <div className="space-y-2"><label className="text-sm font-medium">End Date</label><Input type="date" value={newAd.endDate} onChange={e => setNewAd({...newAd, endDate: e.target.value})} /></div>
             </div>
           </CardContent>
         </Card>
         <div className="flex gap-2">
-          <Button>Create Ad</Button>
+          <Button onClick={handleCreateAd} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Ad'}</Button>
           <Link href="/admin/ads"><Button variant="outline">Cancel</Button></Link>
         </div>
       </div>
@@ -118,7 +173,7 @@ export default function AdminAdsPage({ action, itemId }: { action?: 'list' | 'vi
         </Card>
         <div className="flex gap-2">
           <Button size="sm">Edit Ad</Button>
-          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>Delete</Button>
+          <Button variant="destructive" size="sm" onClick={() => { setSelectedAd(ad); setShowDeleteDialog(true); }}>Delete</Button>
         </div>
       </div>
     );
@@ -179,7 +234,7 @@ export default function AdminAdsPage({ action, itemId }: { action?: 'list' | 'vi
                       <div className="flex gap-1">
                         <Link href={`/admin/ads/${ad.id}`}><Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-3.5 h-3.5" /></Button></Link>
                         <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => { setSelectedAd(ad); setShowDeleteDialog(true); }}><Trash2 className="w-3.5 h-3.5" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -189,6 +244,18 @@ export default function AdminAdsPage({ action, itemId }: { action?: 'list' | 'vi
           </CardContent>
         </Card>
       )}
+
+      {/* Delete ad dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Delete Ad</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Are you sure you want to delete &quot;{selectedAd?.title}&quot;? This action cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteAd} disabled={deleting}>{deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
