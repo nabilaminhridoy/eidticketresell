@@ -32,23 +32,72 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
 
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-local-*
+
+# database
+db/*.db
+db/*.db-journal
+
+# sandbox/dev specific
 .claude
 .z-ai-config
 *.log
 dev.log
 dev.out.log
-test
-prompt
-
 server.log
-# Skills directory
+server.pid
+.next-dev.pid
+keep-server-alive.sh
+Caddyfile
+
+# skills (AI skill files, not needed for deployment)
 /skills/
+
+# agent context (development session files)
+/agent-ctx/
+
+# tool results (session output)
+/tool-results/
+
+# screenshots (QA/debug screenshots)
+/screenshots/
+*.png
+!public/**/*.png
+
+# test results
+/test-results/
+
+# download folder
+/download/
+
+# examples (demo code)
+/examples/
+
+# scripts (sandbox-specific scripts)
+/scripts/
+
+# zscripts (sandbox-specific dev scripts)
+/.zscripts/
+
+# worklog
+/worklog.md
+
+# upload temp files
+/public/uploads/*.png
+/public/uploads/*.jpg
+/public/uploads/*.jpeg
+/public/uploads/*.webp
+
+# mini-services node_modules
+mini-services/*/node_modules
+
+# bun lock (optional, can regenerate)
+# bun.lock
+/upload
