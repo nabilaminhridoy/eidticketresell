@@ -829,16 +829,21 @@ export default function AdminSettingsPaymentsPage({ section }: { section?: strin
               {PAYMENT_METHOD_GROUPS.map(group => {
                 const allSelected = group.methods.every(m => allowedMethods.includes(m.id));
                 return (
-                  <Button
+                  <div
                     key={group.id}
-                    variant={allSelected ? 'default' : 'outline'}
-                    size="sm"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => toggleGroup(group.methods)}
-                    className="justify-start"
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroup(group.methods); } }}
+                    className={`inline-flex items-center justify-start whitespace-nowrap text-sm font-medium transition-colors cursor-pointer select-none rounded-md px-3 py-1.5 h-8 ${
+                      allSelected
+                        ? 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90'
+                        : 'border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground'
+                    }`}
                   >
                     <Checkbox checked={allSelected} className="mr-2 pointer-events-none" />
                     {group.label}
-                  </Button>
+                  </div>
                 );
               })}
             </div>
