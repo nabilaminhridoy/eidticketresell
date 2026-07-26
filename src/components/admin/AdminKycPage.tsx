@@ -61,6 +61,24 @@ function getAuthHeaders() {
 
 const STATUS_TABS = ['all', 'pending', 'approved', 'rejected'];
 
+  const renderImageOrPlaceholder = (url: string | null | undefined, label: string, icon: 'file' | 'camera' = 'file') => {
+    if (url && (url.startsWith('data:') || url.startsWith('http') || url.startsWith('/'))) {
+      return (
+        <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="block">
+          <img src={url} alt={label} className="w-full h-24 object-cover rounded-lg border hover:opacity-80 transition-opacity" />
+          <p className="text-xs text-muted-foreground mt-1 text-center">{label}</p>
+        </a>
+      );
+    }
+    const IconComponent = icon === 'camera' ? Camera : FileText;
+    return (
+      <div key={label} className="bg-muted/50 rounded-lg p-4 flex flex-col items-center justify-center">
+        <IconComponent className="w-6 h-6 text-muted-foreground mb-1" />
+        <p className="text-xs text-muted-foreground">{label}</p>
+      </div>
+    );
+  };
+
 export default function AdminKycPage() {
   const [applications, setApplications] = useState<KycApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -335,20 +353,10 @@ export default function AdminKycPage() {
                   <div><Label className="text-xs text-muted-foreground">Document Type</Label><p className="font-medium">{getDocTypeLabel(selectedKyc.documentType)}</p></div>
                   <div><Label className="text-xs text-muted-foreground">Document Number</Label><p className="font-medium">{selectedKyc.documentNumber}</p></div>
                 </div>
-                {/* Document Images placeholder */}
+                {/* Document Images */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-muted/50 rounded-lg p-6 flex flex-col items-center justify-center">
-                    <FileText className="w-8 h-8 text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">Front Side</p>
-                    <p className="text-xs text-muted-foreground mt-1">Click to view full image</p>
-                  </div>
-                  {selectedKyc.documentBack && (
-                    <div className="bg-muted/50 rounded-lg p-6 flex flex-col items-center justify-center">
-                      <FileText className="w-8 h-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">Back Side</p>
-                      <p className="text-xs text-muted-foreground mt-1">Click to view full image</p>
-                    </div>
-                  )}
+                  {renderImageOrPlaceholder(selectedKyc.documentFront, 'Front Side — Click to view')}
+                  {renderImageOrPlaceholder(selectedKyc.documentBack, 'Back Side — Click to view')}
                 </div>
               </div>
 
@@ -360,17 +368,10 @@ export default function AdminKycPage() {
                   <Camera className="w-4 h-4" /> Selfie Captures
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { label: 'Selfie Photo', key: selectedKyc.selfiePhoto },
-                    { label: 'Right View', key: selectedKyc.selfieRight },
-                    { label: 'Left View', key: selectedKyc.selfieLeft },
-                    { label: 'Smile', key: selectedKyc.selfieSmile },
-                  ].filter(item => item.key).map(item => (
-                    <div key={item.label} className="bg-muted/50 rounded-lg p-4 flex flex-col items-center justify-center">
-                      <Camera className="w-6 h-6 text-muted-foreground mb-1" />
-                      <p className="text-xs text-muted-foreground">{item.label}</p>
-                    </div>
-                  ))}
+                  {renderImageOrPlaceholder(selectedKyc.selfiePhoto, 'Selfie Photo', 'camera')}
+                  {renderImageOrPlaceholder(selectedKyc.selfieRight, 'Right View', 'camera')}
+                  {renderImageOrPlaceholder(selectedKyc.selfieLeft, 'Left View', 'camera')}
+                  {renderImageOrPlaceholder(selectedKyc.selfieSmile, 'Smile', 'camera')}
                 </div>
               </div>
 
