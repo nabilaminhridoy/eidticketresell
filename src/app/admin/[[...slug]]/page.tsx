@@ -1,7 +1,7 @@
 'use client';
 
 import { use } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
 
@@ -27,8 +27,7 @@ export default function AdminCatchAllPage({
   const resolvedParams = use(params);
   const slug = resolvedParams.slug ?? [];
   const slugPath = slug.join('/');
-  const router = useRouter();
   const pathname = usePathname();
 
-  return <AdminPageRouter slugPath={slugPath} pathname={pathname} router={router} />;
+  return <AdminPageRouter slugPath={slugPath} pathname={pathname} />;
 }

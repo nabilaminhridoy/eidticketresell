@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   ShieldCheck,
+  Shield,
   Eye,
   CheckCircle,
   CreditCard,
@@ -28,6 +29,9 @@ import {
   Ban,
   HandCoins,
   CircleDot,
+  Verified,
+  Clock,
+  HeadphonesIcon,
 } from 'lucide-react';
 
 export default function SafetyGuidelinesPage() {

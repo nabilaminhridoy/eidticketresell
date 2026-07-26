@@ -54,7 +54,7 @@ function Loader() {
   );
 }
 
-function NotFoundRedirect({ router: routerProp }: { router: useRouter }) {
+function NotFoundRedirect() {
   const router = useRouter();
   useEffect(() => {
     router.replace('/en/404');
@@ -115,16 +115,14 @@ const routeConfig: Record<string, RouteConfig> = {
 export default function AdminPageRouter({
   slugPath,
   pathname,
-  router: routerProp,
 }: {
   slugPath: string;
   pathname: string;
-  router: useRouter;
 }) {
   const route = routeConfig[slugPath];
 
   if (!route) {
-    return <NotFoundRedirect router={routerProp} />;
+    return <NotFoundRedirect />;
   }
 
   return (

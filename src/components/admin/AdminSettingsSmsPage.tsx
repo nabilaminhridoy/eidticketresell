@@ -26,7 +26,7 @@ interface SettingItem {
 }
 
 function getAuthHeaders() {
-  const token = localStorage.getItem('etr_admin_token');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('etr_admin_token') : '';
   return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
 
@@ -59,7 +59,10 @@ export default function AdminSettingsSmsPage({ section }: { section?: string }) 
 
   useEffect(() => {
     fetch('/api/admin/settings?group=sms', { headers: getAuthHeaders() })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(d => {
         if (d.settings) {
           const settingsMap: Record<string, string> = {};
@@ -75,7 +78,10 @@ export default function AdminSettingsSmsPage({ section }: { section?: string }) 
         }
         setLoading(false);
       })
-      .catch(() => { setLoading(false); });
+      .catch((err) => {
+        setError(err.message || 'Failed to load settings');
+        setLoading(false);
+      });
   }, []);
 
   const handleSave = async () => {
@@ -302,8 +308,8 @@ export default function AdminSettingsSmsPage({ section }: { section?: string }) 
                       <p><strong>Parameters:</strong> api_key, msg, to, sender_id (optional), schedule (optional), content_id (optional for bulk)</p>
                       <p><strong>Phone Format:</strong> Numbers must start with country code (880) or standard 01X format</p>
                       <p><strong>Multiple Numbers:</strong> Separate with comma (e.g., 8801800000000,8801900000000)</p>
-                      <p><strong>Check Balance:</strong> <code className="bg-muted/50 px-1 rounded">https://api.sms.net.bd/user/balance/?api_key={KEY}</code></p>
-                      <p><strong>Delivery Report:</strong> <code className="bg-muted/50 px-1 rounded">https://api.sms.net.bd/report/request/{id}/?api_key={KEY}</code></p>
+                      <p><strong>Check Balance:</strong> <code className="bg-muted/50 px-1 rounded">https://api.sms.net.bd/user/balance/?api_key={'{KEY}'}</code></p>
+                      <p><strong>Delivery Report:</strong> <code className="bg-muted/50 px-1 rounded">https://api.sms.net.bd/report/request/{'{id}'}/?api_key={'{KEY}'}</code></p>
                     </div>
                   </CardContent>
                 </Card>
@@ -453,7 +459,7 @@ export default function AdminSettingsSmsPage({ section }: { section?: string }) 
                 <div className="bg-muted/30 rounded-lg p-3 space-y-1">
                   <p className="text-xs font-medium">Alpha SMS Balance API</p>
                   <p className="text-xs text-muted-foreground">
-                    <code className="bg-muted/50 px-1 rounded">GET https://api.sms.net.bd/user/balance/?api_key={YOUR_API_KEY}</code>
+                    <code className="bg-muted/50 px-1 rounded">GET https://api.sms.net.bd/user/balance/?api_key={'{YOUR_API_KEY}'}</code>
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Returns: <code className="bg-muted/50 px-1 rounded">{`{"error": 0, "data": {"balance": "00.0000"}}`}</code>
