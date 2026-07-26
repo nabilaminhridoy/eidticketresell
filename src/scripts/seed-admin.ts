@@ -88,6 +88,29 @@ async function main() {
     { key: 'social_twitter', value: '', group: 'social' },
     { key: 'social_instagram', value: '', group: 'social' },
     { key: 'social_youtube', value: '', group: 'social' },
+    // SMS settings
+    { key: 'sms_provider', value: 'alpha_sms', group: 'sms' },
+    { key: 'sms_api_key', value: '', group: 'sms' },
+    { key: 'sms_sender_id', value: 'ETRBD', group: 'sms' },
+    { key: 'sms_api_url', value: '', group: 'sms' },
+    { key: 'sms_enabled', value: 'false', group: 'sms' },
+    { key: 'sms_otp_enabled', value: 'false', group: 'sms' },
+    // Payment gateway settings (SSLCommerz)
+    { key: 'SSLCZ_STORE_ID', value: '', group: 'payments' },
+    { key: 'SSLCZ_STORE_PASSWORD', value: '', group: 'payments' },
+    { key: 'SSLCZ_IS_SANDBOX', value: 'true', group: 'payments' },
+    { key: 'SSLCZ_BASE_URL', value: 'https://sandbox.sslcommerz.com', group: 'payments' },
+    { key: 'SSLCZ_VALIDATION_URL', value: '', group: 'payments' },
+    { key: 'bkash_enabled', value: 'false', group: 'payments' },
+    // bKash settings
+    { key: 'BKASH_ENABLED', value: 'false', group: 'bkash' },
+    { key: 'BKASH_APP_KEY', value: '', group: 'bkash' },
+    { key: 'BKASH_APP_SECRET', value: '', group: 'bkash' },
+    { key: 'BKASH_USERNAME', value: '', group: 'bkash' },
+    { key: 'BKASH_PASSWORD', value: '', group: 'bkash' },
+    { key: 'BKASH_IS_SANDBOX', value: 'true', group: 'bkash' },
+    { key: 'BKASH_BASE_URL', value: 'https://checkout.sandbox.bka.sh/v1.2.0-beta', group: 'bkash' },
+    { key: 'BKASH_CALLBACK_URL', value: '', group: 'bkash' },
   ];
 
   let settingsCreated = 0;
@@ -107,7 +130,34 @@ async function main() {
 
   console.log(`\n📊 Settings Summary: ${settingsCreated} created, ${settingsSkipped} skipped.`);
 
-  // 3. Print final summary
+  // 3. Seed PageContent for safety-guidelines
+  console.log('\n📝 Seeding page content...');
+  const existingSafetyPage = await db.pageContent.findUnique({ where: { slug: 'safety-guidelines' } });
+  if (!existingSafetyPage) {
+    await db.pageContent.create({
+      data: {
+        slug: 'safety-guidelines',
+        title: 'Safety Guidelines',
+        titleBn: 'নিরাপত্তা নির্দেশিকা',
+        isActive: true,
+        content: JSON.stringify({
+          heroSubtitle: 'Follow these guidelines for safe ticket buying and selling. Ensure protection for both buyers and sellers.',
+          warningTitle: 'Important Warning',
+          warningDesc: 'If any user requests payment outside the platform, demands personal information, or behaves suspiciously — report them immediately. Our support team is available 24/7.',
+        }),
+        contentBn: JSON.stringify({
+          heroSubtitle: 'নিরাপদ টিকেট কেনাবেচার জন্য এই নির্দেশিকা অনুসরণ করুন। ক্রেতা ও বিক্রেতা উভয়ের সুরক্ষা নিশ্চিত করুন।',
+          warningTitle: 'গুরুত্বপূর্ণ সতর্কতা',
+          warningDesc: 'কোনো ব্যবহারকারী যদি প্ল্যাটফর্মের বাইরে পেমেন্ট চায়, ব্যক্তিগত তথ্য দাবি করে, বা সন্দেহজনক আচরণ করে — অবিলম্বে রিপোর্ট করুন। আমাদের সাহায্য দল 24/7 উপলব্ধ।',
+        }),
+      },
+    });
+    console.log('   ✅ Safety Guidelines page content created.');
+  } else {
+    console.log('   ⏭️  Safety Guidelines page content already exists, skipping.');
+  }
+
+  // 4. Print final summary
   console.log('\n' + '=' .repeat(50));
   console.log('📊 Final Database Counts:');
   console.log('─' .repeat(30));

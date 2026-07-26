@@ -1,6 +1,5 @@
 'use client';
-import dynamic from 'next/dynamic';
-const SafetyGuidelinesPage = dynamic(() => import('@/components/pages/SafetyGuidelinesPage'), { ssr: false });
+import SafetyGuidelinesPage from '@/components/pages/SafetyGuidelinesPage';
 export default function SafetyGuidelinesRoute() {
   return <SafetyGuidelinesPage />;
 }

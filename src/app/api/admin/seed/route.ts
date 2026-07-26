@@ -55,6 +55,27 @@ export async function POST(req: NextRequest) {
       { key: 'withdrawal_min_amount', value: '500', group: 'payment' },
       { key: 'escrow_hold_hours', value: '48', group: 'system' },
       { key: 'maintenance_mode', value: 'false', group: 'system' },
+      // SMS settings
+      { key: 'sms_provider', value: 'alpha_sms', group: 'sms' },
+      { key: 'sms_api_key', value: '', group: 'sms' },
+      { key: 'sms_sender_id', value: 'ETRBD', group: 'sms' },
+      { key: 'sms_api_url', value: '', group: 'sms' },
+      { key: 'sms_enabled', value: 'false', group: 'sms' },
+      { key: 'sms_otp_enabled', value: 'false', group: 'sms' },
+      // Payment gateway settings
+      { key: 'SSLCZ_STORE_ID', value: '', group: 'payments' },
+      { key: 'SSLCZ_STORE_PASSWORD', value: '', group: 'payments' },
+      { key: 'SSLCZ_IS_SANDBOX', value: 'true', group: 'payments' },
+      { key: 'SSLCZ_BASE_URL', value: 'https://sandbox.sslcommerz.com', group: 'payments' },
+      { key: 'bkash_enabled', value: 'false', group: 'payments' },
+      // bKash settings
+      { key: 'BKASH_ENABLED', value: 'false', group: 'bkash' },
+      { key: 'BKASH_APP_KEY', value: '', group: 'bkash' },
+      { key: 'BKASH_APP_SECRET', value: '', group: 'bkash' },
+      { key: 'BKASH_USERNAME', value: '', group: 'bkash' },
+      { key: 'BKASH_PASSWORD', value: '', group: 'bkash' },
+      { key: 'BKASH_IS_SANDBOX', value: 'true', group: 'bkash' },
+      { key: 'BKASH_BASE_URL', value: 'https://checkout.sandbox.bka.sh/v1.2.0-beta', group: 'bkash' },
     ];
 
     let settingsCreated = 0;
@@ -66,7 +87,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Return counts of all entities
+    // 3. Seed PageContent for safety-guidelines
+    let pageContentCreated = 0;
+    const existingSafetyPage = await db.pageContent.findUnique({ where: { slug: 'safety-guidelines' } });
+    if (!existingSafetyPage) {
+      await db.pageContent.create({
+        data: {
+          slug: 'safety-guidelines',
+          title: 'Safety Guidelines',
+          titleBn: 'নিরাপত্তা নির্দেশিকা',
+          isActive: true,
+          content: JSON.stringify({
+            heroSubtitle: 'Follow these guidelines for safe ticket buying and selling.',
+            warningTitle: 'Important Warning',
+            warningDesc: 'If any user requests payment outside the platform, report them immediately.',
+          }),
+          contentBn: JSON.stringify({
+            heroSubtitle: 'নিরাপদ টিকেট কেনাবেচার জন্য এই নির্দেশিকা অনুসরণ করুন।',
+            warningTitle: 'গুরুত্বপূর্ণ সতর্কতা',
+            warningDesc: 'কোনো ব্যবহারকারী যদি প্ল্যাটফর্মের বাইরে পেমেন্ট চায়, অবিলম্বে রিপোর্ট করুন।',
+          }),
+        },
+      });
+      pageContentCreated++;
+    }
+
+    // 4. Return counts of all entities
     const counts = {
       admins: await db.admin.count(),
       superAdmins: await db.admin.count({ where: { role: 'super_admin' } }),
@@ -90,6 +136,7 @@ export async function POST(req: NextRequest) {
       seeded: true,
       superAdminCreated,
       settingsCreated,
+      pageContentCreated,
       counts,
     });
   } catch (error) {
