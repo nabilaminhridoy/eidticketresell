@@ -692,7 +692,7 @@ export default function SellTicketPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {(kycStatus === 'none' || kycStatus === 'rejected') && (
-                  <Button onClick={() => navigate('kyc')} className="bg-primary">
+                  <Button onClick={() => navigate('kyc', { username: user?.username || '' })} className="bg-primary">
                     <ShieldCheck className="w-4 h-4 mr-2" />
                     {isBn ? 'KYC যাচাইকরণ শুরু করুন' : 'Start KYC Verification'}
                   </Button>

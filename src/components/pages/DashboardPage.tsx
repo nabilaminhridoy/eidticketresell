@@ -197,7 +197,7 @@ export default function DashboardPage() {
                   <p className={`text-xs text-muted-foreground ${language === 'bn' ? 'font-bangla' : ''}`}>
                     {language === 'en' ? 'Complete KYC verification to unlock seller features, wallet, and withdrawal capabilities.' : 'বিক্রেতা বৈশিষ্ট্য, ওয়ালেট এবং উত্তোলন সক্ষমতা আনলক করতে কেওয়াইসি যাচাই সম্পন্ন করুন।'}
                   </p>
-                  <Button className="bg-primary" onClick={() => navigate('kyc')}>
+                  <Button className="bg-primary" onClick={() => navigate('kyc', { username: user?.username || '' })}>
                     <ShieldCheck className="w-4 h-4 mr-2" />{t('kycVerification', language)}
                   </Button>
                 </div>
