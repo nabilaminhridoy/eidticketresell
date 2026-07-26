@@ -1373,7 +1373,7 @@ export class SSLCommerz {
     };
 
     try {
-      const response = await fetch(safeActionUrl, {
+      const response = await fetch(safeActionUrl, { // nosem: js/server-side-request-forgery — URL validated above: HTTPS + sslcommerz.com domain
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

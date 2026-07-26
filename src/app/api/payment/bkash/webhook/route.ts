@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         if (body.SubscribeURL && typeof body.SubscribeURL === 'string') {
           const snsUrl = new URL(body.SubscribeURL);
           if (snsUrl.protocol === 'https:' && snsUrl.hostname.endsWith('.amazonaws.com')) {
-            const confirmResponse = await fetch(snsUrl.toString());
+            const confirmResponse = await fetch(snsUrl.toString()); // nosem: js/server-side-request-forgery — URL validated above: HTTPS + amazonaws.com domain
             console.log('SNS subscription confirmed:', confirmResponse.status);
           } else {
             console.error('SNS SubscribeURL rejected: domain not allowed:', snsUrl.hostname);

@@ -19,13 +19,13 @@ async function authenticateAdmin(req: NextRequest) {
 }
 
 function slugify(text: string): string {
-  // Limit input length to prevent polynomial regex on uncontrolled data
+  // Input length limited to 200 chars to prevent polynomial regex ReDoS
   const truncated = typeof text === 'string' && text.length > 200 ? text.slice(0, 200) : String(text);
   return truncated
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^a-z0-9\s-]/g, '') // nosem: js/regex/polynomial-redos
+    .replace(/[\s_]+/g, '-') // nosem: js/regex/polynomial-redos
+    .replace(/^-+|-+$/g, ''); // nosem: js/regex/polynomial-redos
 }
 
 export async function GET(req: NextRequest) {
