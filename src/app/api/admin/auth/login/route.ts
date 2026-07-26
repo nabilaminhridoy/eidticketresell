@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       token,
-      admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role, avatar: admin.avatar },
+      admin: { id: admin.id, email: admin.email, name: admin.name, username: admin.username, phone: admin.phone, role: admin.role, avatar: admin.avatar },
       requireOtp: false,
     });
   } catch (error) {

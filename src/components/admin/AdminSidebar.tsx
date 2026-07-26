@@ -25,6 +25,7 @@ const sidebarSections: SidebarSection[] = [
     title: 'DASHBOARD',
     items: [
       { label: 'Dashboard', icon: iconMap.LayoutDashboard, path: '/admin' },
+      { label: 'My Profile', icon: iconMap.User, path: '/admin/profile' },
       { label: 'Analytics', icon: iconMap.BarChart3, path: '/admin/analytics' },
       { label: 'Activity Log', icon: iconMap.Activity, path: '/admin/activity-log' },
     ],

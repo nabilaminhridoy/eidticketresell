@@ -90,6 +90,9 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
 
             {showUserMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-lg py-2 z-50">
+                <Link href="/admin/profile" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50" onClick={() => setShowUserMenu(false)}>
+                  <iconMap.User className="w-4 h-4" />My Profile
+                </Link>
                 <Link href="/admin/settings/general" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50" onClick={() => setShowUserMenu(false)}>
                   <iconMap.Settings className="w-4 h-4" />Settings
                 </Link>

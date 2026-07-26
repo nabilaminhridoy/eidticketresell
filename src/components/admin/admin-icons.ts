@@ -20,6 +20,8 @@ import {
   Menu, ChevronLeft, ChevronDown,
   // Header icons
   Bell, LogOut, LogIn, User, X,
+  // Profile page icons
+  Camera, Save, Eye, EyeOff, History,
 } from 'lucide-react';
 
 import type { LucideIcon } from 'lucide-react';
@@ -34,6 +36,7 @@ const iconMap: Record<string, LucideIcon> = {
   Megaphone, PenTool, Search, FileBarChart2, Image, Settings, Globe,
   Mail, Smartphone, Shield, Key, UserCog, Scale, Database, HardDrive,
   Clock4, Menu, ChevronLeft, ChevronDown, Bell, LogOut, LogIn, User, X,
+  Camera, Save, Eye, EyeOff, History,
 };
 
 export function getIcon(name: string): LucideIcon | undefined {

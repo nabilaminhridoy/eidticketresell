@@ -49,6 +49,8 @@ export async function GET(req: NextRequest) {
     const adminRecords = admins.map(a => ({
       id: a.id,
       name: a.name,
+      username: a.username,
+      phone: a.phone,
       email: a.email,
       role: a.role,
       isActive: a.isActive,

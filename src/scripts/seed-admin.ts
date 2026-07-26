@@ -45,6 +45,7 @@ async function main() {
       data: {
         email: 'admin@eidticketresell.com',
         name: 'Super Admin',
+        username: 'super_admin',
         password: hashedPassword,
         role: 'super_admin',
         isActive: true,

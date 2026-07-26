@@ -428,15 +428,20 @@ model Admin {
   id            String   @id @default(cuid())
   email         String   @unique
   name          String
+  username      String?  @unique // Username for the frontend website display
+  phone         String?  // Phone number (BD format)
   password      String
   role          String   @default("admin") // admin, super_admin
   avatar        String?
   isActive      Boolean  @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String? // TOTP secret for 2FA
   lastLogin     DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   activities    AdminActivityLog[]
+  notificationPrefs AdminNotificationPref[]
 }
 
 model AdminActivityLog {
@@ -448,6 +453,19 @@ model AdminActivityLog {
   createdAt DateTime @default(now())
 
   admin Admin? @relation(fields: [adminId], references: [id])
+}
+
+model AdminNotificationPref {
+  id        String   @id @default(cuid())
+  adminId   String
+  type      String   // email_login, email_order, email_ticket, sms_login, sms_order, sms_ticket, push_all
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@unique([adminId, type])
 }
 
 model JourneyVerification {

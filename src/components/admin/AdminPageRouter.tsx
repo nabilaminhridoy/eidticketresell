@@ -40,6 +40,7 @@ const AdminSecurityPage = lazy(() => import('./AdminSecurityPage'));
 const AdminAdminsPage = lazy(() => import('./AdminAdminsPage'));
 const AdminRolesPage = lazy(() => import('./AdminRolesPage'));
 const AdminSystemPage = lazy(() => import('./AdminSystemPage'));
+const AdminProfilePage = lazy(() => import('./AdminProfilePage'));
 
 function Loader() {
   return (
@@ -67,6 +68,7 @@ interface RouteConfig {
 
 const routeConfig: Record<string, RouteConfig> = {
   '':               { component: AdminDashboard },
+  'profile':        { component: AdminProfilePage },
   'dashboard':      { component: AdminDashboard },
   'analytics':      { component: AdminAnalyticsPage },
   'activity-log':   { component: AdminActivityLogPage },
