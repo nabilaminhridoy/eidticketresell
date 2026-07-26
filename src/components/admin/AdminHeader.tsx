@@ -120,16 +120,15 @@ export default function AdminHeader({ onMobileMenuToggle, sidebarCollapsed }: { 
           <iconMap.Menu className="w-5 h-5" />
         </button>
         {/* Logo */}
-        <Link href="/admin" className="flex items-center gap-2">
+        <Link href="/admin" className="flex items-center group shrink-0">
           <Image
             src="/logo-en.svg"
-            alt="ETR Admin"
-            width={28}
-            height={28}
-            className="w-7 h-7"
+            alt="ETR"
+            width={140}
+            height={36}
+            className="h-9 w-auto object-contain"
             priority
           />
-          <span className="hidden md:block font-bold text-sm">ETR Admin</span>
         </Link>
         {/* Search bar */}
         <div className="hidden md:flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-1.5 max-w-xs ml-2">

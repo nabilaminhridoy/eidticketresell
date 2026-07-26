@@ -119,13 +119,12 @@ export default function AdminSidebar({ collapsed, onToggle }: { collapsed: boole
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border h-16">
         {!collapsed ? (
-          <Link href="/admin" className="flex items-center gap-2">
-            <Image src="/logo-en.svg" alt="ETR Admin" width={28} height={28} className="w-7 h-7" priority />
-            <span className="font-bold text-sm">ETR Admin</span>
+          <Link href="/admin" className="flex items-center group">
+            <Image src="/logo-en.svg" alt="ETR" width={140} height={36} className="h-9 w-auto object-contain" priority />
           </Link>
         ) : (
-          <Link href="/admin">
-            <Image src="/logo-en.svg" alt="ETR" width={24} height={24} className="w-6 h-6" priority />
+          <Link href="/admin" className="flex items-center">
+            <Image src="/logo-en.svg" alt="ETR" width={36} height={36} className="h-9 w-auto object-contain" priority />
           </Link>
         )}
         <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
