@@ -14,7 +14,8 @@ import { Label } from '@/components/ui/label';
 import {
   CreditCard, Wallet, Shield, Coins, Settings, Webhook, ArrowRight,
   AlertTriangle, CheckCircle2, Info, DollarSign, Banknote, Loader2,
-  Landmark, Smartphone, FileText, Eye, Zap, Globe, QrCode, Mail, MessageSquare
+  Landmark, Smartphone, FileText, Eye, Zap, Globe, QrCode, Mail, MessageSquare,
+  Lock, Send, ArrowDownUp, ShieldCheck
 } from 'lucide-react';
 
 function getAuthHeaders() {
@@ -65,17 +66,18 @@ export default function AdminSettingsPaymentsPage({ section }: { section?: strin
   const [activeTab, setActiveTab] = useState(section || 'overview');
 
   useEffect(() => {
-    fetch('/api/admin/settings?group=payments', { headers: getAuthHeaders() })
-      .then(r => r.json())
-      .then(d => {
-        if (d.settings) {
-          const map: Record<string, string> = {};
-          d.settings.forEach((s: { key: string; value: string }) => {
-            map[s.key] = s.value;
-          });
-          setSettingsMap(map);
-          setFormValues(map);
-        }
+    Promise.all([
+      fetch('/api/admin/settings?group=payments', { headers: getAuthHeaders() }).then(r => r.json()),
+      fetch('/api/admin/settings?group=bkash', { headers: getAuthHeaders() }).then(r => r.json()),
+    ])
+      .then(([paymentsData, bkashData]) => {
+        const map: Record<string, string> = {};
+        const allSettings = [...(paymentsData.settings || []), ...(bkashData.settings || [])];
+        allSettings.forEach((s: { key: string; value: string }) => {
+          map[s.key] = s.value;
+        });
+        setSettingsMap(map);
+        setFormValues(map);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -89,14 +91,14 @@ export default function AdminSettingsPaymentsPage({ section }: { section?: strin
     setFormValues(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  const handleSave = async (settingsToSave: { key: string; value: string }[]) => {
+  const handleSave = async (settingsToSave: { key: string; value: string; group?: string }[]) => {
     setSaving(true);
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          settings: settingsToSave.map(s => ({ key: s.key, value: s.value, group: 'payments' })),
+          settings: settingsToSave.map(s => ({ key: s.key, value: s.value, group: s.group || 'payments' })),
         }),
       });
       if (res.ok) {
@@ -114,11 +116,12 @@ export default function AdminSettingsPaymentsPage({ section }: { section?: strin
     }
   };
 
-  const getChangedSettings = (): { key: string; value: string }[] => {
-    const changed: { key: string; value: string }[] = [];
+  const getChangedSettings = (): { key: string; value: string; group: string }[] => {
+    const changed: { key: string; value: string; group: string }[] = [];
     for (const [key, value] of Object.entries(formValues)) {
       if (settingsMap[key] !== value) {
-        changed.push({ key, value });
+        const group = key.startsWith('BKASH_') ? 'bkash' : 'payments';
+        changed.push({ key, value, group });
       }
     }
     // Also include new keys that weren't in original settingsMap
@@ -131,7 +134,7 @@ export default function AdminSettingsPaymentsPage({ section }: { section?: strin
 
   const sslMode = formValues['sslcommerz_mode'] || settingsMap['sslcommerz_mode'] || 'sandbox';
   const sslEnabled = formValues['sslcommerz_enabled'] === 'true';
-  const bkashEnabled = formValues['bkash_enabled'] === 'true';
+  const bkashEnabled = formValues['BKASH_ENABLED'] === 'true';
   const qbpEnabled = formValues['sslcommerz_qbp_enabled'] === 'true';
   const gpEnabled = formValues['sslcommerz_gp_enabled'] === 'true';
   const invoiceEnabled = formValues['sslcommerz_invoice_enabled'] === 'true';
@@ -172,10 +175,10 @@ export default function AdminSettingsPaymentsPage({ section }: { section?: strin
         name: 'bKash',
         icon: <Wallet className="w-5 h-5" />,
         enabled: bkashEnabled,
-        mode: formValues['bkash_mode'] || 'sandbox',
+        mode: formValues['BKASH_IS_SANDBOX'] === 'false' ? 'live' : 'sandbox',
         color: 'bg-pink-50 border-pink-200',
-        description: 'Mobile banking payment via bKash',
-        configKeys: ['bkash_enabled', 'bkash_app_key', 'bkash_mode'],
+        description: 'bKash tokenized checkout — mobile banking payments',
+        configKeys: ['BKASH_ENABLED', 'BKASH_APP_KEY', 'BKASH_IS_SANDBOX'],
       },
       {
         name: 'SSLCommerz',
@@ -294,95 +297,451 @@ export default function AdminSettingsPaymentsPage({ section }: { section?: strin
     );
   };
 
-  // bKash Configuration
-  const BkashConfig = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Wallet className="w-5 h-5" />bKash Payment Gateway</CardTitle>
-          <CardDescription>Configure bKash integration for mobile banking payments</CardDescription>
-        </CardHeader>
-        <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
+  // bKash Configuration — Comprehensive
+  const BkashConfig = () => {
+    const bkashSandbox = formValues['BKASH_IS_SANDBOX'] !== 'false'; // default true
+    const bkashAgreementEnabled = formValues['BKASH_AGREEMENT_ENABLED'] === 'true';
+    const bkashDisbursementEnabled = formValues['BKASH_DISBURSEMENT_ENABLED'] === 'true';
+    const bkashB2cEnabled = formValues['BKASH_B2C_ENABLED'] === 'true';
+    const bkashB2bEnabled = formValues['BKASH_B2B_ENABLED'] === 'true';
+    const bkashIntraTransferEnabled = formValues['BKASH_INTRA_TRANSFER_ENABLED'] === 'true';
+    const bkashWebhookEnabled = formValues['BKASH_WEBHOOK_ENABLED'] === 'true';
+    const [showPin, setShowPin] = useState(false);
+
+    return (
+      <div className="space-y-6">
+        {/* ── 1. bKash Credentials ── */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />bKash Credentials
+                </CardTitle>
+                <CardDescription>API credentials for bKash tokenized checkout integration</CardDescription>
+              </div>
+              <Badge variant={bkashSandbox ? 'secondary' : 'default'}>
+                {bkashSandbox ? 'Sandbox' : 'Production'}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            {/* Enable bKash Payments */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={bkashEnabled}
+                  onCheckedChange={(checked) => updateFormValue('BKASH_ENABLED', checked ? 'true' : 'false')}
+                />
+                <Label className="font-medium">Enable bKash Payments</Label>
+              </div>
+              <Badge variant={bkashEnabled ? 'default' : 'secondary'}>
+                {bkashEnabled ? 'Active' : 'Inactive'}
+              </Badge>
+            </div>
+
+            <Separator />
+
+            {/* App Key */}
+            <div className="space-y-2">
+              <Label className="font-medium">App Key (BKASH_APP_KEY)</Label>
+              <Input
+                value={formValues['BKASH_APP_KEY'] || ''}
+                onChange={(e) => updateFormValue('BKASH_APP_KEY', e.target.value)}
+                placeholder="e.g., 5t5g4f4r5h5j5k5l5m"
+              />
+              <p className="text-xs text-muted-foreground">The App Key provided by bKash during merchant registration</p>
+            </div>
+
+            {/* App Secret */}
+            <div className="space-y-2">
+              <Label className="font-medium">App Secret (BKASH_APP_SECRET)</Label>
+              <Input
+                type="password"
+                value={formValues['BKASH_APP_SECRET'] || ''}
+                onChange={(e) => updateFormValue('BKASH_APP_SECRET', e.target.value)}
+                placeholder="Your app secret"
+              />
+              <p className="text-xs text-muted-foreground">Keep this secret. Never expose it in client-side code.</p>
+            </div>
+
+            {/* Username */}
+            <div className="space-y-2">
+              <Label className="font-medium">Username (BKASH_USERNAME)</Label>
+              <Input
+                value={formValues['BKASH_USERNAME'] || ''}
+                onChange={(e) => updateFormValue('BKASH_USERNAME', e.target.value)}
+                placeholder="e.g., bkashMerchant"
+              />
+              <p className="text-xs text-muted-foreground">Username used to obtain the API access token</p>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label className="font-medium">Password (BKASH_PASSWORD)</Label>
+              <Input
+                type="password"
+                value={formValues['BKASH_PASSWORD'] || ''}
+                onChange={(e) => updateFormValue('BKASH_PASSWORD', e.target.value)}
+                placeholder="Your password"
+              />
+              <p className="text-xs text-muted-foreground">Password for the bKash API authentication. Keep this secure.</p>
+            </div>
+
+            <Separator />
+
+            {/* Sandbox Mode Toggle */}
             <div className="flex items-center gap-3">
               <Switch
-                checked={formValues['bkash_enabled'] === 'true'}
-                onCheckedChange={(checked) => updateFormValue('bkash_enabled', checked ? 'true' : 'false')}
+                checked={bkashSandbox}
+                onCheckedChange={(checked) => {
+                  updateFormValue('BKASH_IS_SANDBOX', checked ? 'true' : 'false');
+                  // Auto-update base URL when sandbox mode changes
+                  if (checked) {
+                    updateFormValue('BKASH_BASE_URL', 'https://checkout.sandbox.bka.sh/v1.2.0-beta');
+                  } else {
+                    updateFormValue('BKASH_BASE_URL', 'https://checkout.pay.bka.sh/v1.2.0-beta');
+                  }
+                }}
               />
-              <Label className="font-medium">Enable bKash</Label>
+              <Label className="font-medium">Sandbox Mode (BKASH_IS_SANDBOX)</Label>
+              <p className="text-xs text-muted-foreground ml-auto">
+                {bkashSandbox
+                  ? 'Sandbox mode — no real money transactions'
+                  : 'Production mode — real money will be processed!'}
+              </p>
             </div>
-            <Badge variant={formValues['bkash_enabled'] === 'true' ? 'default' : 'secondary'}>
-              {formValues['bkash_enabled'] === 'true' ? 'Active' : 'Inactive'}
-            </Badge>
-          </div>
-          <Separator />
-          <div className="space-y-2">
-            <Label className="font-medium">bKash Merchant Number</Label>
-            <Input
-              value={formValues['bkash_merchant_number'] || ''}
-              onChange={(e) => updateFormValue('bkash_merchant_number', e.target.value)}
-              placeholder="e.g., 017XXXXXXXXX"
-            />
-            <p className="text-xs text-muted-foreground">The merchant number registered with bKash</p>
-          </div>
-          <div className="space-y-2">
-            <Label className="font-medium">bKash App Key</Label>
-            <Input
-              value={formValues['bkash_app_key'] || ''}
-              onChange={(e) => updateFormValue('bkash_app_key', e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="font-medium">bKash App Secret</Label>
-            <Input
-              type="password"
-              value={formValues['bkash_app_secret'] || ''}
-              onChange={(e) => updateFormValue('bkash_app_secret', e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">Keep this secret. Never expose it in client-side code.</p>
-          </div>
-          <div className="space-y-2">
-            <Label className="font-medium">bKash Username</Label>
-            <Input
-              value={formValues['bkash_username'] || ''}
-              onChange={(e) => updateFormValue('bkash_username', e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="font-medium">bKash Password</Label>
-            <Input
-              type="password"
-              value={formValues['bkash_password'] || ''}
-              onChange={(e) => updateFormValue('bkash_password', e.target.value)}
-            />
-          </div>
-          <Separator />
-          <div className="space-y-2">
-            <Label className="font-medium">Mode</Label>
-            <Select
-              value={formValues['bkash_mode'] || 'sandbox'}
-              onValueChange={(v) => updateFormValue('bkash_mode', v)}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sandbox">Sandbox (Test)</SelectItem>
-                <SelectItem value="live">Live</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">Use Sandbox for testing, Live for real transactions</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={formValues['bkash_auto_verify'] === 'true'}
-              onCheckedChange={(checked) => updateFormValue('bkash_auto_verify', checked ? 'true' : 'false')}
-            />
-            <Label>Auto-verify payments</Label>
-            <p className="text-xs text-muted-foreground ml-auto">Automatically verify payment status with bKash API</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+
+            <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200 flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-yellow-800">Important: Switching to Production</p>
+                <p className="text-xs text-yellow-700">Before switching to production, ensure you have completed bKash merchant onboarding and your App Key/Secret are production credentials. Sandbox credentials will not work in production mode.</p>
+              </div>
+            </div>
+
+            {/* Base URL */}
+            <div className="space-y-2">
+              <Label className="font-medium">Base URL (BKASH_BASE_URL)</Label>
+              <Select
+                value={
+                  formValues['BKASH_BASE_URL'] === 'https://checkout.pay.bka.sh/v1.2.0-beta'
+                    ? 'production'
+                    : formValues['BKASH_BASE_URL'] === 'https://checkout.sandbox.bka.sh/v1.2.0-beta'
+                      ? 'sandbox'
+                      : 'custom'
+                }
+                onValueChange={(v) => {
+                  if (v === 'sandbox') {
+                    updateFormValue('BKASH_BASE_URL', 'https://checkout.sandbox.bka.sh/v1.2.0-beta');
+                  } else if (v === 'production') {
+                    updateFormValue('BKASH_BASE_URL', 'https://checkout.pay.bka.sh/v1.2.0-beta');
+                  }
+                  // 'custom' — keep whatever is already in the custom input below
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Select base URL" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sandbox">Sandbox — https://checkout.sandbox.bka.sh/v1.2.0-beta</SelectItem>
+                  <SelectItem value="production">Production — https://checkout.pay.bka.sh/v1.2.0-beta</SelectItem>
+                  <SelectItem value="custom">Custom URL</SelectItem>
+                </SelectContent>
+              </Select>
+              {formValues['BKASH_BASE_URL'] !== 'https://checkout.sandbox.bka.sh/v1.2.0-beta' &&
+                formValues['BKASH_BASE_URL'] !== 'https://checkout.pay.bka.sh/v1.2.0-beta' && (
+                <Input
+                  value={formValues['BKASH_BASE_URL'] || ''}
+                  onChange={(e) => updateFormValue('BKASH_BASE_URL', e.target.value)}
+                  placeholder="https://checkout.sandbox.bka.sh/v1.2.0-beta"
+                  className="mt-2"
+                />
+              )}
+              <p className="text-xs text-muted-foreground">Base URL for bKash API calls. Typically auto-set based on sandbox mode.</p>
+            </div>
+
+            {/* Callback URL */}
+            <div className="space-y-2">
+              <Label className="font-medium">Callback URL (BKASH_CALLBACK_URL)</Label>
+              <Input
+                value={formValues['BKASH_CALLBACK_URL'] || ''}
+                onChange={(e) => updateFormValue('BKASH_CALLBACK_URL', e.target.value)}
+                placeholder={`${window.location?.origin || ''}/api/payment/bkash/callback`}
+              />
+              <p className="text-xs text-muted-foreground">
+                The URL where bKash redirects the customer after completing payment. Must match the URL configured in your bKash merchant dashboard.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── 2. bKash Payment Settings ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />bKash Payment Settings
+            </CardTitle>
+            <CardDescription>Control payment features, default currency, and payment intent</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            {/* Enable bKash Payments (redundant with credentials, but shown for clarity) */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bkashEnabled}
+                onCheckedChange={(checked) => updateFormValue('BKASH_ENABLED', checked ? 'true' : 'false')}
+              />
+              <Label className="font-medium">Enable bKash Payments</Label>
+              <Badge variant={bkashEnabled ? 'default' : 'secondary'} className="ml-auto">
+                {bkashEnabled ? 'Active' : 'Inactive'}
+              </Badge>
+            </div>
+
+            {/* Enable bKash Agreement (Tokenized Checkout) */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bkashAgreementEnabled}
+                onCheckedChange={(checked) => updateFormValue('BKASH_AGREEMENT_ENABLED', checked ? 'true' : 'false')}
+              />
+              <Label className="font-medium">Enable bKash Agreement (Tokenized Checkout)</Label>
+              <p className="text-xs text-muted-foreground ml-auto">
+                Allow customers to create a tokenized agreement for auto-debit payments. First-time users must authorize an agreement; subsequent payments are automatic.
+              </p>
+            </div>
+
+            {/* Enable bKash Disbursement (B2C/B2B) */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bkashDisbursementEnabled}
+                onCheckedChange={(checked) => updateFormValue('BKASH_DISBURSEMENT_ENABLED', checked ? 'true' : 'false')}
+              />
+              <Label className="font-medium">Enable bKash Disbursement (B2C/B2B)</Label>
+              <p className="text-xs text-muted-foreground ml-auto">
+                Enable payout capabilities to send money to customers (B2C) and businesses (B2B) via bKash.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Default Currency */}
+            <div className="space-y-2">
+              <Label className="font-medium">Default Currency</Label>
+              <Select
+                value={formValues['BKASH_CURRENCY'] || 'BDT'}
+                onValueChange={(v) => updateFormValue('BKASH_CURRENCY', v)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BDT">BDT — Bangladeshi Taka</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">bKash only supports BDT (Bangladeshi Taka) as the transaction currency.</p>
+            </div>
+
+            {/* Default Intent */}
+            <div className="space-y-2">
+              <Label className="font-medium">Default Intent (BKASH_INTENT)</Label>
+              <Select
+                value={formValues['BKASH_INTENT'] || 'sale'}
+                onValueChange={(v) => updateFormValue('BKASH_INTENT', v)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sale">Sale — Immediate capture</SelectItem>
+                  <SelectItem value="authorize">Authorize — Hold funds, capture later</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                <strong>Sale:</strong> Payment is immediately captured and settled. <strong>Authorize:</strong> Funds are held in the customer&apos;s account and must be captured separately via the confirm API.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">Tokenized Checkout Flow</p>
+                <p className="text-xs text-blue-700">
+                  bKash uses a tokenized checkout process. First-time customers must create an agreement (mode 0000), which authorizes auto-debit. Subsequent payments use the agreement ID (mode 0001) for seamless checkout without repeated authorization.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── 3. bKash Disbursement Settings ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5" />bKash Disbursement Settings
+            </CardTitle>
+            <CardDescription>Configure B2C payouts, B2B payouts, and intra-account transfers via bKash</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            {/* Enable B2C Payout */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bkashB2cEnabled}
+                onCheckedChange={(checked) => updateFormValue('BKASH_B2C_ENABLED', checked ? 'true' : 'false')}
+              />
+              <Label className="font-medium">Enable B2C Payout</Label>
+              <p className="text-xs text-muted-foreground ml-auto">
+                Send money from your bKash merchant account to customer bKash wallets (one-step process).
+              </p>
+            </div>
+
+            {/* Enable B2B Payout */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bkashB2bEnabled}
+                onCheckedChange={(checked) => updateFormValue('BKASH_B2B_ENABLED', checked ? 'true' : 'false')}
+              />
+              <Label className="font-medium">Enable B2B Payout</Label>
+              <p className="text-xs text-muted-foreground ml-auto">
+                Send money to other bKash merchant accounts (two-step: initiate then execute).
+              </p>
+            </div>
+
+            {/* Enable Intra Account Transfer */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bkashIntraTransferEnabled}
+                onCheckedChange={(checked) => updateFormValue('BKASH_INTRA_TRANSFER_ENABLED', checked ? 'true' : 'false')}
+              />
+              <Label className="font-medium">Enable Intra Account Transfer</Label>
+              <p className="text-xs text-muted-foreground ml-auto">
+                Transfer funds between your own bKash accounts (e.g., collection → disbursement wallet).
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Merchant PIN (masked input) */}
+            <div className="space-y-2">
+              <Label className="font-medium flex items-center gap-2">
+                <Lock className="w-4 h-4" />Merchant PIN for Disbursement (BKASH_MERCHANT_PIN)
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type={showPin ? 'text' : 'password'}
+                  value={formValues['BKASH_MERCHANT_PIN'] || ''}
+                  onChange={(e) => updateFormValue('BKASH_MERCHANT_PIN', e.target.value)}
+                  placeholder="Enter your merchant PIN"
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowPin(!showPin)}
+                  aria-label={showPin ? 'Hide PIN' : 'Show PIN'}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The merchant PIN required for disbursement operations. This is masked for security. Never share this PIN.
+              </p>
+            </div>
+
+            {/* Minimum Payout Amount */}
+            <div className="space-y-2">
+              <Label className="font-medium">Minimum Payout Amount (BDT)</Label>
+              <Input
+                type="number"
+                value={formValues['BKASH_MIN_PAYOUT_AMOUNT'] || '50'}
+                onChange={(e) => updateFormValue('BKASH_MIN_PAYOUT_AMOUNT', e.target.value)}
+                step={1} min={1}
+              />
+              <p className="text-xs text-muted-foreground">Minimum amount for a single bKash disbursement transaction</p>
+            </div>
+
+            {/* Maximum Payout Amount */}
+            <div className="space-y-2">
+              <Label className="font-medium">Maximum Payout Amount (BDT)</Label>
+              <Input
+                type="number"
+                value={formValues['BKASH_MAX_PAYOUT_AMOUNT'] || '50000'}
+                onChange={(e) => updateFormValue('BKASH_MAX_PAYOUT_AMOUNT', e.target.value)}
+                step={100} min={50}
+              />
+              <p className="text-xs text-muted-foreground">Maximum amount for a single bKash disbursement transaction</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-orange-50 border border-orange-200 flex items-start gap-2">
+              <ShieldCheck className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-orange-800">Disbursement Prerequisites</p>
+                <p className="text-xs text-orange-700">
+                  To use bKash disbursement, your merchant account must have the disbursement feature enabled by bKash. You also need a separate disbursement App Key/Secret if bKash provided one. Ensure sufficient balance in your disbursement wallet before initiating payouts.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── 4. bKash Webhook Settings ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Webhook className="w-5 h-5" />bKash Webhook Settings
+            </CardTitle>
+            <CardDescription>Configure webhook/IPN listener for real-time payment status notifications from bKash</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            {/* Webhook Listener URL */}
+            <div className="space-y-2">
+              <Label className="font-medium">Webhook Listener URL</Label>
+              <Input
+                value={formValues['BKASH_WEBHOOK_URL'] || `${window.location?.origin || ''}/api/payment/bkash/webhook`}
+                onChange={(e) => updateFormValue('BKASH_WEBHOOK_URL', e.target.value)}
+                placeholder="/api/payment/bkash/webhook"
+              />
+              <p className="text-xs text-muted-foreground">
+                The endpoint that receives bKash payment notifications. This URL must be accessible from bKash servers and should also be configured in your bKash merchant dashboard.
+              </p>
+            </div>
+
+            {/* Enable Webhook/IPN */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bkashWebhookEnabled}
+                onCheckedChange={(checked) => updateFormValue('BKASH_WEBHOOK_ENABLED', checked ? 'true' : 'false')}
+              />
+              <Label className="font-medium">Enable Webhook/IPN</Label>
+              <p className="text-xs text-muted-foreground ml-auto">
+                Receive instant payment status updates from bKash via Amazon SNS notifications. Always returns 200 to prevent retries.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Last webhook event received */}
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Last Webhook Event Received</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formValues['BKASH_LAST_WEBHOOK_EVENT'] || 'No webhook events received yet'}
+                  </p>
+                </div>
+              </div>
+              <Badge variant={formValues['BKASH_LAST_WEBHOOK_EVENT'] ? 'default' : 'secondary'}>
+                {formValues['BKASH_LAST_WEBHOOK_EVENT'] ? 'Received' : 'None'}
+              </Badge>
+            </div>
+
+            <div className="p-4 rounded-lg bg-green-50 border border-green-200 flex items-start gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-green-800">Webhook Processing</p>
+                <p className="text-xs text-green-700">
+                  The bKash webhook handler processes Amazon SNS SubscriptionConfirmation and payment notification messages. Payment statuses are verified via the bKash API before updating order records. The handler always returns HTTP 200 to prevent bKash retry attempts.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   // SSLCommerz Configuration - Core
   const SSLCommerzCoreConfig = () => (

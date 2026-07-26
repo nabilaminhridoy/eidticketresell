@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useLanguageStore } from '@/lib/store';
 import { useNav } from '@/lib/use-nav';
@@ -8,6 +9,7 @@ import {
   ArrowLeft, Shield, Phone, MapPin, Mail, User, Home,
   CreditCard, Lock, CheckCircle2, Bus, TrainFront, Plane, Ship,
   AlertCircle, Link2, Clock, Copy, ExternalLink,
+  Loader2, Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,8 +37,8 @@ const paymentMethods: {
     labelEn: 'bKash',
     labelBn: 'বিকাশ',
     iconBg: 'bg-pink-500',
-    descriptionEn: 'Pay with your bKash mobile wallet',
-    descriptionBn: 'আপনার বিকাশ মোবাইল ওয়ালেট দিয়ে পেমেন্ট করুন',
+    descriptionEn: 'Pay with bKash tokenized checkout (auto-debit after first setup)',
+    descriptionBn: 'বিকাশ টোকেনাইজড চেকআউট দিয়ে পেমেন্ট করুন (প্রথম সেটআপের পরে স্বয়ংক্রিয়)',
   },
   {
     id: 'sslcommerz',
@@ -87,6 +89,17 @@ interface InvoiceData {
   tran_id: string;
 }
 
+// ─── bKash Payment State ────────────────────────────────────────────
+interface BkashPaymentState {
+  status: 'idle' | 'checking_agreement' | 'creating_agreement' | 'creating_payment' | 'redirecting' | 'success' | 'failed';
+  agreementID: string | null;
+  message: string;
+  trxId?: string;
+  error?: string;
+}
+
+const BKASH_AGREEMENT_KEY = 'bkash_agreement_id';
+
 // ─── Checkout Page Component ────────────────────────────────────────
 export default function CheckoutPage() {
   const { language } = useLanguageStore();
@@ -118,6 +131,22 @@ export default function CheckoutPage() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // ─── bKash payment state ──────────────────────────────────────
+  const [bkashState, setBkashState] = useState<BkashPaymentState>({
+    status: 'idle',
+    agreementID: null,
+    message: '',
+  });
+
+  // ─── Payment result from callback redirect ────────────────────
+  const searchParams = useSearchParams();
+  const paymentStatus = searchParams.get('payment_status');
+  const paymentMethodParam = searchParams.get('payment_method');
+  const trxIdParam = searchParams.get('trxId');
+  const agreementIDParam = searchParams.get('agreementID');
+  const orderIdParam = searchParams.get('orderId');
+  const errorParam = searchParams.get('error');
 
   // ─── Mock ticket data ────────────────────────────────────────
   const ticketInfo = {
@@ -480,6 +509,45 @@ export default function CheckoutPage() {
     }
   }, [paymentMethod]);
 
+  // ─── Handle bKash payment result from callback redirect ──────
+  useEffect(() => {
+    if (paymentStatus && paymentMethodParam === 'bkash') {
+      if (paymentStatus === 'success') {
+        // Save agreementID to localStorage for future use
+        if (agreementIDParam) {
+          localStorage.setItem(BKASH_AGREEMENT_KEY, agreementIDParam);
+        }
+        setBkashState({
+          status: 'success',
+          agreementID: agreementIDParam || null,
+          message: isBn ? 'বিকাশ পেমেন্ট সফল!' : 'bKash payment successful!',
+          trxId: trxIdParam || undefined,
+        });
+      } else if (paymentStatus === 'failed') {
+        // If the error is related to agreement, clear the stored agreementID
+        if (errorParam === 'agreement_cancelled' || errorParam === 'unknown_mode') {
+          localStorage.removeItem(BKASH_AGREEMENT_KEY);
+        }
+        setBkashState({
+          status: 'failed',
+          agreementID: null,
+          message: isBn ? 'বিকাশ পেমেন্ট ব্যর্থ' : 'bKash payment failed',
+          error: errorParam || undefined,
+        });
+      }
+    }
+  }, [paymentStatus, paymentMethodParam, trxIdParam, agreementIDParam, errorParam, isBn]);
+
+  // ─── Load stored bKash agreementID on mount ───────────────────
+  useEffect(() => {
+    if (paymentMethod === 'bkash') {
+      const storedAgreementID = localStorage.getItem(BKASH_AGREEMENT_KEY);
+      if (storedAgreementID) {
+        setBkashState(prev => ({ ...prev, agreementID: storedAgreementID }));
+      }
+    }
+  }, [paymentMethod]);
+
   // ─── Main Submit Handler ─────────────────────────────────────
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -525,16 +593,121 @@ export default function CheckoutPage() {
         // Invoice flow handled by handleCreateInvoice
         setIsSubmitting(false);
       } else if (paymentMethod === 'bkash') {
-        // ─── bKash - simulated for now ──────────────────────
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        navigate('order-successful');
+        // ─── bKash Tokenized Checkout ──────────────────────
+        const storedAgreementID = localStorage.getItem(BKASH_AGREEMENT_KEY);
+        const payerReference = phone; // Use phone number as payer reference
+
+        if (storedAgreementID) {
+          // ── Has existing agreement: check status, then create payment ──
+          setBkashState({ status: 'checking_agreement', agreementID: storedAgreementID, message: isBn ? 'বিকাশ এগ্রিমেন্ট যাচাই হচ্ছে...' : 'Checking bKash agreement...' });
+
+          try {
+            const statusRes = await fetch('/api/payment/bkash/agreement/status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ agreementID: storedAgreementID }),
+            });
+            const statusData = await statusRes.json();
+
+            if (statusData.success && statusData.agreementStatus === 'Completed') {
+              // Agreement is active - create payment
+              setBkashState({ status: 'creating_payment', agreementID: storedAgreementID, message: isBn ? 'বিকাশ পেমেন্ট তৈরি হচ্ছে...' : 'Creating bKash payment...' });
+
+              const payRes = await fetch('/api/payment/bkash/payment/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  orderId: 'DEMO-ORDER',
+                  totalAmount: ticketInfo.total,
+                  currency: 'BDT',
+                  payerReference,
+                  agreementID: storedAgreementID,
+                }),
+              });
+              const payData = await payRes.json();
+
+              if (payData.success && payData.bkashURL) {
+                setBkashState({ status: 'redirecting', agreementID: storedAgreementID, message: isBn ? 'বিকাশে রিডাইরেক্ট হচ্ছে...' : 'Redirecting to bKash...' });
+                window.location.href = payData.bkashURL;
+                return; // Page will redirect, don't set isSubmitting to false
+              } else {
+                // Payment creation failed - maybe agreement is invalid, clear it
+                localStorage.removeItem(BKASH_AGREEMENT_KEY);
+                setBkashState({ status: 'failed', agreementID: null, message: '', error: payData.error || (isBn ? 'পেমেন্ট তৈরি ব্যর্থ' : 'Payment creation failed') });
+                setErrors({ ...errors, payment: payData.error || (isBn ? 'পেমেন্ট তৈরি ব্যর্থ' : 'Payment creation failed') });
+              }
+            } else {
+              // Agreement is not active (Cancelled/expired) - clear and create new
+              localStorage.removeItem(BKASH_AGREEMENT_KEY);
+              setBkashState({ status: 'creating_agreement', agreementID: null, message: isBn ? 'নতুন এগ্রিমেন্ট তৈরি হচ্ছে...' : 'Creating new agreement...' });
+
+              const agrRes = await fetch('/api/payment/bkash/agreement/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  orderId: 'DEMO-ORDER',
+                  totalAmount: ticketInfo.total,
+                  currency: 'BDT',
+                  payerReference,
+                }),
+              });
+              const agrData = await agrRes.json();
+
+              if (agrData.success && agrData.bkashURL) {
+                setBkashState({ status: 'redirecting', agreementID: null, message: isBn ? 'বিকাশে রিডাইরেক্ট হচ্ছে (এগ্রিমেন্ট সেটআপ)...' : 'Redirecting to bKash (agreement setup)...' });
+                window.location.href = agrData.bkashURL;
+                return;
+              } else {
+                setBkashState({ status: 'failed', agreementID: null, message: '', error: agrData.error || (isBn ? 'এগ্রিমেন্ট তৈরি ব্যর্থ' : 'Agreement creation failed') });
+                setErrors({ ...errors, payment: agrData.error || (isBn ? 'এগ্রিমেন্ট তৈরি ব্যর্থ' : 'Agreement creation failed') });
+              }
+            }
+          } catch {
+            localStorage.removeItem(BKASH_AGREEMENT_KEY);
+            setBkashState({ status: 'failed', agreementID: null, message: '', error: isBn ? 'এগ্রিমেন্ট যাচাই ব্যর্থ' : 'Agreement check failed' });
+            setErrors({ ...errors, payment: isBn ? 'এগ্রিমেন্ট যাচাই ব্যর্থ' : 'Agreement check failed' });
+          }
+        } else {
+          // ── No existing agreement: create new agreement ──
+          setBkashState({ status: 'creating_agreement', agreementID: null, message: isBn ? 'বিকাশ এগ্রিমেন্ট তৈরি হচ্ছে...' : 'Creating bKash agreement...' });
+
+          try {
+            const agrRes = await fetch('/api/payment/bkash/agreement/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: 'DEMO-ORDER',
+                totalAmount: ticketInfo.total,
+                currency: 'BDT',
+                payerReference,
+              }),
+            });
+            const agrData = await agrRes.json();
+
+            if (agrData.success && agrData.bkashURL) {
+              setBkashState({ status: 'redirecting', agreementID: null, message: isBn ? 'বিকাশে রিডাইরেক্ট হচ্ছে (এগ্রিমেন্ট সেটআপ)...' : 'Redirecting to bKash (agreement setup)...' });
+              window.location.href = agrData.bkashURL;
+              return;
+            } else {
+              setBkashState({ status: 'failed', agreementID: null, message: '', error: agrData.error || (isBn ? 'এগ্রিমেন্ট তৈরি ব্যর্থ' : 'Agreement creation failed') });
+              setErrors({ ...errors, payment: agrData.error || (isBn ? 'এগ্রিমেন্ট তৈরি ব্যর্থ' : 'Agreement creation failed') });
+            }
+          } catch {
+            setBkashState({ status: 'failed', agreementID: null, message: '', error: isBn ? 'এগ্রিমেন্ট তৈরি ব্যর্থ' : 'Agreement creation failed' });
+            setErrors({ ...errors, payment: isBn ? 'এগ্রিমেন্ট তৈরি ব্যর্থ' : 'Agreement creation failed' });
+          }
+        }
       }
     } catch {
       navigate('order-failed');
     } finally {
-      // Only set false if we didn't redirect (SSLCommerz redirects the whole page)
-      if (paymentMethod !== 'sslcommerz' || errors.payment) {
+      // Only set false if we didn't redirect (SSLCommerz/bKash redirect the whole page)
+      if ((paymentMethod !== 'sslcommerz' && paymentMethod !== 'bkash') || errors.payment) {
         setIsSubmitting(false);
+      }
+      // Also reset bkash state to idle if not redirecting
+      if (paymentMethod === 'bkash' && bkashState.status !== 'redirecting') {
+        setBkashState(prev => ({ ...prev, status: 'idle' }));
       }
     }
   };
@@ -890,6 +1063,159 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </RadioGroup>
+
+                {/* ─── bKash Payment Status (shown when bKash is selected) ─── */}
+                {paymentMethod === 'bkash' && (
+                  <div className="mt-4 space-y-3">
+                    <Separator />
+
+                    {/* bKash Agreement Status Indicator */}
+                    {bkashState.status !== 'idle' && bkashState.status !== 'success' && bkashState.status !== 'failed' && (
+                      <div className="pt-2 p-4 bg-pink-50 dark:bg-pink-900/10 rounded-lg border border-pink-200 dark:border-pink-800/30">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 text-pink-500 animate-spin" />
+                          <span className="text-sm font-medium text-pink-700 dark:text-pink-300">
+                            {bkashState.message}
+                          </span>
+                        </div>
+                        {bkashState.status === 'creating_agreement' && (
+                          <p className="text-xs text-pink-600 dark:text-pink-400 mt-2">
+                            {isBn
+                              ? 'প্রথমবার বিকাশ পেমেন্টের জন্য এগ্রিমেন্ট সেটআপ প্রয়োজন। আপনি বিকাশ পৃষ্ঠায় রিডাইরেক্ট হবেন।'
+                              : 'First-time bKash payment requires an agreement setup. You will be redirected to bKash to authorize.'
+                            }
+                          </p>
+                        )}
+                        {bkashState.status === 'redirecting' && (
+                          <p className="text-xs text-pink-600 dark:text-pink-400 mt-2">
+                            {isBn
+                              ? 'বিকাশ পৃষ্ঠায় যাচ্ছেন, দয়া করে অপেক্ষা করুন...'
+                              : 'Heading to bKash page, please wait...'
+                            }
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* bKash Payment Success Result */}
+                    {bkashState.status === 'success' && (
+                      <div className="pt-2 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-lg border border-emerald-200 dark:border-emerald-800/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="font-semibold text-emerald-800 dark:text-emerald-300 text-sm">
+                            {bkashState.message}
+                          </span>
+                        </div>
+                        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                          {bkashState.trxId && (
+                            <div className="flex justify-between">
+                              <span>{isBn ? 'ট্রানজেকশন আইডি' : 'Transaction ID'}</span>
+                              <span className="font-medium text-emerald-700 dark:text-emerald-400">{bkashState.trxId}</span>
+                            </div>
+                          )}
+                          {bkashState.agreementID && (
+                            <div className="flex justify-between">
+                              <span>{isBn ? 'এগ্রিমেন্ট আইডি' : 'Agreement ID'}</span>
+                              <span className="font-medium text-emerald-700 dark:text-emerald-400">{bkashState.agreementID}</span>
+                            </div>
+                          )}
+                          {orderIdParam && (
+                            <div className="flex justify-between">
+                              <span>{isBn ? 'অর্ডার আইডি' : 'Order ID'}</span>
+                              <span className="font-medium text-emerald-700 dark:text-emerald-400">{orderIdParam}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span>{isBn ? 'মোট পরিমাণ' : 'Total Amount'}</span>
+                            <span className="font-medium">৳ {ticketInfo.total}</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full mt-3 flex items-center gap-2"
+                          onClick={() => navigate('order-successful')}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          {isBn ? 'অর্ডার সফল পৃষ্ঠায় যান' : 'Go to Order Success Page'}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* bKash Payment Failure Result */}
+                    {bkashState.status === 'failed' && (
+                      <div className="pt-2 p-4 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                          <span className="font-semibold text-red-800 dark:text-red-300 text-sm">
+                            {bkashState.message}
+                          </span>
+                        </div>
+                        {bkashState.error && (
+                          <p className="text-xs text-red-700 dark:text-red-400 mt-1">
+                            {isBn ? `ত্রুটি: ${bkashState.error}` : `Error: ${bkashState.error}`}
+                          </p>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-3"
+                          onClick={() => {
+                            setBkashState({ status: 'idle', agreementID: null, message: '' });
+                            localStorage.removeItem(BKASH_AGREEMENT_KEY);
+                          }}
+                        >
+                          {isBn ? 'আবার চেষ্টা করুন' : 'Try Again'}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* bKash Agreement Info for first-time users */}
+                    {bkashState.status === 'idle' && (
+                      <div className="pt-2">
+                        {bkashState.agreementID ? (
+                          // Has an existing agreement
+                          <div className="p-3 bg-pink-50 dark:bg-pink-900/10 rounded-lg border border-pink-200 dark:border-pink-800/30">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Wallet className="h-4 w-4 text-pink-500" />
+                              <span className="text-sm font-medium text-pink-700 dark:text-pink-300">
+                                {isBn ? 'বিকাশ এগ্রিমেন্ট সক্রিয়' : 'bKash Agreement Active'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-pink-600 dark:text-pink-400">
+                              {isBn
+                                ? 'আপনার বিকাশ এগ্রিমেন্ট আগেই সেটআপ করা হয়েছে। পেমেন্ট করতে "বিকাশ দিয়ে পেমেন্ট করুন" বোতাম ক্লিক করুন।'
+                                : 'Your bKash agreement is already set up. Click "Pay with bKash" to proceed with payment.'
+                              }
+                            </p>
+                          </div>
+                        ) : (
+                          // No agreement yet - show info for first-time setup
+                          <div className="p-3 bg-pink-50 dark:bg-pink-900/10 rounded-lg border border-pink-200 dark:border-pink-800/30">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Wallet className="h-4 w-4 text-pink-500" />
+                              <span className="text-sm font-medium text-pink-700 dark:text-pink-300">
+                                {isBn ? 'প্রথমবার বিকাশ সেটআপ' : 'First-time bKash Setup'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-pink-600 dark:text-pink-400">
+                              {isBn
+                                ? 'প্রথমবার বিকাশ পেমেন্টের জন্য এগ্রিমেন্ট সেটআপ প্রয়োজন। আপনি বিকাশ পৃষ্ঠায় রিডাইরেক্ট হবেন এবং একবার অনুমোদন করলে পরবর্তী পেমেন্ট স্বয়ংক্রিয় হবে।'
+                                : 'First-time bKash payment requires an agreement setup. You will be redirected to bKash to authorize. Once authorized, future payments will be automatic.'
+                              }
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {isBn
+                                ? `মোট: ৳ ${ticketInfo.total} (BDT)`
+                                : `Total: ৳ ${ticketInfo.total} (BDT)`
+                              }
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* ─── Google Pay Button (shown when Google Pay is selected) ─── */}
                 {paymentMethod === 'googlepay' && (

@@ -14,9 +14,10 @@ import { db } from '@/lib/db';
  * - REF- → Refund records
  * - DSP- → Dispute records
  * - SUP- → Support Ticket records
+ * - BKASH- → bKash Transaction records
  */
 
-type IdPrefix = 'KYC' | 'ETR' | 'ORD' | 'TXN' | 'WLT' | 'WDR' | 'PAY' | 'REF' | 'DSP' | 'SUP';
+type IdPrefix = 'KYC' | 'ETR' | 'ORD' | 'TXN' | 'WLT' | 'WDR' | 'PAY' | 'REF' | 'DSP' | 'SUP' | 'BKASH';
 
 const PREFIX_COUNTER_NAMES: Record<IdPrefix, string> = {
   KYC: 'kyc_seq',
@@ -29,6 +30,7 @@ const PREFIX_COUNTER_NAMES: Record<IdPrefix, string> = {
   REF: 'ref_seq',
   DSP: 'dsp_seq',
   SUP: 'sup_seq',
+  BKASH: 'bkash_seq',
 };
 
 /**
