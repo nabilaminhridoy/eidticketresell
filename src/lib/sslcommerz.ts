@@ -992,11 +992,10 @@ export class SSLCommerz {
       .map((field) => ipnData[field] || '')
       .join('') + this.storePasswd;
 
-    // MD5 hash the concatenated string
-    // nosem: js/hashes/insufficient-computational-effort — MD5 is required by SSLCommerz IPN verification specification
-    // The store password is an API credential, not a user password; MD5 is the mandated hash algorithm
+    // MD5 hash the concatenated string — MD5 is required by SSLCommerz IPN verification specification.
+    // The store password is an API credential, not a user password; MD5 is the mandated hash algorithm per SSLCommerz docs.
     const computedHash = crypto
-      .createHash('md5')
+      .createHash('md5') // nosem: js/hashes/insufficient-computational-effort
       .update(concatenatedValues)
       .digest('hex');
 
