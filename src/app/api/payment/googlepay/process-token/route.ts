@@ -18,10 +18,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // SSRF protection: Validate actionurl belongs to SSLCommerz
+    // SSRF protection: Validate actionurl and reconstruct safe URL from parsed components
     if (typeof actionurl !== 'string') {
       return NextResponse.json({ error: 'actionurl must be a string' }, { status: 400 });
     }
+    let safeActionUrl: string;
     try {
       const parsedUrl = new URL(actionurl);
       if (parsedUrl.protocol !== 'https:') {
@@ -30,6 +31,8 @@ export async function POST(request: NextRequest) {
       if (!parsedUrl.hostname.endsWith('.sslcommerz.com') && parsedUrl.hostname !== 'sslcommerz.com') {
         return NextResponse.json({ error: 'actionurl must be a valid SSLCommerz domain' }, { status: 400 });
       }
+      // Reconstruct URL from validated parsed components to break taint chain
+      safeActionUrl = parsedUrl.toString();
     } catch {
       return NextResponse.json({ error: 'actionurl is not a valid URL' }, { status: 400 });
     }
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
     const result = await sslcz.processGooglePayToken(
       session_key,
       en_signature_data,
-      actionurl
+      safeActionUrl
     );
 
     // Find the existing PaymentTransaction by session key

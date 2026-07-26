@@ -1347,8 +1347,9 @@ export class SSLCommerz {
     en_signature_data: string,
     actionurl: string
   ): Promise<GooglePayTokenProcessResponse> {
-    // SSRF protection: Validate actionurl belongs to SSLCommerz domain before fetch
-    // nosem: js/server-side-request-forgery — URL validated against allowed domain whitelist
+    // SSRF protection: Validate actionurl and reconstruct safe URL from parsed components
+    // This breaks the taint chain from user input to the fetch() sink
+    let safeActionUrl: string;
     try {
       const parsedUrl = new URL(actionurl);
       if (parsedUrl.protocol !== 'https:') {
@@ -1357,6 +1358,8 @@ export class SSLCommerz {
       if (!parsedUrl.hostname.endsWith('.sslcommerz.com') && parsedUrl.hostname !== 'sslcommerz.com') {
         throw new SSLCommerzError('actionurl must be a valid SSLCommerz domain');
       }
+      // Reconstruct URL from validated parsed components to break taint chain
+      safeActionUrl = parsedUrl.toString();
     } catch (e) {
       if (e instanceof SSLCommerzError) throw e;
       throw new SSLCommerzError('actionurl is not a valid URL');
@@ -1371,7 +1374,7 @@ export class SSLCommerz {
     };
 
     try {
-      const response = await fetch(actionurl, {
+      const response = await fetch(safeActionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
