@@ -6,7 +6,7 @@ import { useAppStore, useAuthStore } from '@/lib/store';
 import { useNav } from '@/lib/use-nav';
 import { useLanguageStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM, TICKET_STATUS, BUS_CLASSES, COURIER_COMPANIES, DELIVERY_SPEEDS, formatDepartureDate, formatDepartureTime } from '@/lib/constants';
+import { TICKET_STATUS, BUS_CLASSES, COURIER_COMPANIES, DELIVERY_SPEEDS, formatDepartureDate, formatDepartureTime, ONLINE_COPY_PLATFORM_FEE_PERCENTAGE, COUNTER_COPY_PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -123,6 +123,29 @@ export default function TicketDetailsPage({ ticketId }: TicketDetailsPageProps =
   const [order, setOrder] = useState<OrderData | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
+  // ─── Fetch platform fees from admin settings ────────────────
+  const [feeSettings, setFeeSettings] = useState({
+    onlineFee: ONLINE_COPY_PLATFORM_FEE_PERCENTAGE,
+    counterFee: COUNTER_COPY_PLATFORM_FEE_PERCENTAGE,
+    minimumFee: PLATFORM_FEE_MINIMUM,
+  });
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(d => {
+        const feesGroup = d.settings?.fees || d.settings?.payments || {};
+        if (feesGroup.platform_fee_online) {
+          setFeeSettings({
+            onlineFee: parseFloat(feesGroup.platform_fee_online || String(ONLINE_COPY_PLATFORM_FEE_PERCENTAGE)),
+            counterFee: parseFloat(feesGroup.platform_fee_counter || String(COUNTER_COPY_PLATFORM_FEE_PERCENTAGE)),
+            minimumFee: parseFloat(feesGroup.platform_fee_minimum || String(PLATFORM_FEE_MINIMUM)),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // ─── Fetch ticket ────────────────────────────────────
   const fetchTicket = useCallback(async () => {
     if (!resolvedTicketId) return;
@@ -146,8 +169,9 @@ export default function TicketDetailsPage({ ticketId }: TicketDetailsPageProps =
   }, [fetchTicket]);
 
   // ─── Calculate fees ──────────────────────────────────
+  const feePercentage = ticket?.ticketType === 'online_copy' ? feeSettings.onlineFee : feeSettings.counterFee;
   const platformFee = ticket
-    ? Math.max(Math.round(ticket.price * PLATFORM_FEE_PERCENTAGE / 100), PLATFORM_FEE_MINIMUM)
+    ? Math.max(Math.round(ticket.price * feePercentage / 100), feeSettings.minimumFee)
     : 0;
 
   const isOnlineCopy = ticket?.ticketType === 'online_copy';
@@ -327,7 +351,7 @@ export default function TicketDetailsPage({ ticketId }: TicketDetailsPageProps =
                     <span>{t('bdt', language)}{ticket.price}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{t('platformFee', language)} ({PLATFORM_FEE_PERCENTAGE}%)</span>
+                    <span>{t('platformFee', language)} ({feePercentage}%)</span>
                     <span>{t('bdt', language)}{platformFee}</span>
                   </div>
                   <Separator />
@@ -984,7 +1008,7 @@ export default function TicketDetailsPage({ ticketId }: TicketDetailsPageProps =
                     <span className="font-medium">{t('bdt', language)}{ticket.price}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{t('platformFee', language)} ({PLATFORM_FEE_PERCENTAGE}%)</span>
+                    <span>{t('platformFee', language)} ({feePercentage}%)</span>
                     <span>{t('bdt', language)}{platformFee}</span>
                   </div>
                 </div>
@@ -1082,7 +1106,7 @@ export default function TicketDetailsPage({ ticketId }: TicketDetailsPageProps =
                             <span>{t('bdt', language)}{ticket.price}</span>
                           </div>
                           <div className="flex justify-between text-muted-foreground">
-                            <span>{t('platformFee', language)} ({PLATFORM_FEE_PERCENTAGE}%)</span>
+                            <span>{t('platformFee', language)} ({feePercentage}%)</span>
                             <span>{t('bdt', language)}{platformFee}</span>
                           </div>
                           <Separator />

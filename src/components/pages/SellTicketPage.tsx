@@ -12,9 +12,12 @@ import {
   DELIVERY_SPEEDS,
   DECK_REQUIRED_CLASSES,
   TRANSPORT_TYPES,
-  PLATFORM_FEE_PERCENTAGE,
-  PLATFORM_FEE_MINIMUM,
 } from '@/lib/constants';
+
+// Default fees (fallback if settings API fails)
+const DEFAULT_ONLINE_FEE = 2;
+const DEFAULT_COUNTER_FEE = 3;
+const DEFAULT_MINIMUM_FEE = 20;
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -291,14 +294,38 @@ export default function SellTicketPage() {
     })();
   }, [isAuthenticated, token, updateUser]);
 
+  // Fetch platform fees from admin settings
+  const [feeSettings, setFeeSettings] = useState({
+    onlineFee: DEFAULT_ONLINE_FEE,
+    counterFee: DEFAULT_COUNTER_FEE,
+    minimumFee: DEFAULT_MINIMUM_FEE,
+  });
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(d => {
+        if (d.settings?.payments || d.settings?.fees) {
+          const feesGroup = d.settings?.payments || d.settings?.fees || {};
+          setFeeSettings({
+            onlineFee: parseFloat(feesGroup.platform_fee_online || String(DEFAULT_ONLINE_FEE)),
+            counterFee: parseFloat(feesGroup.platform_fee_counter || String(DEFAULT_COUNTER_FEE)),
+            minimumFee: parseFloat(feesGroup.platform_fee_minimum || String(DEFAULT_MINIMUM_FEE)),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   /* ---- derived ---- */
+  const isCounterCopy = form.ticketType === 'counter_copy';
+  const feePercentage = isCounterCopy ? feeSettings.counterFee : feeSettings.onlineFee;
+
   const platformFee = useMemo(() => {
     const sp = parseFloat(form.sellingPrice);
     if (!sp || sp <= 0) return 0;
-    return Math.max(PLATFORM_FEE_MINIMUM, Math.round(sp * (PLATFORM_FEE_PERCENTAGE / 100)));
-  }, [form.sellingPrice]);
-
-  const isCounterCopy = form.ticketType === 'counter_copy';
+    return Math.max(feeSettings.minimumFee, Math.round(sp * (feePercentage / 100)));
+  }, [form.sellingPrice, feeSettings.minimumFee, feePercentage]);
 
   const sellerReceives = useMemo(() => {
     const sp = parseFloat(form.sellingPrice);
@@ -825,7 +852,7 @@ export default function SellTicketPage() {
               <span className="font-semibold">৳{form.sellingPrice ? parseFloat(form.sellingPrice).toLocaleString() : '0'}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className={`text-muted-foreground ${fontClass}`}>{t('platformFee', language)} {PLATFORM_FEE_PERCENTAGE}% ({isBn ? `সর্বনিম্ন ৳${PLATFORM_FEE_MINIMUM}` : `min ৳${PLATFORM_FEE_MINIMUM}`})</span>
+              <span className={`text-muted-foreground ${fontClass}`}>{t('platformFee', language)} {feePercentage}% ({isBn ? `সর্বনিম্ন ৳${feeSettings.minimumFee}` : `min ৳${feeSettings.minimumFee}`})</span>
               <span className="text-amber-600 dark:text-amber-400 font-medium">-৳{platformFee.toLocaleString()}</span>
             </div>
             <Separator />
@@ -1426,7 +1453,7 @@ export default function SellTicketPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className={`text-sm text-muted-foreground ${fontClass}`}>
-                    {t('platformFee', language)} {PLATFORM_FEE_PERCENTAGE}% ({isBn ? `সর্বনিম্ন ৳${PLATFORM_FEE_MINIMUM}` : `min ৳${PLATFORM_FEE_MINIMUM}`})
+                    {t('platformFee', language)} {feePercentage}% ({isBn ? `সর্বনিম্ন ৳${feeSettings.minimumFee}` : `min ৳${feeSettings.minimumFee}`})
                   </span>
                   <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
                     -৳{platformFee.toLocaleString()}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyToken, generateTicketId } from '@/lib/auth';
-import { PLATFORM_FEE_PERCENTAGE, PLATFORM_FEE_MINIMUM } from '@/lib/constants';
+import { getPlatformFees } from '@/lib/platform-fees';
 
 export async function GET(req: NextRequest) {
   try {
@@ -205,8 +205,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Please confirm the ticket information checkboxes' }, { status: 400 });
     }
 
-    // Calculate platform fee
-    const calculatedFee = Math.max(PLATFORM_FEE_MINIMUM, Math.round(price * (PLATFORM_FEE_PERCENTAGE / 100)));
+    // Calculate platform fee — uses admin-configured percentages from DB
+    const fees = await getPlatformFees();
+    const feePercentage = ticketType === 'online_copy' ? fees.onlineFee : fees.counterFee;
+    const calculatedFee = Math.max(fees.minimumFee, Math.round(price * (feePercentage / 100)));
     const totalAmount = price + calculatedFee;
 
     // Generate ticket ID
