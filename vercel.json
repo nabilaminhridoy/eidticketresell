@@ -1,6 +1,6 @@
 {
-  "buildCommand": "next build",
-  "installCommand": "bun install && bun run postinstall",
+  "buildCommand": "npx prisma db push --accept-data-loss && npm run build",
+  "installCommand": "npm ci && npm run postinstall",
   "framework": "nextjs",
   "regions": ["iad1"]
 }
