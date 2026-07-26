@@ -19,7 +19,7 @@ import {
   // Sidebar chrome (logo, toggles)
   Menu, ChevronLeft, ChevronDown,
   // Header icons
-  Bell, LogOut, LogIn, User, X,
+  Bell, LogOut, LogIn, User, X, CheckCircle,
   // Profile page icons
   Camera, Save, Eye, EyeOff, History,
 } from 'lucide-react';
@@ -35,7 +35,7 @@ const iconMap: Record<string, LucideIcon> = {
   Star, ScanLine, ClipboardCheck, BookOpen, HelpCircle, FileText, Home,
   Megaphone, PenTool, Search, FileBarChart2, Image, Settings, Globe,
   Mail, Smartphone, Shield, Key, UserCog, Scale, Database, HardDrive,
-  Clock4, Menu, ChevronLeft, ChevronDown, Bell, LogOut, LogIn, User, X,
+  Clock4, Menu, ChevronLeft, ChevronDown, Bell, LogOut, LogIn, User, X, CheckCircle,
   Camera, Save, Eye, EyeOff, History,
 };
 

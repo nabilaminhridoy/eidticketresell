@@ -15,6 +15,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   User, Lock, Shield, Bell, Clock, Camera, Save, Loader2,
   CheckCircle, AlertCircle, Key, Eye, EyeOff, History, Smartphone,
+  ExternalLink, Link2, Unlink,
 } from 'lucide-react';
 
 interface AdminProfile {
@@ -71,6 +72,142 @@ function getActionIcon(action: string) {
 }
 
 export default function AdminProfilePage() {
+
+  // ─── Frontend Account Link sub-component ───
+  function FrontendAccountLink({ username: currentUsername }: { username: string }) {
+    const [linkedStatus, setLinkedStatus] = useState<{
+      linked: boolean;
+      hasUsername: boolean;
+      user?: { id: string; username: string; name: string; isActive: boolean; role: string };
+      username?: string;
+    } | null>(null);
+    const [checking, setChecking] = useState(false);
+    const [linking, setLinking] = useState(false);
+    const [linkMsg, setLinkMsg] = useState<{ success: boolean; text: string } | null>(null);
+
+    const checkLink = async () => {
+      setChecking(true);
+      try {
+        const res = await fetch('/api/admin/link-user', { headers: getAuthHeaders() });
+        const data = await res.json();
+        setLinkedStatus(data);
+      } catch { setLinkedStatus(null); }
+      setChecking(false);
+    };
+
+    const handleLink = async () => {
+      if (!currentUsername) return;
+      setLinking(true);
+      setLinkMsg(null);
+      try {
+        const res = await fetch('/api/admin/link-user', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ action: 'link' }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setLinkMsg({ success: true, text: data.message });
+          await checkLink();
+        } else {
+          setLinkMsg({ success: false, text: data.error });
+        }
+      } catch {
+        setLinkMsg({ success: false, text: 'Network error' });
+      }
+      setLinking(false);
+    };
+
+    const handleUnlink = async () => {
+      setLinking(true);
+      setLinkMsg(null);
+      try {
+        const res = await fetch('/api/admin/link-user', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ action: 'unlink' }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setLinkMsg({ success: true, text: data.message });
+          await checkLink();
+        } else {
+          setLinkMsg({ success: false, text: data.error });
+        }
+      } catch {
+        setLinkMsg({ success: false, text: 'Network error' });
+      }
+      setLinking(false);
+    };
+
+    useEffect(() => { checkLink(); }, []);
+
+    return (
+      <Card className="border-blue-200 dark:border-blue-900">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <ExternalLink className="w-5 h-5 text-blue-500" />
+            <p className="font-medium">Frontend Account (Sell & Buy Tickets)</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            As an admin, you can also sell and buy tickets on the frontend website like a regular user.
+            Your admin identity is completely hidden — other users only see your username.
+            Set a username above and link it to create your frontend account.
+          </p>
+
+          {checking ? (
+            <div className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm text-muted-foreground">Checking...</span></div>
+          ) : linkedStatus ? (
+            <>
+              {!linkedStatus.hasUsername ? (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
+                  <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">⚠ Set a username first</p>
+                  <p className="text-xs text-muted-foreground">Enter a username in the profile form above to create your frontend account.</p>
+                </div>
+              ) : linkedStatus.linked ? (
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">✓ Frontend account linked</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Badge variant="outline">@{linkedStatus.user?.username}</Badge>
+                    <span className="text-muted-foreground">{linkedStatus.user?.isActive ? 'Active' : 'Inactive'}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Your username <strong>@{linkedStatus.user?.username}</strong> is what other users see. Your admin role is hidden.</p>
+                  <div className="flex gap-2 mt-2">
+                    <a href={`/en/${linkedStatus.user?.username}`} target="_blank" className="text-xs text-primary hover:underline flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" />View on frontend
+                    </a>
+                    <Button variant="outline" size="sm" onClick={handleUnlink} disabled={linking} className="gap-1 text-red-600">
+                      <Unlink className="w-3.5 h-3.5" />Deactivate frontend account
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 space-y-2">
+                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Link your frontend account</p>
+                  <p className="text-xs text-muted-foreground">Username: <strong>@{linkedStatus.username || currentUsername}</strong> — click below to create your frontend user account.</p>
+                  <Button size="sm" onClick={handleLink} disabled={linking || !currentUsername} className="gap-1">
+                    {linking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                    Create Frontend Account
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Could not check link status</p>
+          )}
+
+          {linkMsg && (
+            <p className={`text-sm ${linkMsg.success ? 'text-green-600' : 'text-red-600'}`}>{linkMsg.text}</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [notifications, setNotifications] = useState<Record<string, boolean>>({
     email_login: true, email_order: true, email_ticket: true,
@@ -406,6 +543,11 @@ export default function AdminProfilePage() {
                 <Badge variant="outline">{profile?.role || 'admin'}</Badge>
                 <span className="text-sm text-muted-foreground">Role (cannot be changed from profile page)</span>
               </div>
+
+              <Separator />
+
+              {/* Frontend Account Link */}
+              <FrontendAccountLink username={formUsername} />
 
               {/* Save button */}
               {error && <p className="text-sm text-red-600">{error}</p>}

@@ -147,24 +147,95 @@ export default function CheckoutPage() {
   const agreementIDParam = searchParams.get('agreementID');
   const orderIdParam = searchParams.get('orderId');
   const errorParam = searchParams.get('error');
+  const ticketIdParam = searchParams.get('ticketId');
 
-  // ─── Mock ticket data ────────────────────────────────────────
-  const ticketInfo = {
+  // ─── Ticket data from URL params or API ─────────────────────────
+  const [ticketLoading, setTicketLoading] = useState(true);
+  const [ticketData, setTicketData] = useState<{
+    id: string;
+    transportType: string;
+    operator: string;
+    from: string;
+    to: string;
+    date: string;
+    time: string;
+    seat: string;
+    seatClass: string;
+    price: number;
+    fee: number;
+    total: number;
+  } | null>(null);
+
+  // Fetch ticket data from API when ticketId is provided
+  useEffect(() => {
+    if (ticketIdParam) {
+      const token = localStorage.getItem('etr_token') || localStorage.getItem('etr_admin_token');
+      fetch(`/api/tickets/${ticketIdParam}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ticket) {
+            const t = data.ticket;
+            const isOnline = t.ticketType === 'online_copy';
+            const fee = isOnline ? t.platformFee : t.platformFee;
+            const total = isOnline ? t.price + fee : fee;
+            setTicketData({
+              id: t.id,
+              transportType: t.transportType || 'bus',
+              operator: t.transportCompany || 'Unknown',
+              from: t.routeFrom || 'Unknown',
+              to: t.routeTo || 'Unknown',
+              date: t.departureDate || '',
+              time: t.departureTime || '',
+              seat: t.seatNumber || 'N/A',
+              seatClass: t.seatClass || 'Standard',
+              price: t.price || 0,
+              fee: fee,
+              total: total,
+            });
+          }
+          setTicketLoading(false);
+        })
+        .catch(() => setTicketLoading(false));
+    } else {
+      setTicketLoading(false);
+    }
+  }, [ticketIdParam]);
+
+  // Fallback to defaults if no ticket data - same field naming as original
+  const ticketInfo = ticketData ? {
+    transportType: ticketData.transportType,
+    operatorEn: ticketData.operator,
+    operatorBn: ticketData.operator,
+    fromEn: ticketData.from,
+    fromBn: ticketData.from,
+    toEn: ticketData.to,
+    toBn: ticketData.to,
+    date: ticketData.date,
+    time: ticketData.time,
+    seat: ticketData.seat,
+    classEn: ticketData.seatClass,
+    classBn: ticketData.seatClass,
+    price: ticketData.price,
+    fee: ticketData.fee,
+    total: ticketData.total,
+  } : {
     transportType: 'bus',
-    operatorEn: 'Green Line Paribahan',
-    operatorBn: 'গ্রিন লাইন পরিবাহন',
-    fromEn: 'Dhaka',
-    fromBn: 'ঢাকা',
-    toEn: 'Chittigong',
-    toBn: 'চট্টগ্রাম',
-    date: '2025-03-28',
-    time: '22:00',
-    seat: 'A1',
-    classEn: 'AC Business',
-    classBn: 'এসি বিজনেস',
-    price: 850,
-    fee: 17,
-    total: 867,
+    operatorEn: 'Unknown',
+    operatorBn: 'Unknown',
+    fromEn: 'Unknown',
+    fromBn: 'Unknown',
+    toEn: 'Unknown',
+    toBn: 'Unknown',
+    date: '',
+    time: '',
+    seat: 'N/A',
+    classEn: 'Standard',
+    classBn: 'Standard',
+    price: 0,
+    fee: 0,
+    total: 0,
   };
 
   const transportIconMap: Record<string, React.ElementType> = {
@@ -554,6 +625,33 @@ export default function CheckoutPage() {
 
     setIsSubmitting(true);
 
+    // First create the order if we have a ticketId
+    let orderId = '';
+    if (ticketIdParam) {
+      const token = localStorage.getItem('etr_token') || localStorage.getItem('etr_admin_token');
+      try {
+        const orderRes = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ ticketId: ticketIdParam }),
+        });
+        const orderData = await orderRes.json();
+        if (!orderRes.ok) {
+          setErrors({ ...errors, payment: orderData.error || (isBn ? 'অর্ডার তৈরি ব্যর্থ' : 'Order creation failed') });
+          setIsSubmitting(false);
+          return;
+        }
+        orderId = orderData.order?.orderId || orderData.order?.id || '';
+      } catch {
+        setErrors({ ...errors, payment: isBn ? 'অর্ডার তৈরি ব্যর্থ' : 'Order creation failed' });
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     try {
       if (paymentMethod === 'sslcommerz') {
         // ─── SSLCommerz Hosted Payment (Redirect) ──────────
@@ -748,6 +846,34 @@ export default function CheckoutPage() {
   const buttonConfig = getButtonConfig();
 
   // ─── Render ──────────────────────────────────────────────────
+  // Show loading state while fetching ticket data
+  if (ticketLoading) {
+    return (
+      <div className={`min-h-screen bg-background flex items-center justify-center ${fontClass}`}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">{isBn ? 'টিকেট তথ্য লোড হচ্ছে...' : 'Loading ticket info...'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no ticket data and no ticketId param
+  if (!ticketData && !ticketIdParam) {
+    return (
+      <div className={`min-h-screen bg-background flex items-center justify-center ${fontClass}`}>
+        <div className="flex flex-col items-center gap-3 max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500" />
+          <p className="text-lg font-medium">{isBn ? 'কোন টিকেট নির্বাচন করা হয়নি' : 'No ticket selected'}</p>
+          <p className="text-sm text-muted-foreground">{isBn ? 'প্রথমে একটি টিকেট নির্বাচন করুন তারপর চেকআউট করুন' : 'Please select a ticket first, then proceed to checkout'}</p>
+          <Button variant="outline" onClick={() => window.location.href = `/${isBn ? 'bn' : 'en'}/buy-tickets`}>
+            {isBn ? 'টিকেট খুঁজুন' : 'Find Tickets'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-background ${fontClass}`}>
       {/* ─── Header ─────────────────────────────────── */}

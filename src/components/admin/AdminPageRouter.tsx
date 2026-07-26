@@ -41,6 +41,7 @@ const AdminAdminsPage = lazy(() => import('./AdminAdminsPage'));
 const AdminRolesPage = lazy(() => import('./AdminRolesPage'));
 const AdminSystemPage = lazy(() => import('./AdminSystemPage'));
 const AdminProfilePage = lazy(() => import('./AdminProfilePage'));
+const AdminSupportTicketsPage = lazy(() => import('./AdminSupportTicketsPage'));
 
 function Loader() {
   return (
@@ -69,6 +70,7 @@ interface RouteConfig {
 const routeConfig: Record<string, RouteConfig> = {
   '':               { component: AdminDashboard },
   'profile':        { component: AdminProfilePage },
+  'support-tickets': { component: AdminSupportTicketsPage },
   'dashboard':      { component: AdminDashboard },
   'analytics':      { component: AdminAnalyticsPage },
   'activity-log':   { component: AdminActivityLogPage },

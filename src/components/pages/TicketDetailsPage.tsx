@@ -188,27 +188,9 @@ export default function TicketDetailsPage({ ticketId }: TicketDetailsPageProps =
       navigate('login');
       return;
     }
-    setBuying(true);
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ticketId: ticket?.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || (isBn ? 'কেনাকাটা ব্যর্থ হয়েছে' : 'Purchase failed'));
-
-      setOrder(data.order);
-      setHasPaid(true);
-      setShowConfirmDialog(false);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : (isBn ? 'ত্রুটি হয়েছে' : 'An error occurred'));
-    } finally {
-      setBuying(false);
-    }
+    // Navigate to checkout page with ticket ID
+    // Checkout flow: Buy Ticket → Ticket Page → Checkout
+    navigate('checkout', { ticketId: ticket?.id || '' });
   };
 
   // ─── Status badge config ─────────────────────────────

@@ -64,7 +64,7 @@ export function getPagePath(lang: Language, page: string, params?: Record<string
     case 'verify-ticket':
       return `/${lang}/verify-ticket`;
     case 'checkout':
-      return `/${lang}/checkout`;
+      return p.ticketId ? `/${lang}/checkout?ticketId=${p.ticketId}` : `/${lang}/checkout`;
     case 'order-successful':
       return `/${lang}/order/successful`;
     case 'order-cancelled':

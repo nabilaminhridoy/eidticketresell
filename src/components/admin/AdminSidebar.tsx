@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { iconMap } from './admin-icons';
 import type { LucideIcon } from 'lucide-react';
@@ -25,7 +26,6 @@ const sidebarSections: SidebarSection[] = [
     title: 'DASHBOARD',
     items: [
       { label: 'Dashboard', icon: iconMap.LayoutDashboard, path: '/admin' },
-      { label: 'My Profile', icon: iconMap.User, path: '/admin/profile' },
       { label: 'Analytics', icon: iconMap.BarChart3, path: '/admin/analytics' },
       { label: 'Activity Log', icon: iconMap.Activity, path: '/admin/activity-log' },
     ],
@@ -45,6 +45,7 @@ const sidebarSections: SidebarSection[] = [
       { label: 'Reviews', icon: iconMap.Star, path: '/admin/reviews' },
       { label: 'Ticket Verify', icon: iconMap.ScanLine, path: '/admin/verify-ticket' },
       { label: 'Journey Verify', icon: iconMap.ClipboardCheck, path: '/admin/journey-verify' },
+      { label: 'Support Tickets', icon: iconMap.HelpCircle, path: '/admin/support-tickets' },
     ],
   },
   {
@@ -117,12 +118,14 @@ export default function AdminSidebar({ collapsed, onToggle }: { collapsed: boole
     <aside className={`fixed top-0 left-0 h-full bg-card border-r border-border z-50 transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'} overflow-y-auto`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border h-16">
-        {!collapsed && (
+        {!collapsed ? (
           <Link href="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <iconMap.Ticket className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <Image src="/logo-en.svg" alt="ETR Admin" width={28} height={28} className="w-7 h-7" priority />
             <span className="font-bold text-sm">ETR Admin</span>
+          </Link>
+        ) : (
+          <Link href="/admin">
+            <Image src="/logo-en.svg" alt="ETR" width={24} height={24} className="w-6 h-6" priority />
           </Link>
         )}
         <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
