@@ -18,6 +18,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SSRF protection: Validate actionurl belongs to SSLCommerz
+    if (typeof actionurl !== 'string') {
+      return NextResponse.json({ error: 'actionurl must be a string' }, { status: 400 });
+    }
+    try {
+      const parsedUrl = new URL(actionurl);
+      if (parsedUrl.protocol !== 'https:') {
+        return NextResponse.json({ error: 'actionurl must use HTTPS' }, { status: 400 });
+      }
+      if (!parsedUrl.hostname.endsWith('.sslcommerz.com') && parsedUrl.hostname !== 'sslcommerz.com') {
+        return NextResponse.json({ error: 'actionurl must be a valid SSLCommerz domain' }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: 'actionurl is not a valid URL' }, { status: 400 });
+    }
+
     const sslcz = createSSLCommerz(
       process.env.SSLCOMMERZ_STORE_ID!,
       process.env.SSLCOMMERZ_STORE_PASSWORD!,

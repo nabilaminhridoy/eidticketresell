@@ -18,8 +18,21 @@ export async function POST(req: NextRequest) {
       if (!email) {
         return NextResponse.json({ error: 'Email is required' }, { status: 400 });
       }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
+      // Limit input length to prevent ReDoS attacks on regex
+      if (typeof email !== 'string' || email.length > 254) {
+        return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+      }
+      // Use simple string-based email validation (avoids polynomial regex on uncontrolled data)
+      const atIdx = email.indexOf('@');
+      const lastAtIdx = email.lastIndexOf('@');
+      if (atIdx === -1 || atIdx !== lastAtIdx || atIdx === 0 || atIdx === email.length - 1) {
+        return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+      }
+      const domain = email.slice(atIdx + 1);
+      if (!domain.includes('.') || domain.startsWith('.') || domain.endsWith('.')) {
+        return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+      }
+      if (email.includes(' ') || email.includes('\t')) {
         return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
       }
 

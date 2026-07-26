@@ -19,9 +19,11 @@ async function authenticateAdmin(req: NextRequest) {
 }
 
 function slugify(text: string): string {
-  return text
+  // Limit input length to prevent polynomial regex on uncontrolled data
+  const truncated = typeof text === 'string' && text.length > 200 ? text.slice(0, 200) : String(text);
+  return truncated
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
     .replace(/[\s_]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }

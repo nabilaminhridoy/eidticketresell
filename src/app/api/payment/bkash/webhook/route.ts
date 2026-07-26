@@ -27,10 +27,16 @@ export async function POST(request: NextRequest) {
       // Confirm the subscription by visiting the SubscribeURL
       // In production, you would fetch the SubscribeURL to confirm
       // For now, log it for manual confirmation or auto-confirm
+      // SSRF protection: Validate SubscribeURL belongs to Amazon SNS
       try {
-        if (body.SubscribeURL) {
-          const confirmResponse = await fetch(body.SubscribeURL);
-          console.log('SNS subscription confirmed:', confirmResponse.status);
+        if (body.SubscribeURL && typeof body.SubscribeURL === 'string') {
+          const snsUrl = new URL(body.SubscribeURL);
+          if (snsUrl.protocol === 'https:' && snsUrl.hostname.endsWith('.amazonaws.com')) {
+            const confirmResponse = await fetch(snsUrl.toString());
+            console.log('SNS subscription confirmed:', confirmResponse.status);
+          } else {
+            console.error('SNS SubscribeURL rejected: domain not allowed:', snsUrl.hostname);
+          }
         }
       } catch (confirmError) {
         console.error('SNS subscription confirmation failed:', confirmError);
