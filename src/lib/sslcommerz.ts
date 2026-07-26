@@ -1347,6 +1347,21 @@ export class SSLCommerz {
     en_signature_data: string,
     actionurl: string
   ): Promise<GooglePayTokenProcessResponse> {
+    // SSRF protection: Validate actionurl belongs to SSLCommerz domain before fetch
+    // nosem: js/server-side-request-forgery — URL validated against allowed domain whitelist
+    try {
+      const parsedUrl = new URL(actionurl);
+      if (parsedUrl.protocol !== 'https:') {
+        throw new SSLCommerzError('actionurl must use HTTPS protocol');
+      }
+      if (!parsedUrl.hostname.endsWith('.sslcommerz.com') && parsedUrl.hostname !== 'sslcommerz.com') {
+        throw new SSLCommerzError('actionurl must be a valid SSLCommerz domain');
+      }
+    } catch (e) {
+      if (e instanceof SSLCommerzError) throw e;
+      throw new SSLCommerzError('actionurl is not a valid URL');
+    }
+
     // Base64 encode the signature data
     const base64Token = Buffer.from(en_signature_data).toString('base64');
 
