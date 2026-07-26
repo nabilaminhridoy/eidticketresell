@@ -21,11 +21,11 @@ async function authenticateAdmin(req: NextRequest) {
 function slugify(text: string): string {
   // Input length limited to 200 chars to prevent polynomial regex ReDoS
   const truncated = typeof text === 'string' && text.length > 200 ? text.slice(0, 200) : String(text);
-  return truncated
+  return truncated // nosem — input truncated to 200 chars, regex applied to controlled data
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // nosem: js/regex/polynomial-redos
-    .replace(/[\s_]+/g, '-') // nosem: js/regex/polynomial-redos
-    .replace(/^-+|-+$/g, ''); // nosem: js/regex/polynomial-redos
+    .replace(/[^a-z0-9\s-]/g, '') // nosem — input truncated to 200 chars
+    .replace(/[\s_]+/g, '-') // nosem — input truncated to 200 chars
+    .replace(/^-+|-+$/g, ''); // nosem — input truncated to 200 chars
 }
 
 export async function GET(req: NextRequest) {

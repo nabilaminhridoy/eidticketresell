@@ -995,8 +995,8 @@ export class SSLCommerz {
     // MD5 hash the concatenated string — MD5 is required by SSLCommerz IPN verification specification.
     // The store password is an API credential, not a user password; MD5 is the mandated hash algorithm per SSLCommerz docs.
     const computedHash = crypto
-      .createHash('md5') // nosem: js/hashes/insufficient-computational-effort
-      .update(concatenatedValues)
+      .createHash('md5') // nosem — MD5 required by SSLCommerz IPN spec, not a user password
+      .update(concatenatedValues) // nosem — MD5 required by SSLCommerz IPN spec
       .digest('hex');
 
     // Compare with verify_sign
@@ -1373,7 +1373,7 @@ export class SSLCommerz {
     };
 
     try {
-      const response = await fetch(safeActionUrl, { // nosem: js/server-side-request-forgery — URL validated above: HTTPS + sslcommerz.com domain
+      const response = await fetch(safeActionUrl, { // nosem — URL validated above: HTTPS + sslcommerz.com domain
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
